@@ -1,0 +1,52 @@
+version: 1
+
+project:
+  name: auto
+  type: auto
+  modules: []
+
+git:
+  default_branch: auto
+  remote: origin
+  sync_mode: current-branch
+  integration: rebase
+  create_pr: false
+  require_clean_preflight: true
+
+testing:
+  full_mode: strict
+  new_mode: standard
+  sync_mode: quick
+  coverage:
+    enabled: true
+    minimum: 80
+  commands:
+    quick: []
+    standard: []
+    strict: []
+  android:
+    min_api: auto
+    representative_api: auto
+  web:
+    unit: true
+    integration: true
+    e2e: true
+    uat: true
+
+paths:
+  docs: docs
+  reports: reports/testing
+
+exclude:
+  - .git
+  - .idea
+  - .vscode
+  - node_modules
+  - target
+  - build
+  - dist
+  - coverage
+  - .gradle
+  - .pytest_cache
+  - __pycache__
+  - source

@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Python ${{ matrix.python-version }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Unit and contract tests
+        run: python -m unittest discover -s tests -v
+      - name: Bundle validation
+        run: python scripts/validate_bundle.py --root .
+      - name: Python compilation
+        run: python -m compileall -q scripts tests
+      - name: Command routing smoke
+        run: python scripts/siyk.py route "/siyk-test-new standard CI smoke"
+      - name: Self-detection smoke
+        run: python scripts/siyk.py detect --root .
+      - name: Repository secret scan
+        run: python scripts/siyk.py scan --root . --all
+
+  claude-adapter-linux:
+    name: Claude adapter / Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bash syntax
+        run: bash -n adapters/claude-code/install.sh
+      - name: Install and reinstall smoke
+        run: |
+          export CLAUDE_HOME="$RUNNER_TEMP/claude-home"
+          bash adapters/claude-code/install.sh
+          bash adapters/claude-code/install.sh
+          test -f "$CLAUDE_HOME/skills/siyrs-skill/SKILL.md"
+          test -f "$CLAUDE_HOME/commands/siyk-test-full.md"
+          test -f "$CLAUDE_HOME/commands/siyk-test-new.md"
+          test -f "$CLAUDE_HOME/commands/siyk-git-sync.md"
+          test ! -e "$CLAUDE_HOME/skills/siyrs-skill/.git"
+
+  claude-adapter-windows:
+    name: Claude adapter / Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and reinstall smoke
+        shell: pwsh
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP "claude-home"
+          ./adapters/claude-code/install.ps1 -ClaudeHome $target
+          ./adapters/claude-code/install.ps1 -ClaudeHome $target
+          if (-not (Test-Path (Join-Path $target "skills/siyrs-skill/SKILL.md"))) { throw "Skill missing" }
+          foreach ($name in @("siyk-test-full", "siyk-test-new", "siyk-git-sync")) {
+            if (-not (Test-Path (Join-Path $target "commands/$name.md"))) { throw "Command missing: $name" }
+          }
+          if (Test-Path (Join-Path $target "skills/siyrs-skill/.git")) { throw "Git metadata copied" }

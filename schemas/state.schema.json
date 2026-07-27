@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/siyrs/siyrs-skill/schemas/state.schema.json",
+  "title": "siyrs-skill state",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": {"const": 1},
+    "last_full_test_commit": {"type": ["string", "null"]},
+    "last_full_test_fingerprint": {"type": ["string", "null"]},
+    "last_full_test_mode": {"enum": ["quick", "standard", "strict", null]},
+    "last_incremental_test_commit": {"type": ["string", "null"]},
+    "last_incremental_test_fingerprint": {"type": ["string", "null"]},
+    "last_incremental_test_mode": {"enum": ["quick", "standard", "strict", null]},
+    "last_results_file": {"type": ["string", "null"]},
+    "updated_at": {"type": ["string", "null"], "format": "date-time"}
+  },
+  "additionalProperties": true
+}
