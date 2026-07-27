@@ -1,11 +1,11 @@
 ---
 name: siyrs-skill
-description: Project-level engineering quality workflows. Use when the user invokes /siyk-test-full, /siyk-test-new, /siyk-git-sync, asks to “沉淀测试”, or wants repeatable project detection, test generation, verification, documentation, and safe Git synchronization.
+description: Project-level engineering quality workflows. Use when the user invokes /siyk-test-full, /siyk-test-new, /siyk-git-commit, /siyk-git-sync, asks to “沉淀测试” or “本地保存代码”, or wants repeatable project detection, test generation, verification, documentation, local Git commits, and safe remote synchronization.
 ---
 
 # siyrs-skill
 
-Version: **0.1.1**  
+Version: **0.1.2**  
 Command prefix: **`siyk`**
 
 Use this skill as a project-level engineering quality controller. It detects the repository type first, then selects the appropriate testing and Git workflow. It must produce real repository changes, execute real verification commands when the environment permits, and report evidence rather than claiming success from file generation alone.
@@ -16,12 +16,14 @@ Recognize the following literal commands at the start of a user request. When co
 
 - `/siyk-test-full [quick|standard|strict] [extra instructions]`
 - `/siyk-test-new [quick|standard|strict] [extra instructions]`
+- `/siyk-git-commit [--no-test] [commit message or extra instructions]`
 - `/siyk-git-sync [branch] [--pr] [--no-test] [extra instructions]`
 
 Also route these aliases:
 
 - `沉淀` or `沉淀测试` with no narrower qualifier → `/siyk-test-new standard`
 - `全量沉淀`、`全量沉淀测试`、`完整沉淀测试` → `/siyk-test-full strict`
+- `本地保存`、`本地保存代码`、`保存本地代码`、`本地提交` → `/siyk-git-commit`
 - `同步代码`、`保存并同步远程仓库` → `/siyk-git-sync`
 
 If the user explicitly names a command, that command is the authorization to perform its normal, bounded side effects. Do not repeatedly ask for confirmation for ordinary test-file edits, local commits, fetch/rebase, or pushing the current branch. Still stop for destructive or scope-expanding operations listed in `references/safety-and-authorization.md`.
@@ -59,6 +61,7 @@ Defaults:
 
 - `/siyk-test-full` → `strict`
 - `/siyk-test-new` → `standard`
+- `/siyk-git-commit` → repository-configured preflight; otherwise `quick`
 - `/siyk-git-sync` → repository-configured preflight; otherwise `quick`
 
 ## Global quality rules
@@ -94,6 +97,19 @@ Load `commands/test-new.md` and execute it completely. The workflow must:
 - generate tests for the changed behavior and related regression paths;
 - execute and repair the affected test set;
 - incrementally update the test matrix and baseline.
+
+## `/siyk-git-commit`
+
+Load `commands/git-commit.md` and execute it completely. The workflow must:
+
+- inspect repository, branch, operation state, changed files, and local policy;
+- scan intended changes for likely secrets and inappropriate generated artifacts;
+- run configured or quick project-appropriate preflight checks unless `--no-test` is explicit;
+- stage only intentional changes and preserve unrelated user work;
+- create one cohesive normal local commit when changes exist;
+- report the exact commit and remaining worktree state.
+
+This command is local-only. It must not fetch, pull, rebase, merge, push, create a PR, create a tag/release, or otherwise mutate a remote repository.
 
 ## `/siyk-git-sync`
 
@@ -139,6 +155,7 @@ A command is complete only when the final response includes:
 - defects fixed and regression tests added;
 - documentation and state updates;
 - remaining risks;
+- Git commit/branch result for local commit operations;
 - Git commit/branch/remote result for sync operations.
 
 When execution is blocked, finish all work that does not depend on the blocker, preserve reproducible commands, and clearly label the command **partially complete** rather than pretending success.

@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class AdapterTests(unittest.TestCase):
     def test_claude_command_adapters_exist(self):
         command_dir = ROOT / "adapters" / "claude-code" / "commands"
-        for name in ("siyk-test-full", "siyk-test-new", "siyk-git-sync"):
+        for name in ("siyk-test-full", "siyk-test-new", "siyk-git-commit", "siyk-git-sync"):
             path = command_dir / f"{name}.md"
             self.assertTrue(path.is_file())
             text = path.read_text(encoding="utf-8")

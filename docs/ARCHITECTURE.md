@@ -2,7 +2,7 @@
 
 ## Goal
 
-Provide one cross-platform Agent Skill, `siyrs-skill`, with three stable user workflows and a short command vocabulary.
+Provide one cross-platform Agent Skill, `siyrs-skill`, with four stable user workflows and a short command vocabulary.
 
 ## Layers
 
@@ -12,6 +12,7 @@ Provide one cross-platform Agent Skill, `siyrs-skill`, with three stable user wo
 2. **Command workflows — `commands/`**
    - full test sedimentation;
    - incremental test sedimentation;
+   - local-only Git commit;
    - safe Git synchronization.
 3. **Project-specific policy — `references/`**
    - project detection;
@@ -34,7 +35,7 @@ Provide one cross-platform Agent Skill, `siyrs-skill`, with three stable user wo
 
 ## Why commands are modules, not separate Skills
 
-The three workflows share project detection, test policies, state, output contracts, and Git boundaries. Keeping one root Skill avoids duplicated policy and drift. Detailed command files load only when needed.
+The four workflows share project detection, test policies, state, output contracts, and Git boundaries. Keeping one root Skill avoids duplicated policy and drift. Detailed command files load only when needed.
 
 ## Deterministic command routing
 
@@ -54,6 +55,7 @@ The config is user-controlled policy. The state is workflow evidence and baselin
 ## Side-effect model
 
 - Test commands may edit repository source/tests/docs and run local build/test tools.
+- Git commit may create one normal local commit and never contacts the remote.
 - Git sync may create a normal commit, fetch/integrate, and push the current branch.
 - Destructive history changes, default-branch merge, release, deployment, and external production changes are outside the default scope.
 

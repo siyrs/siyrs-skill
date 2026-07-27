@@ -13,7 +13,7 @@ class BundleValidationTests(unittest.TestCase):
     def test_current_bundle_is_valid(self):
         result = validate(ROOT)
         self.assertTrue(result["valid"], result["errors"])
-        self.assertEqual("0.1.1", result["version"])
+        self.assertEqual("0.1.2", result["version"])
 
     def test_version_drift_is_detected(self):
         with TemporaryDirectory() as tmp:

@@ -26,8 +26,23 @@ class RouteCommandTests(unittest.TestCase):
         new = route("沉淀测试 新增功能")
         self.assertEqual("/siyk-test-new", new["command"])
         self.assertEqual("standard", new["strength"])
+        commit = route("本地保存 feat: 保存权限功能")
+        self.assertEqual("/siyk-git-commit", commit["command"])
+        self.assertEqual("feat: 保存权限功能", commit["extra"])
         sync = route("保存并同步远程仓库")
         self.assertEqual("/siyk-git-sync", sync["command"])
+
+    def test_git_commit_parses_message_and_flag(self):
+        result = route("/siyk-git-commit --no-test feat: 保存本地功能")
+        self.assertEqual("/siyk-git-commit", result["command"])
+        self.assertEqual(["--no-test"], result["flags"])
+        self.assertEqual("feat: 保存本地功能", result["extra"])
+        self.assertEqual("/siyk-git-commit --no-test feat: 保存本地功能", result["normalized"])
+
+    def test_git_commit_unknown_flag_warns(self):
+        result = route("/siyk-git-commit --amend")
+        self.assertEqual(["unknown flag: --amend"], result["warnings"])
+        self.assertEqual("--amend", result["extra"])
 
     def test_git_sync_parses_branch_and_flags(self):
         result = route("/siyk-git-sync main --pr --no-test 发布首版")

@@ -1,6 +1,6 @@
 # Safety and authorization boundaries
 
-The user’s explicit `/siyk-*` command authorizes ordinary operations inside the current repository required by that workflow. Avoid repetitive confirmation for normal test edits, builds, local commits, fetch/rebase, and current-branch push.
+The user’s explicit `/siyk-*` command authorizes ordinary operations inside the current repository required by that workflow. Avoid repetitive confirmation for normal test edits, builds, local commits, fetch/rebase, and current-branch push. Authorization remains command-specific: `/siyk-git-commit` authorizes a normal local commit but no network or remote Git mutation; `/siyk-git-sync` authorizes its bounded current-branch fetch/integrate/push flow.
 
 ## Stop or request explicit expanded scope for
 

@@ -7,6 +7,7 @@ Use an explicit Skill invocation plus the internal command router, for example:
 ```text
 $siyrs-skill /siyk-test-full strict
 $siyrs-skill /siyk-test-new standard 沉淀本轮功能
+$siyrs-skill /siyk-git-commit
 $siyrs-skill /siyk-git-sync
 ```
 

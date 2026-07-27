@@ -16,6 +16,18 @@ Use compact, evidence-first reports. Do not bury failures under broad completion
 10. **Remaining risks**: untested environments, external dependencies, flaky areas.
 11. **Acceptance decision**: whether the selected strength was met.
 
+## Git local commit report
+
+1. **Status**.
+2. **Repository/current branch**.
+3. **Preflight checks** or explicit `--no-test`.
+4. **Secret/artifact scan**.
+5. **Intentional staging scope** and preserved unrelated changes.
+6. **Commit**: hash, message, files or “nothing to commit”.
+7. **Remaining worktree state**: staged, unstaged, untracked, conflicted.
+8. **Remote result**: “not contacted and not modified”.
+9. **Remaining risks or blockers**.
+
 ## Git sync report
 
 1. **Status**.

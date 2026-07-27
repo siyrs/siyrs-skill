@@ -1,4 +1,4 @@
-# v0.1.1 Acceptance
+# v0.1.2 Acceptance
 
 ## Package and version contract
 
@@ -12,6 +12,7 @@
 
 - [x] `/siyk-test-full` routes to full-project testing.
 - [x] `/siyk-test-new` routes to baseline-aware incremental testing.
+- [x] `/siyk-git-commit` routes to local-only intentional staging and normal commit.
 - [x] `/siyk-git-sync` routes to safe current-branch synchronization.
 - [x] Chinese aliases are normalized deterministically.
 - [x] Unknown text does not route accidentally.
@@ -28,7 +29,7 @@
 - [x] Generated-but-not-run tests cannot be reported as passed.
 - [x] UAT and result documentation templates exist.
 
-## Git workflow
+## Git workflows
 
 - [x] Staged, unstaged, untracked, conflicted, upstream, ahead/behind, and baseline evidence are collected.
 - [x] Paths containing spaces and non-ASCII characters are handled with NUL-delimited Git output.
@@ -36,6 +37,8 @@
 - [x] Known token/private-key formats block synchronization.
 - [x] Fixture bypass marker is only honored in test/fixture paths.
 - [x] Preflight tests run by default.
+- [x] Local commit never fetches, pulls, rebases, merges, pushes, creates a PR/tag/release, switches branches, amends, or bypasses hooks by default.
+- [x] Local commit reports the remaining worktree and explicitly confirms the remote was not contacted or modified.
 - [x] Intentional staging replaces blind inclusion.
 - [x] No default force push, history rewrite, default-branch merge, release, or deployment.
 
@@ -60,6 +63,7 @@ python scripts/validate_bundle.py --root .
 python -m compileall -q scripts tests
 bash -n adapters/claude-code/install.sh
 python scripts/siyk.py route "/siyk-test-new standard smoke"
+python scripts/siyk.py route "/siyk-git-commit feat: smoke"
 python scripts/siyk.py detect --root .
 python scripts/siyk.py fingerprint --root .
 python scripts/siyk.py scan --root . --all

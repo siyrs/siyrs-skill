@@ -1,10 +1,11 @@
 {
   "name": "siyrs-skill",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "python_requires": ">=3.10",
   "commands": [
     "/siyk-test-full",
     "/siyk-test-new",
+    "/siyk-git-commit",
     "/siyk-git-sync"
   ],
   "platform_adapters": [
@@ -22,6 +23,7 @@
     "SKILL.md",
     "VERSION",
     "adapters/claude-code/README.md",
+    "adapters/claude-code/commands/siyk-git-commit.md",
     "adapters/claude-code/commands/siyk-git-sync.md",
     "adapters/claude-code/commands/siyk-test-full.md",
     "adapters/claude-code/commands/siyk-test-new.md",
@@ -35,6 +37,7 @@
     "assets/templates/TEST-RESULTS.template.md",
     "assets/templates/TESTING.template.md",
     "assets/templates/UAT.template.md",
+    "commands/git-commit.md",
     "commands/git-sync.md",
     "commands/test-full.md",
     "commands/test-new.md",
@@ -43,6 +46,7 @@
     "docs/DEVELOPMENT.md",
     "docs/RELEASE-REPORT-v0.1.0.md",
     "docs/RELEASE-REPORT-v0.1.1.md",
+    "docs/RELEASE-REPORT-v0.1.2.md",
     "docs/ROADMAP.md",
     "references/git-policy.md",
     "references/output-contract.md",

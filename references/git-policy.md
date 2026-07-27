@@ -1,8 +1,13 @@
-# Git synchronization policy
+# Git commit and synchronization policy
 
-## Safe default
+## Safe defaults
 
-`/siyk-git-sync` synchronizes the current branch only. It may create a normal commit and push it to the corresponding remote branch.
+- `/siyk-git-commit` creates one normal local commit only. It does not contact or mutate a remote repository.
+- `/siyk-git-sync` synchronizes the current branch. It may create a normal commit, fetch/integrate, and push to the corresponding remote branch.
+
+## Local commit boundary
+
+`/siyk-git-commit` never fetches, pulls, rebases, merges, pushes, creates a PR/tag/release, switches branches, amends, bypasses hooks, or rewrites history by default. It preserves unrelated work and reports the remaining worktree.
 
 ## Never by default
 

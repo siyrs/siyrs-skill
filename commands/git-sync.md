@@ -2,6 +2,8 @@
 
 Purpose: save intentional local code changes and safely synchronize the current branch with its remote counterpart.
 
+For a local commit that must not contact or modify any remote, use `/siyk-git-commit` instead.
+
 ## Default authorization
 
 The explicit command authorizes:

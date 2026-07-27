@@ -14,6 +14,7 @@ REQUIRED = [
     "CHANGELOG.md",
     "commands/test-full.md",
     "commands/test-new.md",
+    "commands/git-commit.md",
     "commands/git-sync.md",
     "references/project-detection.md",
     "references/output-contract.md",
@@ -28,7 +29,7 @@ REQUIRED = [
     ".github/workflows/ci.yml",
     "release-manifest.json",
 ]
-COMMANDS = ("/siyk-test-full", "/siyk-test-new", "/siyk-git-sync")
+COMMANDS = ("/siyk-test-full", "/siyk-test-new", "/siyk-git-commit", "/siyk-git-sync")
 IGNORED_PARTS = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 IGNORED_SUFFIXES = {".pyc", ".pyo"}
 

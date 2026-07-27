@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.2 - 2026-07-27
+
+### Added
+
+- `/siyk-git-commit` local-only save workflow with optional commit message and explicit `--no-test` mode.
+- Chinese aliases for local save/commit requests.
+- Claude Code autocomplete adapter, routing tests, command contracts, and acceptance coverage for the new command.
+
+### Changed
+
+- Git policy and output contracts now distinguish local commit from remote synchronization.
+- Documentation and CI installer smoke tests now cover four stable commands.
+
 ## 0.1.1 - 2026-07-27
 
 ### Added

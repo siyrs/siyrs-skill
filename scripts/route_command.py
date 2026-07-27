@@ -18,6 +18,7 @@ TEST_COMMANDS = {
 VALID_STRENGTHS = {"quick", "standard", "strict"}
 FULL_ALIASES = ("全量沉淀测试", "完整沉淀测试", "全量沉淀")
 NEW_ALIASES = ("沉淀测试", "沉淀")
+COMMIT_ALIASES = ("保存本地代码", "本地保存代码", "本地保存", "本地提交")
 SYNC_ALIASES = ("保存并同步远程仓库", "同步代码")
 
 
@@ -73,6 +74,32 @@ def route(text: str) -> dict:
             source="literal",
         ))
 
+    if first == "/siyk-git-commit":
+        flags: list[str] = []
+        extra_tokens: list[str] = []
+        warnings: list[str] = []
+        for token in tokens[1:]:
+            if token == "--no-test":
+                if token not in flags:
+                    flags.append(token)
+            elif token.startswith("--"):
+                warnings.append(f"unknown flag: {token}")
+                extra_tokens.append(token)
+            else:
+                extra_tokens.append(token)
+        parts = [first]
+        parts.extend(flags)
+        parts.extend(extra_tokens)
+        return asdict(RouteResult(
+            matched=True,
+            command=first,
+            flags=flags,
+            extra=" ".join(extra_tokens),
+            normalized=" ".join(parts),
+            source="literal",
+            warnings=warnings,
+        ))
+
     if first == "/siyk-git-sync":
         branch = None
         flags: list[str] = []
@@ -126,6 +153,18 @@ def route(text: str) -> dict:
             matched=True,
             command="/siyk-test-new",
             strength="standard",
+            extra=extra,
+            normalized=normalized,
+            source=f"alias:{alias}",
+        ))
+
+    alias = _matches_alias(raw, COMMIT_ALIASES)
+    if alias:
+        extra = raw[len(alias):].strip()
+        normalized = "/siyk-git-commit" + (f" {extra}" if extra else "")
+        return asdict(RouteResult(
+            matched=True,
+            command="/siyk-git-commit",
             extra=extra,
             normalized=normalized,
             source=f"alias:{alias}",
