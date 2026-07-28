@@ -1,13 +1,10 @@
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
-
 permissions:
   contents: read
-
 jobs:
   validate:
     name: Python ${{ matrix.python-version }} / ${{ matrix.os }}
@@ -31,20 +28,16 @@ jobs:
       - name: Command routing smoke
         run: |
           python scripts/siyk.py route "/siyk-test-new standard CI smoke"
-          python scripts/siyk.py route "/siyk-git-commit feat: CI smoke"
+          python scripts/siyk.py route "/siyk-git-commit --allow-risk=RISK-001 feat: CI smoke"
+          python scripts/siyk.py route "/siyk-git-sync --allow-risk=all"
       - name: Self-detection smoke
         run: python scripts/siyk.py detect --root .
-      - name: Repository secret scan
+      - name: Repository-wide secret scan
         run: python scripts/siyk.py scan --root . --all
-
   claude-adapter-linux:
-    name: Claude adapter / Linux
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
       - name: Bash syntax
         run: bash -n adapters/claude-code/install.sh
       - name: Install and reinstall smoke
@@ -53,14 +46,9 @@ jobs:
           bash adapters/claude-code/install.sh
           bash adapters/claude-code/install.sh
           test -f "$CLAUDE_HOME/skills/siyrs-skill/SKILL.md"
-          test -f "$CLAUDE_HOME/commands/siyk-test-full.md"
-          test -f "$CLAUDE_HOME/commands/siyk-test-new.md"
-          test -f "$CLAUDE_HOME/commands/siyk-git-commit.md"
-          test -f "$CLAUDE_HOME/commands/siyk-git-sync.md"
+          for name in siyk-test-full siyk-test-new siyk-git-commit siyk-git-sync; do test -f "$CLAUDE_HOME/commands/$name.md"; done
           test ! -e "$CLAUDE_HOME/skills/siyrs-skill/.git"
-
   claude-adapter-windows:
-    name: Claude adapter / Windows
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

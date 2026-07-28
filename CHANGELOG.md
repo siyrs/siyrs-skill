@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.3 - 2026-07-28
+
+### Added
+
+- Git-native Index/tree and outgoing-history scan policy.
+- Explicit `RISK-*` authorization protocol with natural-language and `--allow-risk` overrides.
+- Internal subworkflow composition contract for reusing `git-commit` inside `git-sync`.
+- Common testing governance shared by full and incremental test workflows.
+
+### Changed
+
+- `/siyk-git-commit` now stages intentional paths before scanning the exact Git Index instead of treating worktree scanning as authoritative.
+- `/siyk-git-sync` reuses the commit subworkflow, integrates fetched remote changes, resolves clear/testable conflicts, reverifies, scans the complete outgoing history, then pushes.
+- Unchanged authorized findings are inherited across commit/push phases within one sync run.
+- Stable workflow decisions are further consolidated into Markdown references; scripts remain deterministic helpers.
+
 ## 0.1.2 - 2026-07-27
 
 ### Added
@@ -25,22 +41,15 @@
 
 ### Changed
 
-- Git change collection now reports staged, unstaged, untracked, conflicted, upstream and baseline evidence with safe NUL-delimited path parsing.
-- Project detection now preserves nested manifest paths, module roots and clearer full-stack/Node classifications.
-- Worktree fingerprints now represent staged patches, unstaged patches, untracked files with spaces/non-ASCII paths, and submodule state.
-- Secret scanning treats known token formats as blocking findings and restricts fixture bypass markers to test/fixture paths.
-- Bundle validation now checks version consistency and exact release-manifest contents.
-- State updates now require a real commit or fingerprint and use durable atomic writes.
+- Git change collection reports staged, unstaged, untracked, conflicted, upstream and baseline evidence with NUL-safe paths.
+- Project detection preserves nested manifests/module roots and clearer full-stack/Node classifications.
+- Worktree fingerprints represent staged/unstaged/untracked/submodule state.
+- Repository-wide secret scanning supports constrained test-fixture markers.
+- Bundle validation checks version consistency and exact release contents.
 
 ## 0.1.0 - 2026-07-27
 
 ### Added
 
-- `siyrs-skill` Agent Skill manifest.
-- `/siyk-test-full` full-project test inventory and test-debt workflow.
-- `/siyk-test-new` Git-baseline-aware incremental testing workflow.
-- `/siyk-git-sync` safe current-branch commit/fetch/integrate/push workflow.
-- Web/full-stack, Android, Python/CLI/Skill testing references.
-- Project detection, change collection, secret scanning, state management, and bundle validation scripts.
-- Project configuration, test documentation, UAT, test-matrix, result, and state templates.
-- Self-tests for core deterministic scripts.
+- Root Skill and full/incremental testing plus Git synchronization workflows.
+- Project-specific testing references, deterministic helpers, templates, and self-tests.

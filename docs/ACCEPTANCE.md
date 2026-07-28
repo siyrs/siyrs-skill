@@ -1,72 +1,55 @@
-# v0.1.2 Acceptance
+# v0.1.3 Acceptance
 
-## Package and version contract
+## Package/version
 
-- [x] Exactly one root `SKILL.md`.
-- [x] Valid `name` and `description` frontmatter.
-- [x] `VERSION`、`SKILL.md`、`README.md`、`CHANGELOG.md` and `release-manifest.json` are consistent.
-- [x] `release-manifest.json` exactly lists distributable files.
-- [x] Config and state JSON Schemas exist.
+- [x] Exactly one root `SKILL.md` with valid frontmatter.
+- [x] VERSION/manifest/README/changelog/release manifest use `0.1.3`.
+- [x] New Markdown references are included in the exact release manifest.
 
-## Routing
+## Git commit
 
-- [x] `/siyk-test-full` routes to full-project testing.
-- [x] `/siyk-test-new` routes to baseline-aware incremental testing.
-- [x] `/siyk-git-commit` routes to local-only intentional staging and normal commit.
-- [x] `/siyk-git-sync` routes to safe current-branch synchronization.
-- [x] Chinese aliases are normalized deterministically.
-- [x] Unknown text does not route accidentally.
-- [x] Claude Code adapter files provide separate slash-menu commands when installed.
+- [x] Local commit remains local-only.
+- [x] Intentional paths are staged before authoritative scanning.
+- [x] Git Index/candidate Tree replace worktree Python scan as commit authority.
+- [x] Partial-staging mismatch is explicitly covered.
+- [x] Sensitive paths, introduced/retained/removed content, and staged object sizes are distinguished.
+- [x] Explicit user risk authorization can continue the commit while retaining audit evidence.
+
+## Git sync
+
+- [x] `git-sync` loads `git-commit` as an internal subworkflow instead of duplicating it.
+- [x] Child `committed`/`no-op`/`blocked`/`failed` return contract exists.
+- [x] Remote state is fetched before divergence decisions.
+- [x] Clear/testable conflicts may be resolved; ambiguous conflicts stop recoverably.
+- [x] Post-integration tests rerun by default.
+- [x] Outgoing commit history and final HEAD are scanned before push.
+- [x] A credential added then removed in outgoing history remains detectable.
+- [x] Same authorized finding is not confirmed twice within one sync run.
+
+## Risk authorization
+
+- [x] Findings receive `RISK-*` identifiers.
+- [x] Natural-language and `--allow-risk` forms are documented.
+- [x] Authorization is scoped to current run/repository/branch/fingerprint.
+- [x] Scanner still runs after authorization.
+- [x] Reports never print full secret values.
+- [x] Content authorization does not expand force push/release/deployment scope.
 
 ## Test workflows
 
-- [x] Project type is detected before framework choice.
-- [x] Nested manifests and monorepo module roots are preserved.
-- [x] Web/full-stack, Android, Python/CLI/Skill strategies exist.
-- [x] Full mode creates function inventory and test matrix.
-- [x] Incremental mode uses Git/state baseline and traces changed behavior.
-- [x] Real test execution and rerun are mandatory.
-- [x] Generated-but-not-run tests cannot be reported as passed.
-- [x] UAT and result documentation templates exist.
+- [x] `test-full` and `test-new` load one common testing policy.
+- [x] Behavior-first planning, execution ladder, failure classification, and evidence truth are centralized.
+- [x] Planned UAT is distinguished from executed UAT.
+- [x] Incremental scope expands for shared/cross-cutting behavior.
+- [x] Documentation is merged without erasing richer existing records.
 
-## Git workflows
-
-- [x] Staged, unstaged, untracked, conflicted, upstream, ahead/behind, and baseline evidence are collected.
-- [x] Paths containing spaces and non-ASCII characters are handled with NUL-delimited Git output.
-- [x] Secret/generated-artifact scan runs before staging.
-- [x] Known token/private-key formats block synchronization.
-- [x] Fixture bypass marker is only honored in test/fixture paths.
-- [x] Preflight tests run by default.
-- [x] Local commit never fetches, pulls, rebases, merges, pushes, creates a PR/tag/release, switches branches, amends, or bypasses hooks by default.
-- [x] Local commit reports the remaining worktree and explicitly confirms the remote was not contacted or modified.
-- [x] Intentional staging replaces blind inclusion.
-- [x] No default force push, history rewrite, default-branch merge, release, or deployment.
-
-## Deterministic tooling
-
-- [x] Command router.
-- [x] Project detector.
-- [x] Git change collector.
-- [x] Worktree fingerprint helper.
-- [x] Secret/artifact scanner.
-- [x] State reader/updater with atomic writes.
-- [x] Bundle and release-manifest validator.
-- [x] Unified helper CLI.
-
-## Verification evidence
-
-Release requires:
+## Verification commands
 
 ```bash
 python -m unittest discover -s tests -v
 python scripts/validate_bundle.py --root .
 python -m compileall -q scripts tests
+python scripts/siyk.py route "/siyk-git-commit --allow-risk=RISK-001 feat: smoke"
+python scripts/siyk.py route "/siyk-git-sync --allow-risk=all"
 bash -n adapters/claude-code/install.sh
-python scripts/siyk.py route "/siyk-test-new standard smoke"
-python scripts/siyk.py route "/siyk-git-commit feat: smoke"
-python scripts/siyk.py detect --root .
-python scripts/siyk.py fingerprint --root .
-python scripts/siyk.py scan --root . --all
 ```
-
-GitHub Actions repeats the contract across Ubuntu and Windows with Python 3.10, 3.12 and 3.13, plus native installer smoke tests.

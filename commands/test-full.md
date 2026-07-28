@@ -1,120 +1,73 @@
 # Command: `/siyk-test-full`
 
-Purpose: inspect the entire repository, build a durable function inventory, close meaningful test gaps, execute the suites, repair failures, and persist evidence.
+Purpose: inspect the entire repository, build a durable behavior inventory, close meaningful test gaps, execute the required suites, repair failures, and persist trustworthy evidence.
 
 ## Inputs
 
 - Strength: `quick`, `standard`, or `strict`; default `strict`.
-- Optional user scope or exclusions.
-- Repository-local `.siyrs/config.yaml` when present.
+- Optional user scope/exclusions.
+- Repository-local `.siyrs/config.yaml`.
+
+## Required references
+
+Load `references/testing-common.md`, `references/project-detection.md`, the detected project-type testing references, and `references/output-contract.md`.
 
 ## Procedure
 
-### 1. Establish repository scope
+### 1. Establish repository and module scope
 
-- Find the repository root and default branch.
-- Read root agent instructions, README, architecture/PRD documents, build manifests, CI, source roots, migrations, API definitions, routes, deployment files, and existing tests.
-- Detect all meaningful modules. A monorepo may require multiple testing strategies.
-- Record environment limitations before changing code.
+Read repository instructions, architecture/PRD, manifests, source/test roots, CI, migrations, APIs/routes/screens/commands, jobs, deployment files, and existing test evidence. Detect every meaningful module independently in a monorepo. Record environment limitations before edits.
 
-### 2. Build or refresh the function inventory
+### 2. Refresh behavior inventory
 
-Create or update `docs/testing/FUNCTION-INVENTORY.md` unless the repository already has an equivalent source of truth.
+Create or update `docs/testing/FUNCTION-INVENTORY.md` unless an equivalent source of truth exists. Inventory behavior rather than classes and include entry point, business rule/state transition, dependencies, existing/missing layers, risk, status, and evidence.
 
-Inventory behavior rather than classes. Include at least:
+Trace critical flows from entry point through business logic to persistence/external boundaries. Do not invent features from names.
 
-- module/domain;
-- user-visible or system behavior;
-- entry point/API/screen/command;
-- critical dependencies;
-- existing test layers;
-- missing test layers;
-- risk/priority;
-- current status.
+### 3. Refresh the test matrix and debt
 
-Do not invent features from names alone. Trace important flows from entry point to business logic and persistence/external boundary.
-
-### 3. Build the test matrix
-
-Create or update `docs/testing/TEST-MATRIX.md` and map each important behavior to the appropriate test layers.
-
-Use the detected project references:
-
-- full-stack/web → `references/testing-web.md`
-- Android → `references/testing-android.md`
-- Python/CLI/Skill → `references/testing-python-skill.md`
+Create or update `docs/testing/TEST-MATRIX.md`. Map important behaviors to unit, integration/API/repository/instrumented, UI/E2E, UAT, compatibility, and smoke/build layers as appropriate.
 
 Prioritize:
 
-1. critical business rules and state transitions;
-2. authentication, authorization, tenant/data isolation, and validation;
-3. data persistence and migration behavior;
+1. business rules/state transitions;
+2. authentication, authorization, tenancy/data isolation, validation;
+3. persistence/migration compatibility;
 4. public API/CLI/UI contracts;
-5. failure, timeout, retry, idempotency, and boundary cases;
-6. high-value end-to-end user journeys;
-7. regressions for defects found during execution.
+5. failure/retry/timeout/idempotency/boundaries;
+6. high-value user journeys;
+7. regressions for defects found.
 
-### 4. Implement missing tests
+Keep deferred gaps visible as test debt with priority and rationale.
 
-- Follow existing frameworks and naming conventions when viable.
-- Introduce a new framework only when the repository lacks the required layer and the benefit exceeds maintenance cost.
-- Keep tests deterministic and CI-friendly.
-- Use fixtures/builders to reduce duplication without hiding intent.
-- Avoid broad snapshot tests as substitutes for behavioral assertions.
-- Do not mock the unit under test.
+### 4. Implement tests
 
-### 5. Execute in increasing cost order
+Apply `references/testing-common.md` and the detected project strategy. Prefer stable CI-suitable coverage. Do not over-generate low-value tests merely to increase file or coverage counts.
 
-Typical order:
+### 5. Execute, diagnose, repair, rerun
 
-1. format/lint/static checks;
-2. unit tests;
-3. integration/API/repository/instrumented tests;
-4. E2E/UI tests;
-5. UAT/build/package/runtime smoke checks;
-6. coverage collection in `standard`/`strict` when configured or supported.
+Run in increasing cost order. Capture exact commands and outcomes. Classify every failure, fix legitimate implementation/test defects, add regression coverage, then rerun the complete relevant suites.
 
-Capture exact commands and exit statuses. For long suites, run the smallest diagnostic scope first, then the complete relevant suite after fixes.
+In `strict`, include configured coverage, artifact/build validation, compatibility, and real runtime/UI/UAT evidence where the environment permits. Mark planned manual UAT separately from executed UAT.
 
-### 6. Diagnose and repair
-
-For every failure, classify it as:
-
-- implementation defect;
-- test defect;
-- stale expectation;
-- flaky/non-deterministic behavior;
-- environment or external dependency blocker.
-
-Fix legitimate implementation/test defects. Add regression coverage for defects. Do not lower assertions or add unconditional skips.
-
-### 7. Persist documentation and baseline
+### 6. Persist documentation and baseline
 
 Update or create:
 
-- `docs/TESTING.md`
-- `docs/testing/FUNCTION-INVENTORY.md`
-- `docs/testing/TEST-MATRIX.md`
-- `docs/testing/UAT.md`
-- `docs/testing/TEST-RESULTS.md`
+- `docs/TESTING.md`;
+- `docs/testing/FUNCTION-INVENTORY.md`;
+- `docs/testing/TEST-MATRIX.md`;
+- `docs/testing/UAT.md`;
+- `docs/testing/TEST-RESULTS.md`.
 
-Update `.siyrs/state.json` only after the final repository state and tested commit/worktree fingerprint are known. Record:
+Preserve richer existing documentation. Record actual results, blocked suites, measured coverage, remaining debt, and selected strength.
 
-- last full-test commit or worktree fingerprint;
-- strength;
-- actual commands;
-- result summary;
-- blocked suites;
-- timestamp.
+Update `.siyrs/state.json` only after evidence is saved and the tested state is represented by a durable commit or deterministic fingerprint.
 
-Use `python <skill-dir>/scripts/fingerprint.py --root <repo>` when the tested state is not represented by a durable commit. Persist the baseline with `python <skill-dir>/scripts/state.py --root <repo> update --kind full --mode <mode> --commit <sha>` or `--fingerprint <sha256>` only after evidence is saved.
+### 7. Completion decision
 
-### 8. Completion decision
+- **complete**: required suites for the selected strength passed and evidence/baseline are saved;
+- **partially complete**: meaningful tests/docs were added but named suites are blocked/failing with explicit evidence;
+- **failed**: no trustworthy result can be produced or the repository is left worse.
 
-Mark:
-
-- **complete**: required suites for the selected strength passed and evidence is saved;
-- **partially complete**: useful tests/docs were added, but named suites are blocked or failing for documented reasons;
-- **failed**: no trustworthy test result can be produced or changes make the repository worse.
-
-Use `references/output-contract.md` for the final report.
+Use `references/output-contract.md`.

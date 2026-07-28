@@ -1,7 +1,7 @@
 ---
-description: 安全保存本地代码并同步当前分支到远程仓库。
-argument-hint: [branch] [--pr] [--no-test] [补充要求]
+description: 复用本地提交子流程，拉取并整合远端代码、验证、扫描待推送历史并正常推送。
+argument-hint: [branch] [--pr] [--no-test] [--allow-risk[=<finding-id|all>]] [补充要求]
 disable-model-invocation: true
 ---
 
-Use the installed `siyrs-skill` skill. Execute the literal workflow `/siyk-git-sync $ARGUMENTS` against the current repository. Apply the Skill's bounded authorization, secret scan, preflight, intentional staging, commit, fetch/integration, verification, and push rules.
+Use the installed `siyrs-skill` skill. Execute `/siyk-git-sync $ARGUMENTS` against the current repository. Reuse the embedded git-commit workflow, share its risk ledger, fetch/integrate, resolve clear testable conflicts, reverify, scan outgoing history/final HEAD, and normally push. Never force push by default.

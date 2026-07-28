@@ -1,125 +1,103 @@
 # Command: `/siyk-git-commit`
 
-Purpose: safely save intentional work as a normal local Git commit without contacting or mutating any remote repository. This is a **local-only** workflow.
+Purpose: safely save intentional work as one normal local Git commit without contacting or mutating a remote repository. This is a **local-only** workflow and the reusable local-save subworkflow for `/siyk-git-sync`.
 
 ## Syntax
 
 ```text
-/siyk-git-commit [--no-test] [commit message or extra instructions]
+/siyk-git-commit [--no-test] [--allow-risk[=<finding-id|all>]] [commit message or extra instructions]
 ```
 
-When the remaining text is a clear commit message, use it after validating that it describes the staged diff. Otherwise generate a concise Conventional Commit-style message from the actual changes.
+When the remaining text is a clear commit message, use it after verifying that it describes the staged diff. Otherwise generate a concise Conventional Commit-style message from the actual staged change.
+
+## Required references
+
+Load:
+
+- `references/git-content-scan.md`;
+- `references/risk-authorization.md`;
+- `references/git-policy.md`;
+- `references/output-contract.md`;
+- `references/subworkflow-composition.md` when embedded by another command.
 
 ## Default authorization
 
-The explicit command authorizes:
+The explicit command authorizes repository inspection, configured/quick preflight checks, intentional staging, Git-native Index scanning, one normal local commit, and read-only verification of the result.
 
-- repository and worktree inspection;
-- configured or quick preflight checks;
-- secret/generated-artifact scanning;
-- staging intentional project changes;
-- one normal local commit;
-- read-only inspection of the resulting commit and worktree.
-
-It does **not** authorize remote or history-changing operations. It **must not fetch**, pull, rebase, merge, push, create a PR, switch branches, force-push, rewrite history, amend, create tags/releases, deploy, or perform any other remote/external mutation.
+It **must not contact or mutate a remote repository**. It does **not** authorize fetch, pull, rebase, merge, push, PR creation, branch switching, amend/fixup, force push, history rewrite, tags/releases, deployment, or other remote/external mutation.
 
 ## Procedure
 
-### 1. Inspect repository state
+### 1. Inspect repository and operation state
 
-Collect:
+Collect repository root, current branch, detached-HEAD status, staged/unstaged/untracked/conflicted files, ignored candidates when relevant, in-progress merge/rebase/cherry-pick/revert/bisect state, repository instructions, commit conventions, submodules, and linked worktrees.
 
-- repository root and current branch;
-- detached-HEAD status;
-- staged, unstaged, untracked, ignored, and conflicted files;
-- merge/rebase/cherry-pick/revert/bisect state;
-- repository-local instructions and commit conventions;
-- submodule/worktree state when used.
+Stop when repository identity is ambiguous, HEAD is detached without an explicit destination, unresolved conflicts exist, or an in-progress history operation makes the intended commit ambiguous.
 
-Stop before committing when:
+### 2. Determine one intentional save scope
 
-- the directory is not a Git repository;
-- HEAD is detached, unless the user explicitly expands scope and explains the intended branch destination;
-- unresolved conflicts or an in-progress history operation make the intended commit ambiguous;
-- repository identity or requested change scope is ambiguous.
+- Inspect staged and unstaged diffs before changing the Index.
+- Use the user request, current task, tests, and documentation to group one cohesive commit.
+- Preserve unrelated user work unstaged.
+- Never use blind `git add -A` when unrelated, generated, suspicious, or unknown files are present.
+- Do not stash, reset, clean, revert, or discard unrelated work.
 
-### 2. Determine the intended save scope
+### 3. Run pre-commit verification
 
-- Inspect staged and unstaged diffs before changing the index.
-- Use the user request, current task, changed behavior, tests, and documentation to group one cohesive commit.
-- Preserve unrelated user changes unstaged.
-- Never use blind `git add -A` when the worktree contains unrelated, generated, suspicious, or unknown files.
-- Do not stash, reset, clean, revert, or discard unrelated changes.
-
-### 3. Secret and artifact guard
-
-Run:
-
-```text
-python <skill-dir>/scripts/scan_secrets.py --root <repo> --git-changes
-```
-
-Review likely credentials, private keys, `.env` files, signing material, database dumps, personal data, large binaries, build outputs, caches, downloaded SDK/source trees, and dependency directories.
-
-Stop before staging or committing when a high-confidence secret/private key is present. Follow the fixture-marker restrictions in `commands/git-sync.md` and `references/safety-and-authorization.md`.
-
-### 4. Pre-commit verification
-
-Unless `--no-test` is explicitly supplied:
+Unless `--no-test` is explicit:
 
 - use `.siyrs/config.yaml` preflight commands when defined;
-- otherwise run a quick project-appropriate format/lint/compile check plus affected unit or smoke tests;
-- record exact commands and outcomes;
-- fix legitimate failures in scope, add regression coverage where appropriate, and rerun.
+- otherwise run project-appropriate quick format/lint/compile plus affected unit/smoke checks;
+- apply `references/testing-common.md` truth and failure-classification rules;
+- fix legitimate in-scope failures and rerun.
 
-`--no-test` permits an unverified local save only. Report it prominently and do not describe the commit as tested.
+`--no-test` permits an unverified local save only. Report it prominently and never describe the commit as tested.
 
-### 5. Stage intentional changes
+### 4. Stage intentional paths
 
-- Stage explicit paths belonging to the cohesive change.
-- Re-read `git diff --cached` after staging.
-- Confirm that tests and documentation associated with the change are included when appropriate.
-- Confirm that unrelated files remain unstaged.
+Use explicit Git pathspecs. Re-read `git diff --cached` and confirm that corresponding tests/docs are included when they belong to the same change. If nothing intentional remains, return `no-op`; do not create an empty commit.
 
-If no intentional changes remain, do not create an empty commit; report “nothing to commit”.
+### 5. Scan the exact Git Index
+
+Follow the commit-stage procedure in `references/git-content-scan.md`.
+
+The authoritative scan target is the Index and candidate tree, not the worktree and not `scan_secrets.py --git-changes`.
+
+Create stable `RISK-*` findings for credentials, private data, signing material, suspicious filenames, generated artifacts, large blobs, and other review signals.
+
+- Without authorization, pause on findings whose default action is stop.
+- When the user explicitly authorizes a finding or supplies `--allow-risk`, apply `references/risk-authorization.md`, record the authorization, and continue.
+- Authorization skips the stop decision, not the scan.
 
 ### 6. Create the local commit
 
-- Prefer the user-supplied message when it accurately describes the staged diff and follows repository policy.
-- Otherwise generate a concise message using an appropriate type such as `feat`, `fix`, `test`, `refactor`, `docs`, `build`, `ci`, or `chore`.
-- Create one normal commit. Do not use `--amend`, `--fixup`, `--squash`, `--no-verify`, or signing overrides unless separately and explicitly authorized.
-- Allow normal repository hooks to run. If a hook fails or modifies files, inspect the resulting state, fix in-scope issues, and rerun the normal commit rather than bypassing the hook.
+- Prefer an accurate user-supplied message; otherwise generate a concise message using `feat`, `fix`, `test`, `refactor`, `docs`, `build`, `ci`, or `chore`.
+- Create one normal commit.
+- Do not use `--amend`, `--fixup`, `--squash`, `--no-verify`, signing overrides, or history rewriting unless separately authorized.
+- Allow normal repository hooks. If a hook fails or modifies files, inspect, fix in-scope issues, restage, rescan the changed Index, and rerun the normal commit.
 
-### 7. Verify local result
+### 7. Verify and return
 
-Collect:
+Collect commit hash/subject/files, branch, remaining staged/unstaged/untracked/conflicted state, checks, Index scan findings, risk authorizations, and confirmation that no remote command ran.
 
-- new commit hash and subject;
-- committed file summary;
-- current branch;
-- remaining staged, unstaged, untracked, and conflicted files;
-- preflight evidence;
-- confirmation that no remote operation was performed.
+Standalone return status:
 
-Do not run network Git commands merely to prove that remote state is unchanged.
+- `committed` when one cohesive commit exists and is verified;
+- `no-op` when no intentional change required a commit;
+- `blocked` or `failed` with precise evidence otherwise.
 
-### 8. Report
+When embedded by `/siyk-git-sync`, return the same result and shared risk ledger to the parent. The child itself still performs no remote operation.
 
-Use the local commit section in `references/output-contract.md`. Clearly state:
+## Completion and report
 
-- whether a commit was created;
-- commit hash/message and committed files;
-- tests/checks run or explicit `--no-test` status;
-- remaining worktree changes;
-- secret/artifact scan result;
+Use the Git local commit section in `references/output-contract.md`. State:
+
+- commit/no-op result;
+- exact preflight evidence or `--no-test`;
+- intentional staging scope and preserved unrelated work;
+- Git Index/tree scan scope;
+- finding IDs and authorization disposition;
+- commit hash/message/files;
+- remaining worktree state;
 - **remote result: not contacted and not modified**;
 - remaining risks.
-
-## Completion conditions
-
-The command is complete only when either:
-
-1. one cohesive local commit has been created and verified; or
-2. the repository had nothing intentional to commit and that state was verified.
-
-A failed hook, conflict, detached HEAD, secret finding, or ambiguous scope makes the command partially complete or failed; never claim the code was saved when no commit exists.

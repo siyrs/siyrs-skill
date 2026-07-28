@@ -1,84 +1,64 @@
 # Command: `/siyk-test-new`
 
-Purpose: identify behavior added or changed since a trustworthy baseline, add corresponding tests plus targeted regression coverage, run them, and update durable test records.
+Purpose: identify behavior added or changed since a trustworthy baseline, add direct and regression coverage, execute it, and incrementally update durable test records.
 
 ## Inputs
 
 - Strength: `quick`, `standard`, or `strict`; default `standard`.
-- Optional user statement describing the new feature/fix.
-- Repository-local `.siyrs/config.yaml` and `.siyrs/state.json`.
+- Optional user statement describing the feature/fix.
+- `.siyrs/config.yaml` and `.siyrs/state.json` when present.
+
+## Required references
+
+Load `references/testing-common.md`, `references/project-detection.md`, the detected project-type testing references, and `references/output-contract.md`.
 
 ## Baseline priority
 
-Use the first trustworthy baseline available, but cross-check all sources:
+Cross-check all evidence and use the first trustworthy baseline:
 
-1. explicit baseline supplied by the user;
-2. `last_incremental_test_commit` or `last_full_test_commit` from `.siyrs/state.json` when it exists in the current history;
-3. merge-base of `HEAD` and the configured/default remote branch;
+1. explicit user baseline;
+2. valid incremental/full baseline from `.siyrs/state.json`;
+3. merge-base with configured/fetched default remote branch;
 4. upstream tracking branch;
 5. recent commits plus staged/unstaged/untracked changes;
-6. user-stated feature scope when Git history is unavailable.
+6. user-stated scope when Git history is unavailable.
 
-Run `python <skill-dir>/scripts/collect_git_changes.py --root <repo>` to gather deterministic Git evidence, then inspect the affected call paths. Use `python <skill-dir>/scripts/fingerprint.py --root <repo>` to identify an uncommitted tested state.
+Use `<skill-dir>/scripts/collect_git_changes.py` for deterministic Git evidence and `<skill-dir>/scripts/fingerprint.py` for an uncommitted tested state.
 
 ## Procedure
 
-### 1. Identify changed behavior
+### 1. Identify changed behavior and blast radius
 
-Do not equate changed files with changed behavior. Determine:
+Do not equate changed files with changed behavior. Identify new/changed/removed APIs, commands, pages/screens, state transitions, jobs, schemas, permissions, integrations, migrations, configuration, callers, consumers, and regressions.
 
-- new/changed APIs, commands, pages, screens, state transitions, jobs, schemas, permissions, integrations, and configuration;
-- behavior removed or made incompatible;
-- transitive callers and consumers;
-- related old behavior at regression risk.
+Expand scope beyond changed files for shared authentication/authorization, schemas, migrations, public APIs, common components, shared libraries, and build/runtime configuration.
 
-For database changes, inspect both migration and application compatibility. For UI changes, trace data loading, empty/error/loading states, user actions, and backend contracts.
+### 2. Build an incremental test plan
 
-### 2. Create an incremental test plan
+For every changed behavior record intended result, closest stable automated layer, integration boundary, affected regression path, negative/boundary case, and required UI/E2E/UAT evidence.
 
-For each changed behavior, specify:
+### 3. Implement focused tests
 
-- intended behavior;
-- direct test layer;
-- integration/contract boundary;
-- affected regression path;
-- negative/boundary cases;
-- required UAT or UI/E2E evidence.
-
-### 3. Add tests
-
-Minimum expectations by project type:
-
-- web/full-stack: changed backend/frontend unit tests, API/integration tests, affected E2E journey, and UAT update;
-- Android: JVM unit/ViewModel/repository tests, mock/fake boundary tests, affected instrumentation/UI test, lifecycle/permission regression where relevant;
-- Python/CLI/Skill: unit tests, CLI/contract/path tests, and smoke tests for changed routing or scripts.
+Apply `references/testing-common.md` and the detected project strategy. Update existing tests when the behavior intentionally changed; add new tests when a distinct behavior or regression contract is needed. Avoid duplicating broad full-suite coverage without a changed-behavior reason.
 
 ### 4. Run targeted then broader regression
 
-- Run the narrowest affected tests first for fast diagnosis.
-- After fixes, run the complete related module/suite.
-- In `strict`, run the repository-wide suites required by the configured policy.
-- Record skipped or environment-blocked suites explicitly.
+Run the narrowest diagnostic tests first, repair failures, then run the complete affected module/suite. In `strict`, run repository-wide suites required by policy. Explicitly record pre-existing, skipped, flaky, and environment-blocked results.
 
 ### 5. Update durable records
 
-Incrementally update:
+Incrementally update existing inventory/matrix rows, UAT for user-visible behavior, and `docs/testing/TEST-RESULTS.md`. Do not erase unrelated historical coverage.
 
-- existing test matrix/inventory rows;
-- UAT scenarios for new user-visible behavior;
-- `docs/testing/TEST-RESULTS.md` with the current run;
-- `.siyrs/state.json` only after successful/partially-successful evidence is recorded. Use `python <skill-dir>/scripts/state.py --root <repo> update --kind incremental --mode <mode> --commit <sha>` or `--fingerprint <sha256>` after writing the results file.
-
-Do not erase historical or unrelated test coverage from documentation.
+Update `.siyrs/state.json` only after evidence is saved. A partial baseline must list blocked/failed suites so it cannot be interpreted as fully green.
 
 ### 6. Completion decision
 
-A changed behavior is not “沉淀完成” until it has:
+Changed behavior is not “沉淀完成” until it has:
 
-- an appropriate automated test at the closest stable layer;
+- appropriate automated coverage at the closest stable layer;
 - integration/UI/E2E coverage where the boundary warrants it;
-- a negative or boundary case when meaningful;
+- meaningful negative/boundary coverage;
 - actual execution evidence;
-- documentation/state updates.
+- documentation and baseline updates.
 
-Use `references/output-contract.md` for the final report.
+Use `references/output-contract.md`.

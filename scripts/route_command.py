@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Normalize siyrs-skill slash commands and Chinese aliases.
-
-This parser is intentionally conservative. It only routes commands at the start of
-an input string and returns evidence for the agent; it does not execute workflows.
-"""
+"""Normalize siyrs-skill slash commands and Chinese aliases."""
 from __future__ import annotations
 
 import argparse
@@ -11,16 +7,12 @@ import json
 import shlex
 from dataclasses import asdict, dataclass, field
 
-TEST_COMMANDS = {
-    "/siyk-test-full": "strict",
-    "/siyk-test-new": "standard",
-}
+TEST_COMMANDS = {"/siyk-test-full": "strict", "/siyk-test-new": "standard"}
 VALID_STRENGTHS = {"quick", "standard", "strict"}
 FULL_ALIASES = ("全量沉淀测试", "完整沉淀测试", "全量沉淀")
 NEW_ALIASES = ("沉淀测试", "沉淀")
 COMMIT_ALIASES = ("保存本地代码", "本地保存代码", "本地保存", "本地提交")
 SYNC_ALIASES = ("保存并同步远程仓库", "同步代码")
-
 
 @dataclass
 class RouteResult:
@@ -49,37 +41,30 @@ def _matches_alias(text: str, aliases: tuple[str, ...]) -> str | None:
     return None
 
 
+def _is_allow_risk(token: str) -> bool:
+    return token == "--allow-risk" or token.startswith("--allow-risk=")
+
+
 def route(text: str) -> dict:
     raw = text.strip()
     if not raw:
         return asdict(RouteResult(matched=False))
-
     tokens = _split(raw)
     first = tokens[0] if tokens else ""
 
     if first in TEST_COMMANDS:
-        default_strength = TEST_COMMANDS[first]
-        strength = default_strength
         rest = tokens[1:]
+        strength = TEST_COMMANDS[first]
         if rest and rest[0] in VALID_STRENGTHS:
             strength = rest.pop(0)
         extra = " ".join(rest)
         normalized = f"{first} {strength}" + (f" {extra}" if extra else "")
-        return asdict(RouteResult(
-            matched=True,
-            command=first,
-            strength=strength,
-            extra=extra,
-            normalized=normalized,
-            source="literal",
-        ))
+        return asdict(RouteResult(True, command=first, strength=strength, extra=extra, normalized=normalized, source="literal"))
 
     if first == "/siyk-git-commit":
-        flags: list[str] = []
-        extra_tokens: list[str] = []
-        warnings: list[str] = []
+        flags, extra_tokens, warnings = [], [], []
         for token in tokens[1:]:
-            if token == "--no-test":
+            if token == "--no-test" or _is_allow_risk(token):
                 if token not in flags:
                     flags.append(token)
             elif token.startswith("--"):
@@ -87,26 +72,14 @@ def route(text: str) -> dict:
                 extra_tokens.append(token)
             else:
                 extra_tokens.append(token)
-        parts = [first]
-        parts.extend(flags)
-        parts.extend(extra_tokens)
-        return asdict(RouteResult(
-            matched=True,
-            command=first,
-            flags=flags,
-            extra=" ".join(extra_tokens),
-            normalized=" ".join(parts),
-            source="literal",
-            warnings=warnings,
-        ))
+        parts = [first, *flags, *extra_tokens]
+        return asdict(RouteResult(True, command=first, flags=flags, extra=" ".join(extra_tokens), normalized=" ".join(parts), source="literal", warnings=warnings))
 
     if first == "/siyk-git-sync":
         branch = None
-        flags: list[str] = []
-        extra_tokens: list[str] = []
-        warnings: list[str] = []
+        flags, extra_tokens, warnings = [], [], []
         for token in tokens[1:]:
-            if token in {"--pr", "--no-test"}:
+            if token in {"--pr", "--no-test"} or _is_allow_risk(token):
                 if token not in flags:
                     flags.append(token)
             elif token.startswith("--"):
@@ -121,79 +94,38 @@ def route(text: str) -> dict:
             parts.append(branch)
         parts.extend(flags)
         parts.extend(extra_tokens)
-        return asdict(RouteResult(
-            matched=True,
-            command=first,
-            branch=branch,
-            flags=flags,
-            extra=" ".join(extra_tokens),
-            normalized=" ".join(parts),
-            source="literal",
-            warnings=warnings,
-        ))
+        return asdict(RouteResult(True, command=first, branch=branch, flags=flags, extra=" ".join(extra_tokens), normalized=" ".join(parts), source="literal", warnings=warnings))
 
-    alias = _matches_alias(raw, FULL_ALIASES)
-    if alias:
-        extra = raw[len(alias):].strip()
-        normalized = "/siyk-test-full strict" + (f" {extra}" if extra else "")
-        return asdict(RouteResult(
-            matched=True,
-            command="/siyk-test-full",
-            strength="strict",
-            extra=extra,
-            normalized=normalized,
-            source=f"alias:{alias}",
-        ))
+    for aliases, command, strength in (
+        (FULL_ALIASES, "/siyk-test-full", "strict"),
+        (NEW_ALIASES, "/siyk-test-new", "standard"),
+    ):
+        alias = _matches_alias(raw, aliases)
+        if alias:
+            extra = raw[len(alias):].strip()
+            normalized = f"{command} {strength}" + (f" {extra}" if extra else "")
+            return asdict(RouteResult(True, command=command, strength=strength, extra=extra, normalized=normalized, source=f"alias:{alias}"))
 
-    alias = _matches_alias(raw, NEW_ALIASES)
-    if alias:
-        extra = raw[len(alias):].strip()
-        normalized = "/siyk-test-new standard" + (f" {extra}" if extra else "")
-        return asdict(RouteResult(
-            matched=True,
-            command="/siyk-test-new",
-            strength="standard",
-            extra=extra,
-            normalized=normalized,
-            source=f"alias:{alias}",
-        ))
-
-    alias = _matches_alias(raw, COMMIT_ALIASES)
-    if alias:
-        extra = raw[len(alias):].strip()
-        normalized = "/siyk-git-commit" + (f" {extra}" if extra else "")
-        return asdict(RouteResult(
-            matched=True,
-            command="/siyk-git-commit",
-            extra=extra,
-            normalized=normalized,
-            source=f"alias:{alias}",
-        ))
-
-    alias = _matches_alias(raw, SYNC_ALIASES)
-    if alias:
-        extra = raw[len(alias):].strip()
-        normalized = "/siyk-git-sync" + (f" {extra}" if extra else "")
-        return asdict(RouteResult(
-            matched=True,
-            command="/siyk-git-sync",
-            extra=extra,
-            normalized=normalized,
-            source=f"alias:{alias}",
-        ))
+    for aliases, command in ((COMMIT_ALIASES, "/siyk-git-commit"), (SYNC_ALIASES, "/siyk-git-sync")):
+        alias = _matches_alias(raw, aliases)
+        if alias:
+            extra = raw[len(alias):].strip()
+            normalized = command + (f" {extra}" if extra else "")
+            routed = route(normalized)
+            routed["source"] = f"alias:{alias}"
+            return routed
 
     return asdict(RouteResult(matched=False))
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Normalize a siyrs-skill command")
-    parser.add_argument("text", help="Literal slash command or supported Chinese alias")
+    parser.add_argument("text")
     parser.add_argument("--pretty", action="store_true")
     args = parser.parse_args()
     result = route(args.text)
     print(json.dumps(result, ensure_ascii=False, indent=2 if args.pretty else None))
     return 0 if result["matched"] else 1
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

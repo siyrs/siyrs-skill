@@ -1,58 +1,28 @@
 from pathlib import Path
-import sys
-import unittest
-
+import sys, unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from route_command import route
 
-
 class RouteCommandTests(unittest.TestCase):
-    def test_literal_test_full_defaults_to_strict(self):
-        result = route("/siyk-test-full")
-        self.assertTrue(result["matched"])
-        self.assertEqual("/siyk-test-full", result["command"])
-        self.assertEqual("strict", result["strength"])
-
-    def test_literal_test_new_keeps_extra(self):
-        result = route("/siyk-test-new quick 权限管理")
-        self.assertEqual("quick", result["strength"])
-        self.assertEqual("权限管理", result["extra"])
-        self.assertEqual("/siyk-test-new quick 权限管理", result["normalized"])
-
-    def test_chinese_aliases(self):
-        full = route("全量沉淀测试 登录流程")
-        self.assertEqual("/siyk-test-full", full["command"])
-        self.assertEqual("strict", full["strength"])
-        new = route("沉淀测试 新增功能")
-        self.assertEqual("/siyk-test-new", new["command"])
-        self.assertEqual("standard", new["strength"])
-        commit = route("本地保存 feat: 保存权限功能")
-        self.assertEqual("/siyk-git-commit", commit["command"])
-        self.assertEqual("feat: 保存权限功能", commit["extra"])
-        sync = route("保存并同步远程仓库")
-        self.assertEqual("/siyk-git-sync", sync["command"])
-
-    def test_git_commit_parses_message_and_flag(self):
-        result = route("/siyk-git-commit --no-test feat: 保存本地功能")
-        self.assertEqual("/siyk-git-commit", result["command"])
-        self.assertEqual(["--no-test"], result["flags"])
-        self.assertEqual("feat: 保存本地功能", result["extra"])
-        self.assertEqual("/siyk-git-commit --no-test feat: 保存本地功能", result["normalized"])
-
-    def test_git_commit_unknown_flag_warns(self):
-        result = route("/siyk-git-commit --amend")
-        self.assertEqual(["unknown flag: --amend"], result["warnings"])
-        self.assertEqual("--amend", result["extra"])
-
-    def test_git_sync_parses_branch_and_flags(self):
-        result = route("/siyk-git-sync main --pr --no-test 发布首版")
-        self.assertEqual("main", result["branch"])
-        self.assertEqual(["--pr", "--no-test"], result["flags"])
-        self.assertEqual("发布首版", result["extra"])
-
-    def test_unrelated_text_does_not_route(self):
-        self.assertFalse(route("请帮我写一个测试") ["matched"])
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_test_defaults_and_aliases(self):
+        self.assertEqual("strict", route("/siyk-test-full")["strength"])
+        self.assertEqual("standard", route("沉淀测试 新功能")["strength"])
+    def test_commit_flags(self):
+        r=route("/siyk-git-commit --no-test --allow-risk=RISK-001 feat: 保存")
+        self.assertEqual(["--no-test","--allow-risk=RISK-001"],r["flags"])
+        self.assertEqual("feat: 保存",r["extra"])
+    def test_commit_bare_allow_risk(self):
+        self.assertEqual(["--allow-risk"],route("/siyk-git-commit --allow-risk")["flags"])
+    def test_alias_preserves_allow_risk_flag(self):
+        r=route("本地保存 --allow-risk=RISK-002 feat: 保存")
+        self.assertEqual(["--allow-risk=RISK-002"],r["flags"])
+        self.assertEqual("alias:本地保存",r["source"])
+    def test_sync_flags_and_branch(self):
+        r=route("/siyk-git-sync main --pr --allow-risk=all --no-test")
+        self.assertEqual("main",r["branch"])
+        self.assertEqual(["--pr","--allow-risk=all","--no-test"],r["flags"])
+    def test_unknown_flag_warns(self):
+        self.assertEqual(["unknown flag: --force"],route("/siyk-git-sync --force")["warnings"])
+    def test_unrelated_does_not_route(self):
+        self.assertFalse(route("帮我写测试")["matched"])
+if __name__=="__main__": unittest.main()

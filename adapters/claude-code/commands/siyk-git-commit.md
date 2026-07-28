@@ -1,7 +1,7 @@
 ---
-description: 安全检查并把当前改动保存为本地 Git 提交，不访问或修改远程仓库。
-argument-hint: [--no-test] [提交说明或补充要求]
+description: 把目标改动安全保存为本地 Git 提交；扫描 Index，支持显式风险放行，不访问远程仓库。
+argument-hint: [--no-test] [--allow-risk[=<finding-id|all>]] [提交说明]
 disable-model-invocation: true
 ---
 
-Use the installed `siyrs-skill` skill. Execute the literal workflow `/siyk-git-commit $ARGUMENTS` against the current repository. Apply the Skill's local-only authorization, secret scan, preflight, intentional staging, normal commit, verification, and evidence-reporting rules. Do not fetch, pull, rebase, merge, push, create a PR, or otherwise mutate a remote repository.
+Use the installed `siyrs-skill` skill. Execute `/siyk-git-commit $ARGUMENTS` against the current repository. Follow the local-only workflow, intentional staging, Git Index/tree scan, explicit risk authorization, preflight, normal commit, and evidence rules. Do not perform any remote Git operation.

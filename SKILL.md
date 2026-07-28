@@ -1,161 +1,110 @@
 ---
 name: siyrs-skill
-description: Project-level engineering quality workflows. Use when the user invokes /siyk-test-full, /siyk-test-new, /siyk-git-commit, /siyk-git-sync, asks to “沉淀测试” or “本地保存代码”, or wants repeatable project detection, test generation, verification, documentation, local Git commits, and safe remote synchronization.
+description: Project-level engineering quality workflows. Use when the user invokes /siyk-test-full, /siyk-test-new, /siyk-git-commit, /siyk-git-sync, asks to “沉淀测试”, “本地保存代码”, or wants project-aware testing, durable evidence, local Git commits, conflict-aware remote synchronization, and explicit risk-authorization handling.
 ---
 
 # siyrs-skill
 
-Version: **0.1.2**  
+Version: **0.1.3**  
 Command prefix: **`siyk`**
 
-Use this skill as a project-level engineering quality controller. It detects the repository type first, then selects the appropriate testing and Git workflow. It must produce real repository changes, execute real verification commands when the environment permits, and report evidence rather than claiming success from file generation alone.
+Use this Skill as a project-level engineering quality controller. Detect repository type before selecting test strategy. Produce real repository changes, execute real verification when possible, and report evidence rather than claiming completion from file generation alone.
 
 ## Command routing
 
-Recognize the following literal commands at the start of a user request. When command wording is ambiguous, run `python <skill-dir>/scripts/route_command.py "<request>" --pretty` and use the normalized result as routing evidence:
+Recognize:
 
 - `/siyk-test-full [quick|standard|strict] [extra instructions]`
 - `/siyk-test-new [quick|standard|strict] [extra instructions]`
-- `/siyk-git-commit [--no-test] [commit message or extra instructions]`
-- `/siyk-git-sync [branch] [--pr] [--no-test] [extra instructions]`
+- `/siyk-git-commit [--no-test] [--allow-risk[=<finding-id|all>]] [commit message or extra instructions]`
+- `/siyk-git-sync [branch] [--pr] [--no-test] [--allow-risk[=<finding-id|all>]] [extra instructions]`
 
-Also route these aliases:
+Aliases:
 
-- `沉淀` or `沉淀测试` with no narrower qualifier → `/siyk-test-new standard`
+- `沉淀`、`沉淀测试` → `/siyk-test-new standard`
 - `全量沉淀`、`全量沉淀测试`、`完整沉淀测试` → `/siyk-test-full strict`
 - `本地保存`、`本地保存代码`、`保存本地代码`、`本地提交` → `/siyk-git-commit`
 - `同步代码`、`保存并同步远程仓库` → `/siyk-git-sync`
 
-If the user explicitly names a command, that command is the authorization to perform its normal, bounded side effects. Do not repeatedly ask for confirmation for ordinary test-file edits, local commits, fetch/rebase, or pushing the current branch. Still stop for destructive or scope-expanding operations listed in `references/safety-and-authorization.md`.
+Use `<skill-dir>/scripts/route_command.py` when normalization evidence is useful. The router does not execute workflows.
 
-## Mandatory first step: inspect and classify
+A literal command authorizes its normal bounded side effects. Content/privacy findings may be explicitly authorized under `references/risk-authorization.md`; destructive or scope-expanding operations still require separate authorization.
 
-Before choosing test frameworks or commands:
+## Mandatory project classification
 
-Resolve `<skill-dir>` as the directory containing this loaded `SKILL.md`. Bundled helpers must be invoked from `<skill-dir>/scripts/`; never assume they exist in the target repository.
+Resolve `<skill-dir>` as this file's directory. Before test framework selection:
 
-1. Locate the repository root.
-2. Read the root instructions and project documentation when present.
-3. Inspect manifests, source roots, test roots, CI, build files, migrations, API definitions, routes, and deployment files.
-4. Run `python <skill-dir>/scripts/detect_project.py --root <repo>` when available, then verify its result by reading the relevant files.
-5. Classify one or more project types:
-   - web frontend
-   - web backend
-   - full-stack web
-   - Android
-   - Python application or CLI
-   - script/skill repository
-   - multi-module/monorepo
-   - unknown/custom
-6. For monorepos, classify each meaningful module independently and build one combined execution plan.
+1. locate repository root;
+2. read repository instructions/docs;
+3. inspect manifests, source/test roots, CI, migrations, APIs/routes/screens/commands, and deployment files;
+4. run `<skill-dir>/scripts/detect_project.py --root <repo>` when available and verify its evidence;
+5. classify frontend, backend, full-stack, Android, Python/CLI, script/Skill, monorepo, or custom modules independently.
 
-Do not choose Java, Node.js, Android, or Python commands merely from the README. Prefer build manifests and actual source layout.
+Prefer actual manifests/source layout over README claims.
 
 ## Execution strengths
 
 - `quick`: static checks, affected unit tests, smoke checks.
-- `standard`: all relevant unit tests, integration/API tests, affected E2E/UI tests, basic UAT evidence.
-- `strict`: full unit/integration/API suite, full E2E/UI suite where runnable, UAT scenarios, coverage, build artifact verification, compatibility checks defined by the repository.
+- `standard`: relevant unit/integration/API plus affected E2E/UI and basic UAT evidence.
+- `strict`: full required suites, UAT, coverage, artifact/runtime and compatibility verification where runnable.
 
-Defaults:
-
-- `/siyk-test-full` → `strict`
-- `/siyk-test-new` → `standard`
-- `/siyk-git-commit` → repository-configured preflight; otherwise `quick`
-- `/siyk-git-sync` → repository-configured preflight; otherwise `quick`
+Defaults: full=`strict`, new=`standard`, commit/sync preflight=repository policy or `quick`.
 
 ## Global quality rules
 
-1. Never report a test as passed unless it was actually executed and returned success.
-2. Do not delete, weaken, permanently skip, or replace meaningful assertions merely to make a suite green.
-3. Distinguish implementation defects, test defects, environment blockers, and missing external dependencies.
-4. Prefer stable CI-suitable tests before fragile tests that depend on real external services.
-5. Mock external boundaries, not the business logic under test.
-6. Preserve existing project conventions unless they are clearly broken and the change is documented.
-7. Add regression tests for defects fixed during the workflow.
-8. Keep generated documentation synchronized with actual commands and evidence.
-9. Do not claim coverage percentages without collecting a coverage report.
-10. Do not silently overwrite user changes or rewrite Git history.
+1. Never report a test as passed unless executed successfully.
+2. Generated-but-not-run and skipped are not passed.
+3. Do not weaken assertions or add unconditional skips to make suites green.
+4. Classify implementation, test, expectation, flaky, environment, and dependency failures.
+5. Preserve unrelated user changes.
+6. Add regression tests for defects fixed.
+7. Keep docs/state aligned with actual evidence.
+8. Do not claim coverage without a report.
+9. Do not silently rewrite Git history.
+10. Prefer Markdown policy/reference sedimentation; use scripts for deterministic fact collection, parsing, validation, and state only.
 
 ## `/siyk-test-full`
 
-Load `commands/test-full.md` and execute it completely. The workflow must:
-
-- inventory the whole project and its user-visible/business functions;
-- map every meaningful function to existing and missing tests;
-- generate or improve tests appropriate to each detected project type;
-- execute the tests, diagnose failures, fix legitimate defects, and rerun;
-- update testing documentation and a durable baseline;
-- record remaining risks and environment-limited items honestly.
+Load `commands/test-full.md`. It inventories the entire repository, maps behavior to test layers, closes meaningful gaps, executes/repairs suites, and persists evidence and a full baseline.
 
 ## `/siyk-test-new`
 
-Load `commands/test-new.md` and execute it completely. The workflow must:
+Load `commands/test-new.md`. It establishes a trustworthy baseline, identifies changed behavior and blast radius, adds direct/regression coverage, executes it, and updates incremental evidence.
 
-- establish the comparison baseline using `.siyrs/state.json`, Git merge-base, commits, staged/unstaged changes, and the user’s stated feature scope;
-- identify new or changed behavior, not merely changed files;
-- generate tests for the changed behavior and related regression paths;
-- execute and repair the affected test set;
-- incrementally update the test matrix and baseline.
+Both testing commands must load `references/testing-common.md` plus detected project strategy references.
 
 ## `/siyk-git-commit`
 
-Load `commands/git-commit.md` and execute it completely. The workflow must:
+Load `commands/git-commit.md`. It creates one cohesive local commit or verified no-op. It stages intentional paths, runs preflight, scans the exact Git Index/tree using Git-native commands, applies explicit risk authorizations, commits, and reports remaining worktree state.
 
-- inspect repository, branch, operation state, changed files, and local policy;
-- scan intended changes for likely secrets and inappropriate generated artifacts;
-- run configured or quick project-appropriate preflight checks unless `--no-test` is explicit;
-- stage only intentional changes and preserve unrelated user work;
-- create one cohesive normal local commit when changes exist;
-- report the exact commit and remaining worktree state.
-
-This command is local-only. It must not fetch, pull, rebase, merge, push, create a PR, create a tag/release, or otherwise mutate a remote repository.
+It is local-only and must not contact or mutate a remote.
 
 ## `/siyk-git-sync`
 
-Load `commands/git-sync.md` and execute it completely. The default is a safe synchronization of the current branch:
+Load `commands/git-sync.md`. It must reuse `commands/git-commit.md` as an internal subworkflow, then fetch, integrate/resolve clear conflicts, reverify, scan the exact outgoing commit range/final tree, and normally push the current branch.
 
-- inspect repository state;
-- scan for likely secrets and inappropriate generated files;
-- run configured preflight checks;
-- stage intentional changes only;
-- create a clear commit when needed;
-- fetch and integrate remote changes without force-pushing;
-- rerun critical checks after integration;
-- push the current branch and report the exact result.
-
-Do not merge into the default branch, force-push, delete branches/tags, or create a release unless the user explicitly requested that expanded operation.
+Do not duplicate the local commit logic. Share the risk authorization ledger so unchanged authorized findings are not confirmed twice.
 
 ## Supporting references
 
-Read only the references needed for the detected project and command:
+Load only relevant files:
 
+- `references/testing-common.md`
 - `references/project-detection.md`
 - `references/testing-web.md`
 - `references/testing-android.md`
 - `references/testing-python-skill.md`
 - `references/git-policy.md`
-- `references/output-contract.md`
+- `references/git-content-scan.md`
+- `references/risk-authorization.md`
+- `references/subworkflow-composition.md`
 - `references/safety-and-authorization.md`
+- `references/output-contract.md`
 
-Project configuration and state contracts are documented by `schemas/config.schema.json` and `schemas/state.schema.json`.
-
-Client-native autocomplete adapters are under `adapters/`; they are optional and must not replace the portable command routing in this manifest.
-
-Use templates under `assets/templates/` when the project lacks equivalent documentation. Do not replace richer existing documents with a smaller template.
+Use templates only when the project lacks equivalent docs. Never replace richer docs with smaller generated templates.
 
 ## Completion contract
 
-A command is complete only when the final response includes:
+Every result includes detected scope, files changed, commands actually executed, pass/fail/blocked evidence, defects/regressions, docs/state, remaining risks, and exact Git result when applicable.
 
-- detected project type and scope;
-- files changed;
-- commands actually executed;
-- pass/fail/blocked counts or equivalent evidence;
-- defects fixed and regression tests added;
-- documentation and state updates;
-- remaining risks;
-- Git commit/branch result for local commit operations;
-- Git commit/branch/remote result for sync operations.
-
-When execution is blocked, finish all work that does not depend on the blocker, preserve reproducible commands, and clearly label the command **partially complete** rather than pretending success.
+When blocked, finish independent work and mark `partially complete` or `failed`; do not pretend completion.
