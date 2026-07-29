@@ -1,45 +1,31 @@
+---
+command: "/siyk-test-run-t1"
+order: 20
+kind: "test-run"
+tier: "T1"
+strengths: []
+default_strength: null
+aliases_prefix: ["跑t1", "变更回测", "跑改动相关的测试", "change regression"]
+aliases_exact: ["regression"]
+legacy_commands: []
+client_entrypoint: true
+---
 # Command: `/siyk-test-run-t1`
 
-Purpose: **execute** change-regression coverage (T1) for behavior touched by the current change, with blast-radius expansion across shared code. T1 is diff-driven and dynamic — it is generated from what has actually been produced, not a fixed case set. This command runs tests; to author new cases use `/siyk-test-add`.
-
-## Inputs
-
-- The change produced so far: committed + staged diff **and uncommitted working-tree changes** (target of truth = what has actually been produced).
-- Optional user statement of the feature/fix.
-- `.siyrs/config.yaml` and `.siyrs/state.json` when present.
+Purpose: execute dynamic change-regression coverage for the current produced change, including shared-code blast-radius expansion.
 
 ## Required references
 
-Load `references/testing-tiers.md`, `references/testing-common.md`, `references/project-detection.md`, the detected project-type testing references, and `references/output-contract.md`.
+Load `references/testing-tiers.md`, `references/testing-selectors.md`, `references/testing-common.md`, `references/project-detection.md`, the detected project strategy, and `references/output-contract.md`.
 
 ## Procedure
 
-### 1. Collect the diff
+1. Collect committed, staged, unstaged, and untracked evidence with `<skill-dir>/scripts/collect_git_changes.py --purpose t1 --root <repo>`. Prefer the last trustworthy T1 commit from state, then T3, then upstream merge-base.
+2. Map changes to behavior: APIs, commands, pages, schemas, permissions, migrations, state machines, jobs, callers, and consumers.
+3. Expand the set across shared kernels, access policy, domain predicates, migrations, shared UI/constants, serialization, and build configuration.
+4. Resolve executable commands/case IDs using project configuration and native test selectors.
+5. Display the resolved set and continue automatically when mapping is unambiguous and normal-cost. Ask only when multiple materially different scopes exist, real UAT or unusually expensive environments are introduced, or correctness cannot be inferred.
+6. Execute in increasing cost order, classify failures before edits, repair legitimate defects, add regression coverage, and rerun the complete affected set.
+7. Persist exact direct/expanded modules, case IDs, baseline, commit/fingerprint, status, blocked suites, and result path as `last_t1_run`.
 
-Use `<skill-dir>/scripts/collect_git_changes.py` for deterministic Git evidence of committed/staged changes, and inspect the working tree for uncommitted/untracked changes. Include both.
-
-### 2. Identify changed behavior (not files)
-
-Map the diff to behavior: new/changed/removed APIs, commands, pages/screens, state transitions, jobs, schemas, permissions, migrations, callers, consumers. Do not infer behavior from file/class names alone.
-
-### 3. Expand blast radius across shared code
-
-Apply the shared-code expansion map in `references/testing-tiers.md`. A single-file change may affect many modules (shared kernels, domain predicates, state machines, access policies, migrations, export helpers, role constants). The T1 set is the union of the directly-changed module's cases and every expanded module's representative cases.
-
-### 4. Map to cases and confirm
-
-Map affected behaviors to the project's case IDs (prefix or equivalent). List the resulting T1 set (direct + expanded) and confirm it with the user before executing, so an under- or over-expanded set can be corrected.
-
-### 5. Execute in increasing cost order
-
-Run backend/frontend unit first, then E2E(mock), then real UAT only when the changed boundary warrants it. Run the narrowest diagnostic first, repair failures, then the complete affected set. Record exact commands and outcomes.
-
-### 6. Classify failures
-
-Per `references/testing-common.md`, classify each failure (implementation/test/expectation/flaky/environment/dependency/pre-existing) before changing code. Add regression coverage for any real defect found.
-
-### 7. Report
-
-Report the T1 set run, pass/fail/blocked evidence, classification, defects/regressions added, and remaining risks. T1 is fast development feedback — it does not replace the T3 release gate.
-
-Use `references/output-contract.md`.
+T1 has no `quick|standard|strict` argument. Its scope is determined by the diff and blast radius. T1 is development feedback and does not replace T3 release gating.

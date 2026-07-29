@@ -1,29 +1,22 @@
 #!/usr/bin/env python3
-"""Normalize siyrs-skill slash commands and Chinese aliases."""
+"""Normalize siyrs-skill commands from Markdown command metadata."""
 from __future__ import annotations
 
 import argparse
 import json
 import shlex
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 
-TEST_COMMANDS = {
-    "/siyk-test-add": "standard",
-    "/siyk-test-run-t1": None,
-    "/siyk-test-run-t2": "quick",
-    "/siyk-test-run-t3": "strict",
-}
-VALID_STRENGTHS = {"quick", "standard", "strict"}
-ADD_ALIASES = ("沉淀测试", "沉淀")
-T1_ALIASES = ("跑t1", "变更回测", "跑改动相关的测试", "change regression", "regression")
-T2_ALIASES = ("跑t2", "冒烟", "smoke")
-T3_ALIASES = ("跑t3", "全量沉淀测试", "完整沉淀测试", "全量沉淀", "全量", "release gate", "full")
-COMMIT_ALIASES = ("保存本地代码", "本地保存代码", "本地保存", "本地提交")
-SYNC_ALIASES = ("保存并同步远程仓库", "同步代码")
+from command_registry import CommandSpec, load_registry
+
+GLOBAL_STRENGTHS = {"quick", "standard", "strict"}
+
 
 @dataclass
 class RouteResult:
     matched: bool
+    valid: bool = True
     command: str | None = None
     strength: str | None = None
     branch: str | None = None
@@ -41,98 +34,132 @@ def _split(text: str) -> list[str]:
         return text.split()
 
 
-def _matches_alias(text: str, aliases: tuple[str, ...]) -> str | None:
-    for alias in aliases:
-        if text == alias or text.startswith(alias + " "):
-            return alias
-    return None
+def _norm(text: str) -> str:
+    return " ".join(text.strip().casefold().split())
+
+
+def _registry(root: Path | None = None) -> list[CommandSpec]:
+    return load_registry(root or Path(__file__).resolve().parents[1])
+
+
+def _route_test(spec: CommandSpec, tokens: list[str], *, source: str, warnings: list[str] | None = None) -> dict:
+    rest = list(tokens)
+    warnings = list(warnings or [])
+    strength = spec.default_strength
+    valid = True
+    if rest and rest[0].casefold() in GLOBAL_STRENGTHS:
+        candidate = rest.pop(0).casefold()
+        if candidate in spec.strengths:
+            strength = candidate
+        else:
+            valid = False
+            warnings.append(f"strength {candidate!r} is not supported by {spec.command}")
+    extra = " ".join(rest)
+    parts = [spec.command]
+    if strength:
+        parts.append(strength)
+    if extra:
+        parts.append(extra)
+    return asdict(RouteResult(
+        matched=True,
+        valid=valid,
+        command=spec.command,
+        strength=strength,
+        extra=extra,
+        normalized=" ".join(parts),
+        source=source,
+        warnings=warnings,
+    ))
 
 
 def _is_allow_risk(token: str) -> bool:
     return token == "--allow-risk" or token.startswith("--allow-risk=")
 
 
-def route(text: str) -> dict:
+def _route_git(spec: CommandSpec, tokens: list[str], *, source: str, warnings: list[str] | None = None) -> dict:
+    warnings = list(warnings or [])
+    flags: list[str] = []
+    extra: list[str] = []
+    branch: str | None = None
+    valid = True
+    for token in tokens:
+        if token == "--no-test" or _is_allow_risk(token) or (spec.command == "/siyk-git-sync" and token == "--pr"):
+            if token not in flags:
+                flags.append(token)
+        elif token.startswith("--"):
+            warnings.append(f"unknown flag: {token}")
+            valid = False
+            extra.append(token)
+        elif spec.command == "/siyk-git-sync" and branch is None:
+            branch = token
+        else:
+            extra.append(token)
+    parts = [spec.command]
+    if branch:
+        parts.append(branch)
+    parts.extend(flags)
+    parts.extend(extra)
+    return asdict(RouteResult(
+        matched=True,
+        valid=valid,
+        command=spec.command,
+        branch=branch,
+        flags=flags,
+        extra=" ".join(extra),
+        normalized=" ".join(parts),
+        source=source,
+        warnings=warnings,
+    ))
+
+
+def _route_spec(spec: CommandSpec, tokens: list[str], source: str, warnings: list[str] | None = None) -> dict:
+    if spec.kind.startswith("test"):
+        return _route_test(spec, tokens, source=source, warnings=warnings)
+    return _route_git(spec, tokens, source=source, warnings=warnings)
+
+
+def route(text: str, root: Path | None = None) -> dict:
     raw = text.strip()
     if not raw:
         return asdict(RouteResult(matched=False))
+    specs = _registry(root)
+    by_command = {spec.command: spec for spec in specs}
+    legacy = {old: spec for spec in specs for old in spec.legacy_commands}
     tokens = _split(raw)
     first = tokens[0] if tokens else ""
 
-    if first in TEST_COMMANDS:
+    if first in by_command:
+        return _route_spec(by_command[first], tokens[1:], "literal")
+
+    if first in legacy:
+        spec = legacy[first]
         rest = tokens[1:]
-        strength = TEST_COMMANDS[first]
-        if rest and rest[0] in VALID_STRENGTHS:
-            strength = rest.pop(0)
-        extra = " ".join(rest)
-        parts = [first]
-        if strength:
-            parts.append(strength)
-        if extra:
-            parts.append(extra)
-        normalized = " ".join(parts)
-        return asdict(RouteResult(True, command=first, strength=strength, extra=extra, normalized=normalized, source="literal"))
+        warnings = [spec.deprecated_message or f"{first} is deprecated; use {spec.command}"]
+        if first == "/siyk-test-full" and rest and rest[0].casefold() in GLOBAL_STRENGTHS:
+            old_strength = rest.pop(0).casefold()
+            warnings.append(f"legacy strength {old_strength!r} is ignored; T3 is always strict")
+        return _route_spec(spec, rest, f"legacy:{first}", warnings)
 
-    if first == "/siyk-git-commit":
-        flags, extra_tokens, warnings = [], [], []
-        for token in tokens[1:]:
-            if token == "--no-test" or _is_allow_risk(token):
-                if token not in flags:
-                    flags.append(token)
-            elif token.startswith("--"):
-                warnings.append(f"unknown flag: {token}")
-                extra_tokens.append(token)
-            else:
-                extra_tokens.append(token)
-        parts = [first, *flags, *extra_tokens]
-        return asdict(RouteResult(True, command=first, flags=flags, extra=" ".join(extra_tokens), normalized=" ".join(parts), source="literal", warnings=warnings))
-
-    if first == "/siyk-git-sync":
-        branch = None
-        flags, extra_tokens, warnings = [], [], []
-        for token in tokens[1:]:
-            if token in {"--pr", "--no-test"} or _is_allow_risk(token):
-                if token not in flags:
-                    flags.append(token)
-            elif token.startswith("--"):
-                warnings.append(f"unknown flag: {token}")
-                extra_tokens.append(token)
-            elif branch is None:
-                branch = token
-            else:
-                extra_tokens.append(token)
-        parts = [first]
-        if branch:
-            parts.append(branch)
-        parts.extend(flags)
-        parts.extend(extra_tokens)
-        return asdict(RouteResult(True, command=first, branch=branch, flags=flags, extra=" ".join(extra_tokens), normalized=" ".join(parts), source="literal", warnings=warnings))
-
-    for aliases, command, strength in (
-        (T3_ALIASES, "/siyk-test-run-t3", "strict"),
-        (T2_ALIASES, "/siyk-test-run-t2", "quick"),
-        (T1_ALIASES, "/siyk-test-run-t1", None),
-        (ADD_ALIASES, "/siyk-test-add", "standard"),
-    ):
-        alias = _matches_alias(raw, aliases)
-        if alias:
-            extra = raw[len(alias):].strip()
-            parts = [command]
-            if strength:
-                parts.append(strength)
-            if extra:
-                parts.append(extra)
-            normalized = " ".join(parts)
-            return asdict(RouteResult(True, command=command, strength=strength, extra=extra, normalized=normalized, source=f"alias:{alias}"))
-
-    for aliases, command in ((COMMIT_ALIASES, "/siyk-git-commit"), (SYNC_ALIASES, "/siyk-git-sync")):
-        alias = _matches_alias(raw, aliases)
-        if alias:
-            extra = raw[len(alias):].strip()
-            normalized = command + (f" {extra}" if extra else "")
-            routed = route(normalized)
-            routed["source"] = f"alias:{alias}"
-            return routed
+    normalized_raw = _norm(raw)
+    exact_matches: list[tuple[CommandSpec, str]] = []
+    prefix_matches: list[tuple[CommandSpec, str, str]] = []
+    for spec in specs:
+        for alias in spec.aliases_exact:
+            if normalized_raw == _norm(alias):
+                exact_matches.append((spec, alias))
+        for alias in spec.aliases_prefix:
+            key = _norm(alias)
+            if normalized_raw == key:
+                prefix_matches.append((spec, alias, ""))
+            elif normalized_raw.startswith(key + " "):
+                # Slice from normalized text. This is safe for routing semantics; exact user casing is not required.
+                prefix_matches.append((spec, alias, normalized_raw[len(key):].strip()))
+    if exact_matches:
+        spec, alias = exact_matches[0]
+        return _route_spec(spec, [], f"alias:{alias}")
+    if prefix_matches:
+        spec, alias, remainder = sorted(prefix_matches, key=lambda item: len(_norm(item[1])), reverse=True)[0]
+        return _route_spec(spec, _split(remainder), f"alias:{alias}")
 
     return asdict(RouteResult(matched=False))
 
@@ -140,11 +167,18 @@ def route(text: str) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Normalize a siyrs-skill command")
     parser.add_argument("text")
+    parser.add_argument("--root", default=str(Path(__file__).resolve().parents[1]))
     parser.add_argument("--pretty", action="store_true")
     args = parser.parse_args()
-    result = route(args.text)
+    try:
+        result = route(args.text, Path(args.root))
+    except (OSError, ValueError) as exc:
+        result = asdict(RouteResult(matched=False, valid=False, warnings=[str(exc)]))
     print(json.dumps(result, ensure_ascii=False, indent=2 if args.pretty else None))
-    return 0 if result["matched"] else 1
+    if not result["matched"]:
+        return 1
+    return 0 if result["valid"] else 2
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

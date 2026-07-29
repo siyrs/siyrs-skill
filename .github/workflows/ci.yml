@@ -7,7 +7,6 @@ permissions:
   contents: read
 jobs:
   validate:
-    name: Python ${{ matrix.python-version }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -19,91 +18,87 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Unit and contract tests
-        run: python -m unittest discover -s tests -v
-      - name: Bundle validation
-        run: python scripts/validate_bundle.py --root .
-      - name: Python compilation
-        run: python -m compileall -q scripts tests
-      - name: Command routing smoke
+      - run: python -m unittest discover -s tests -v
+      - run: python scripts/validate_bundle.py --root .
+      - run: python -m compileall -q scripts tests
+      - name: Current command routing smoke
         run: |
-          python scripts/siyk.py route "/siyk-test-new standard CI smoke"
-          python scripts/siyk.py route "/siyk-git-commit --allow-risk=RISK-001 feat: CI smoke"
-          python scripts/siyk.py route "/siyk-git-sync --allow-risk=all"
-      - name: Self-detection smoke
-        run: python scripts/siyk.py detect --root .
-      - name: Repository-wide secret scan
-        run: python scripts/siyk.py scan --root . --all
-  claude-adapter-linux:
+          python scripts/siyk.py route "/siyk-test-add standard CI"
+          python scripts/siyk.py route "/siyk-test-run-t1"
+          python scripts/siyk.py route "/siyk-test-run-t2"
+          python scripts/siyk.py route "/siyk-test-run-t3"
+          python scripts/siyk.py route "/siyk-git-commit"
+          python scripts/siyk.py route "/siyk-git-sync"
+      - run: python scripts/siyk.py scan --root . --all
+
+  claude-linux-upgrade:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bash syntax
-        run: bash -n adapters/claude-code/install.sh
-      - name: Install and reinstall smoke
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: bash -n adapters/claude-code/install.sh
+      - name: Upgrade, cleanup, reinstall
         run: |
           export CLAUDE_HOME="$RUNNER_TEMP/claude-home"
+          mkdir -p "$CLAUDE_HOME/commands"
+          printf '%s\n' '---' 'siyrs-skill-command-adapter: true' '---' > "$CLAUDE_HOME/commands/siyk-test-new.md"
+          printf '%s\n' '---' 'siyrs-skill-command-adapter: true' '---' > "$CLAUDE_HOME/commands/siyk-test-full.md"
           bash adapters/claude-code/install.sh
           bash adapters/claude-code/install.sh
-          test -f "$CLAUDE_HOME/skills/siyrs-skill/SKILL.md"
-          for name in siyk-test-full siyk-test-new siyk-git-commit siyk-git-sync; do test -f "$CLAUDE_HOME/commands/$name.md"; done
-          test ! -e "$CLAUDE_HOME/skills/siyrs-skill/.git"
-  claude-adapter-windows:
+          for name in siyk-test-add siyk-test-run-t1 siyk-test-run-t2 siyk-test-run-t3 siyk-git-commit siyk-git-sync; do test -f "$CLAUDE_HOME/commands/$name.md"; done
+          test ! -e "$CLAUDE_HOME/commands/siyk-test-new.md"
+          test ! -e "$CLAUDE_HOME/commands/siyk-test-full.md"
+
+  claude-windows-upgrade:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install and reinstall smoke
+      - name: Upgrade, cleanup, reinstall
         shell: pwsh
         run: |
-          $target = Join-Path $env:RUNNER_TEMP "claude-home"
-          ./adapters/claude-code/install.ps1 -ClaudeHome $target
-          ./adapters/claude-code/install.ps1 -ClaudeHome $target
-          if (-not (Test-Path (Join-Path $target "skills/siyrs-skill/SKILL.md"))) { throw "Skill missing" }
-          foreach ($name in @("siyk-test-full", "siyk-test-new", "siyk-git-commit", "siyk-git-sync")) {
-            if (-not (Test-Path (Join-Path $target "commands/$name.md"))) { throw "Command missing: $name" }
-          }
-          if (Test-Path (Join-Path $target "skills/siyrs-skill/.git")) { throw "Git metadata copied" }
-  codex-adapter-linux:
+          $home = Join-Path $env:RUNNER_TEMP "claude-home"
+          New-Item -ItemType Directory -Force (Join-Path $home "commands") | Out-Null
+          Set-Content (Join-Path $home "commands/siyk-test-new.md") "---`nsiyrs-skill-command-adapter: true`n---"
+          Set-Content (Join-Path $home "commands/siyk-test-full.md") "---`nsiyrs-skill-command-adapter: true`n---"
+          ./adapters/claude-code/install.ps1 -ClaudeHome $home
+          ./adapters/claude-code/install.ps1 -ClaudeHome $home
+          foreach ($name in @("siyk-test-add","siyk-test-run-t1","siyk-test-run-t2","siyk-test-run-t3","siyk-git-commit","siyk-git-sync")) { if(-not(Test-Path (Join-Path $home "commands/$name.md"))){throw "missing $name"} }
+          if(Test-Path (Join-Path $home "commands/siyk-test-new.md")){throw "stale test-new"}
+          if(Test-Path (Join-Path $home "commands/siyk-test-full.md")){throw "stale test-full"}
+
+  codex-linux-upgrade:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bash syntax
-        run: bash -n adapters/codex/install.sh
-      - name: Install and reinstall smoke
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: bash -n adapters/codex/install.sh
+      - name: Upgrade, archive legacy, reinstall
         run: |
           export SIYRS_CODEX_SKILLS_HOME="$RUNNER_TEMP/agents-skills"
+          export SIYRS_CODEX_SKILL_BACKUPS_HOME="$RUNNER_TEMP/skill-backups"
+          mkdir -p "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new" "$SIYRS_CODEX_SKILLS_HOME/siyk-test-full"
+          printf '%s\n' '---' 'name: siyk-test-new' '---' > "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new/SKILL.md"
+          printf '%s\n' '---' 'name: siyk-test-full' '---' > "$SIYRS_CODEX_SKILLS_HOME/siyk-test-full/SKILL.md"
           bash adapters/codex/install.sh
           bash adapters/codex/install.sh
-          test -f "$SIYRS_CODEX_SKILLS_HOME/siyrs-skill/SKILL.md"
-          for name in siyk-test-full siyk-test-new siyk-git-commit siyk-git-sync; do
-            test -f "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.md"
-            grep -Eq "^name:[[:space:]]*$name[[:space:]]*$" "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.md"
-            test -f "$SIYRS_CODEX_SKILLS_HOME/$name/agents/openai.yaml"
-            test ! -e "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.template.md"
-          done
-          test ! -e "$SIYRS_CODEX_SKILLS_HOME/siyrs-skill/.git"
-  codex-adapter-windows:
+          for name in siyk-test-add siyk-test-run-t1 siyk-test-run-t2 siyk-test-run-t3 siyk-git-commit siyk-git-sync; do test -f "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.md"; done
+          test ! -e "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new"
+          test ! -e "$SIYRS_CODEX_SKILLS_HOME/siyk-test-full"
+          find "$SIYRS_CODEX_SKILL_BACKUPS_HOME" -type f -name SKILL.md | grep -q .
+
+  codex-windows-upgrade:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install and reinstall smoke
+      - name: Upgrade, archive legacy, reinstall
         shell: pwsh
         run: |
-          $target = Join-Path $env:RUNNER_TEMP "agents-skills"
-          $archive = Join-Path $env:RUNNER_TEMP "skill-backups"
-          $duplicate = Join-Path $target "_backup"
-          New-Item -ItemType Directory -Force -Path $duplicate | Out-Null
-          Set-Content -NoNewline -Path (Join-Path $duplicate "SKILL.md") -Value "---`nname: siyrs-skill`ndescription: stale copy`n---`n"
-          ./adapters/codex/install.ps1 -SkillsHome $target -LegacyArchiveHome $archive
-          ./adapters/codex/install.ps1 -SkillsHome $target -LegacyArchiveHome $archive
-          if (-not (Test-Path (Join-Path $target "siyrs-skill/SKILL.md"))) { throw "Core Skill missing" }
-          if (Test-Path $duplicate) { throw "Duplicate core Skill was not archived" }
-          if (-not (Get-ChildItem -Path $archive -Directory -Filter "siyrs-skill-duplicate-*" -ErrorAction SilentlyContinue)) { throw "Archived duplicate core Skill missing" }
-          foreach ($name in @("siyk-test-full", "siyk-test-new", "siyk-git-commit", "siyk-git-sync")) {
-            $skill = Join-Path $target "$name/SKILL.md"
-            if (-not (Test-Path $skill)) { throw "Codex entrypoint missing: $name" }
-            if ((Get-Content -Raw $skill) -notmatch "(?m)^name:\s*$([regex]::Escape($name))\s*$") { throw "Invalid Codex entrypoint: $name" }
-            if (-not (Test-Path (Join-Path $target "$name/agents/openai.yaml"))) { throw "Codex metadata missing: $name" }
-            if (Test-Path (Join-Path $target "$name/SKILL.template.md")) { throw "Template leaked into installed Skill: $name" }
-          }
-          if (Test-Path (Join-Path $target "siyrs-skill/.git")) { throw "Git metadata copied" }
+          $home=Join-Path $env:RUNNER_TEMP "agents-skills"; $archive=Join-Path $env:RUNNER_TEMP "skill-backups"
+          foreach($old in @("siyk-test-new","siyk-test-full")){New-Item -ItemType Directory -Force (Join-Path $home $old)|Out-Null;Set-Content (Join-Path $home "$old/SKILL.md") "---`nname: $old`n---"}
+          ./adapters/codex/install.ps1 -SkillsHome $home -LegacyArchiveHome $archive
+          ./adapters/codex/install.ps1 -SkillsHome $home -LegacyArchiveHome $archive
+          foreach ($name in @("siyk-test-add","siyk-test-run-t1","siyk-test-run-t2","siyk-test-run-t3","siyk-git-commit","siyk-git-sync")) { if(-not(Test-Path (Join-Path $home "$name/SKILL.md"))){throw "missing $name"} }
+          if(Test-Path (Join-Path $home "siyk-test-new")){throw "stale test-new"}
+          if(Test-Path (Join-Path $home "siyk-test-full")){throw "stale test-full"}

@@ -1,20 +1,27 @@
 # Test Results
 
 - Date/time:
-- Repository/commit:
-- Command:
-- Mode:
+- Repository/commit/fingerprint:
+- Workflow: authoring / T1 / T2 / T3
+- Baseline:
+- Selector ID:
+- Direct modules:
+- Expanded modules:
+- Case IDs:
 - Status:
+- T3 release gate:
 
 ## Executed commands
 
-| Command | Exit | Result | Report/evidence |
+| Command | Exit | Result | Evidence |
 |---|---:|---|---|
 
-## Defects fixed
+## Pass/fail/skipped/blocked
 
-## Blocked or skipped checks
+## Defects and regression coverage
+
+## UAT: planned vs executed
 
 ## Coverage
 
-## Remaining risks
+## Remaining debt and risks

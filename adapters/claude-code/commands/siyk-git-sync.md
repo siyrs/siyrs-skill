@@ -1,7 +1,8 @@
 ---
-description: 复用本地提交子流程，拉取并整合远端代码、验证、扫描待推送历史并正常推送。
-argument-hint: [branch] [--pr] [--no-test] [--allow-risk[=<finding-id|all>]] [补充要求]
+description: 本地提交、集成远程、复验并安全推送当前分支
+argument-hint: [补充参数或说明]
 disable-model-invocation: true
+siyrs-skill-command-adapter: true
 ---
 
-Use the installed `siyrs-skill` skill. Execute `/siyk-git-sync $ARGUMENTS` against the current repository. Reuse the embedded git-commit workflow, share its risk ledger, fetch/integrate, resolve clear testable conflicts, reverify, scan outgoing history/final HEAD, and normally push. Never force push by default.
+Use the installed `siyrs-skill` core. Execute `/siyk-git-sync $ARGUMENTS` against the current repository and follow the root Skill, selected command Markdown, shared references, authorization, and evidence contracts.

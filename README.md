@@ -1,138 +1,61 @@
 # siyrs-skill
 
-[![CI](https://github.com/siyrs/siyrs-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/siyrs/siyrs-skill/actions/workflows/ci.yml)
+`siyrs-skill` 是面向持续开发的项目级研发质量 Skill。
 
-`siyrs-skill` 是一个面向持续开发的项目级研发质量 Skill，把项目识别、测试沉淀、真实验证、本地提交、远程同步、冲突处理和风险授权固化为短命令。
-
-- Skill：`siyrs-skill`
+- 当前版本：`v0.2.2`
 - 命令前缀：`siyk`
-- 当前版本：`v0.2.0`
 - Python：3.10+
-- 原则：业务/流程判断优先沉淀为 Markdown；脚本只做确定性采集、解析、校验和状态维护
+- 规则原则：Markdown-first；脚本只负责确定性解析、采集、校验与状态维护
 
-## 六个稳定命令
-
-```text
-/siyk-test-add [quick|standard|strict] [补充要求]          # 编写/新增测试用例
-/siyk-test-run-t1 [补充要求]                               # T1 变更回测（diff 驱动 + 共享代码扩散）
-/siyk-test-run-t2 [quick|standard] [模块范围]              # T2 冒烟（主路径 + 权限边界子集）
-/siyk-test-run-t3 [quick|standard|strict] [补充要求]       # T3 全量（含真实 UAT，发布门禁）
-/siyk-git-commit [--no-test] [--allow-risk[=<finding-id|all>]] [提交说明]
-/siyk-git-sync [branch] [--pr] [--no-test] [--allow-risk[=<finding-id|all>]] [补充要求]
-```
-
-`add` 负责写用例，`run-t1|t2|t3` 负责按档位执行。三档规则见 `references/testing-tiers.md`。
-
-## Git 工作流
+## 六个命令
 
 ```text
-/siyk-git-commit
-→ 识别意图与预检
-→ 只暂存目标文件
-→ Git Index/候选 Tree 安全扫描
-→ 风险默认暂停或用户明确放行
-→ git commit
+/siyk-test-add [quick|standard|strict] [说明]  # 编写测试
+/siyk-test-run-t1 [说明]                      # 动态变更回归
+/siyk-test-run-t2 [模块范围]                  # 固定冒烟子集
+/siyk-test-run-t3 [说明]                      # 完整发布门禁
+/siyk-git-commit ...                          # T1 预检 + 本地提交
+/siyk-git-sync ...                            # commit + fetch/integrate + T1/T2 + push
 ```
 
-```text
-/siyk-git-sync
-→ 复用 /siyk-git-commit 子流程
-→ git fetch
-→ fast-forward/rebase/merge
-→ 解决语义明确且可验证的冲突
-→ 重新验证
-→ 扫描全部待推送提交和 HEAD Tree
-→ git push
-```
+`/siyk-test-new` 与 `/siyk-test-full` 暂时保留兼容路由并输出弃用提醒。重新运行安装器后，旧客户端入口会被删除或归档。
 
-风险发现会编号为 `RISK-001` 等。`--allow-risk` 或明确自然语言授权可以放行当前运行中的内容风险，但不会跳过扫描，也不会扩展为 force push、发布或部署授权。
+## 测试体系
+
+- `test-add` 的 `quick|standard|strict` 表示新增用例的沉淀深度。
+- T1 不再套 strength；范围由上次 T1/T3 基线、当前 diff 和共享代码影响面决定。
+- T2 使用 `.siyrs/config.yaml` 中的框架原生 selector 命令。仅有 Markdown 标记而没有可执行 selector 时，只能算部分完成。
+- T3 固定为严格全量发布门禁；需要的真实 UAT 未执行时不能通过发布门禁。
+
+项目配置与状态均升级为 v2：分别记录 authoring、T1、T2、T3 和 release gate。旧 state v1 可通过：
+
+```bash
+python <skill-dir>/scripts/state.py --root <repo> migrate
+```
 
 ## 安装
 
-### Claude Code
-
-Windows：
+Claude Code：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\adapters\claude-code\install.ps1
 ```
 
-macOS/Linux：
-
 ```bash
 bash adapters/claude-code/install.sh
 ```
 
-安装后提供六个独立 `/siyk-*` 自动补全入口。
-
-### Codex
-
-Codex 不会把一个根 Skill 内部的 `commands/*.md` 自动展开成多个候选。适配器会安装：
-
-```text
-$HOME/.agents/skills/siyrs-skill/         核心策略与工作流
-$HOME/.agents/skills/siyk-test-add/        薄入口 Skill（写用例）
-$HOME/.agents/skills/siyk-test-run-t1/     薄入口 Skill（T1 变更回测）
-$HOME/.agents/skills/siyk-test-run-t2/     薄入口 Skill（T2 冒烟）
-$HOME/.agents/skills/siyk-test-run-t3/     薄入口 Skill（T3 全量）
-$HOME/.agents/skills/siyk-git-commit/      薄入口 Skill
-$HOME/.agents/skills/siyk-git-sync/        薄入口 Skill
-```
-
-Windows：
+Codex：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\adapters\codex\install.ps1
 ```
 
-macOS/Linux：
-
 ```bash
 bash adapters/codex/install.sh
 ```
 
-安装后重新打开 Codex；若当前会话未刷新，重启 Codex。之后输入 `/siyk` 应显示六个入口：
-
-```text
-/siyk-test-add
-/siyk-test-run-t1
-/siyk-test-run-t2
-/siyk-test-run-t3
-/siyk-git-commit
-/siyk-git-sync
-```
-
-也可以使用 Codex 的技能提及方式：
-
-```text
-$siyk-test-add standard 沉淀新增功能
-$siyk-test-run-t1
-$siyk-test-run-t2
-$siyk-test-run-t3 strict
-$siyk-git-commit feat: 保存当前实现
-$siyk-git-sync
-```
-
-六个入口只负责发现和路由，执行时会读取同级的 `siyrs-skill` 核心，不复制测试、Git、安全或授权规则。
-
-安装器会自动把 `$HOME/.agents/skills` 中其他声明为 `siyrs-skill` 的直接子目录移到 `$HOME/.agents/skill-backups`，避免旧副本导致重复候选。PowerShell 可用 `-LegacyArchiveHome`，Bash 可用 `SIYRS_CODEX_SKILL_BACKUPS_HOME` 指定归档位置。
-
-## 测试模型
-
-`test-add`、`test-run-t1`、`test-run-t2`、`test-run-t3` 共用 `references/testing-common.md`（执行规则）与 `references/testing-tiers.md`（三档分级），统一约束行为优先、分层覆盖、真实执行、失败分类、文档增量合并和证据后置更新。
-
-## 结构
-
-```text
-SKILL.md                 顶层路由与全局契约
-commands/                六个用户工作流
-references/              公共策略、项目策略、Git/测试协议
-scripts/                 确定性工具
-assets/                  配置、状态与文档模板
-schemas/                 配置/状态契约
-adapters/                Claude Code 与 Codex 发现适配
-tests/ + CI              自测与跨平台验收
-```
+安装器直接读取 `commands/*.md` frontmatter，因此命令、适配器、CI 和安装清理使用同一个事实源。
 
 ## 本仓库验收
 
@@ -140,8 +63,9 @@ tests/ + CI              自测与跨平台验收
 python -m unittest discover -s tests -v
 python scripts/validate_bundle.py --root .
 python -m compileall -q scripts tests
+python scripts/siyk.py registry --root .
+python scripts/siyk.py route "跑T1"
+python scripts/siyk.py scan --root . --all
 bash -n adapters/claude-code/install.sh
 bash -n adapters/codex/install.sh
 ```
-
-`scan_secrets.py` 仍用于全仓/CI 审计；Git commit/push 工作流按照 `references/git-content-scan.md` 直接扫描 Git 对象。

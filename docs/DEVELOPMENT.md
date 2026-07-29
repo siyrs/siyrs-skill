@@ -1,26 +1,20 @@
 # Development and release checks
 
-## Supported Python
-
-Deterministic helpers require Python 3.10 or newer and use only the standard library.
-
-## Local checks
+Python 3.10+ and standard library only.
 
 ```bash
 python -m unittest discover -s tests -v
 python scripts/validate_bundle.py --root .
 python -m compileall -q scripts tests
+python scripts/command_registry.py --root . --field json
+python scripts/siyk.py route "/siyk-test-add standard smoke"
+python scripts/siyk.py route "/siyk-test-run-t1"
+python scripts/siyk.py route "/siyk-test-run-t2"
+python scripts/siyk.py route "/siyk-test-run-t3"
+python scripts/siyk.py route "/siyk-git-commit"
+python scripts/siyk.py route "/siyk-git-sync"
 bash -n adapters/claude-code/install.sh
-python scripts/siyk.py route "/siyk-test-run-t3 strict"
-python scripts/siyk.py detect --root .
-python scripts/siyk.py fingerprint --root .
-python scripts/siyk.py scan --root . --all
+bash -n adapters/codex/install.sh
 ```
 
-## Release invariants
-
-- `VERSION`、`SKILL.md`、`README.md`、`CHANGELOG.md` 和 `release-manifest.json` 的版本必须一致。
-- `release-manifest.json` 必须精确列出可分发文件。
-- 根目录只能有一个 `SKILL.md`。
-- Linux 与 Windows Claude Code 安装器必须分别通过 CI 烟测。
-- 密钥扫描器不得允许生产路径通过 fixture 标记绕过扫描。
+Release invariants: version agreement, exact file manifest, one root `SKILL.md`, six exact adapter sets, no deprecated CI references, schema v2, and upgrade cleanup smoke tests on Linux and Windows.

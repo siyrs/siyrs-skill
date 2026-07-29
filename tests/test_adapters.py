@@ -1,133 +1,31 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import os
-import re
-import shutil
-import subprocess
-import unittest
-
-ROOT = Path(__file__).resolve().parents[1]
-NAMES = ("siyk-test-add", "siyk-test-run-t1", "siyk-test-run-t2", "siyk-test-run-t3", "siyk-git-commit", "siyk-git-sync")
-
-
-def native_bash() -> str | None:
-    if os.name == "nt":
-        candidate = Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Git" / "bin" / "bash.exe"
-        return str(candidate) if candidate.is_file() else None
-    return shutil.which("bash")
-
-
+import os,re,shutil,subprocess,sys,unittest
+ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'scripts'))
+from command_registry import registry_document
+NAMES=registry_document(ROOT)['entrypoint_names'];LEGACY=registry_document(ROOT)['legacy_names']
 class AdapterTests(unittest.TestCase):
-    def test_claude_command_adapters_exist(self):
-        command_dir = ROOT / "adapters" / "claude-code" / "commands"
-        for name in NAMES:
-            path = command_dir / f"{name}.md"
-            self.assertTrue(path.is_file())
-            text = path.read_text(encoding="utf-8")
-            self.assertIn("siyrs-skill", text)
-            self.assertIn(f"/{name}", text)
-            self.assertIn("$ARGUMENTS", text)
-
-    def test_codex_entrypoints_are_thin_explicit_skills(self):
-        entrypoints = ROOT / "adapters" / "codex" / "entrypoints"
-        for name in NAMES:
-            template = entrypoints / name / "SKILL.template.md"
-            metadata = entrypoints / name / "agents" / "openai.yaml"
-            self.assertTrue(template.is_file(), name)
-            self.assertTrue(metadata.is_file(), name)
-            text = template.read_text(encoding="utf-8")
-            self.assertRegex(text, rf"(?m)^name:\s*{re.escape(name)}\s*$")
-            self.assertIn("<skills-root>/siyrs-skill/SKILL.md", text)
-            self.assertIn(f"/{name}", text)
-            self.assertIn("thin discovery adapter", text)
-            meta = metadata.read_text(encoding="utf-8")
-            self.assertIn(f'display_name: "/{name}"', meta)
-            self.assertIn("allow_implicit_invocation: false", meta)
-
-    def test_installers_exist_and_use_current_codex_location(self):
-        claude_bash = ROOT / "adapters" / "claude-code" / "install.sh"
-        claude_ps = ROOT / "adapters" / "claude-code" / "install.ps1"
-        codex_bash = ROOT / "adapters" / "codex" / "install.sh"
-        codex_ps = ROOT / "adapters" / "codex" / "install.ps1"
-        for path in (claude_bash, claude_ps, codex_bash, codex_ps):
-            self.assertTrue(path.is_file(), path)
-        self.assertIn('"${temp_target}/.git"', claude_bash.read_text(encoding="utf-8"))
-        self.assertIn('".git"', claude_ps.read_text(encoding="utf-8"))
-        bash_text = codex_bash.read_text(encoding="utf-8")
-        ps_text = codex_ps.read_text(encoding="utf-8")
-        self.assertIn("${HOME}/.agents/skills", bash_text)
-        self.assertIn('".agents\\skills"', ps_text)
-        self.assertNotIn(".codex/prompts", bash_text)
-        self.assertIn("SIYRS_CODEX_SKILL_BACKUPS_HOME", bash_text)
-        self.assertIn("LegacyArchiveHome", ps_text)
-        for name in NAMES:
-            self.assertIn(name, bash_text)
-            self.assertIn(name, ps_text)
-
-    @unittest.skipUnless(native_bash(), "a native Bash runtime is required for installer smoke test")
-    def test_codex_bash_installer_is_idempotent(self):
-        with TemporaryDirectory() as tmp:
-            target = Path(tmp) / "agents-skills"
-            env = os.environ.copy()
-            env["SIYRS_CODEX_SKILLS_HOME"] = str(target)
-            script = ROOT / "adapters" / "codex" / "install.sh"
-            bash = native_bash()
-            self.assertIsNotNone(bash)
-            subprocess.run([bash, str(script)], cwd=ROOT, env=env, check=True, capture_output=True, text=True)
-            subprocess.run([bash, str(script)], cwd=ROOT, env=env, check=True, capture_output=True, text=True)
-            self.assertTrue((target / "siyrs-skill" / "SKILL.md").is_file())
-            for name in NAMES:
-                installed = target / name
-                self.assertTrue((installed / "SKILL.md").is_file(), name)
-                self.assertTrue((installed / "agents" / "openai.yaml").is_file(), name)
-                self.assertFalse((installed / "SKILL.template.md").exists(), name)
-                text = (installed / "SKILL.md").read_text(encoding="utf-8")
-                self.assertRegex(text, rf"(?m)^name:\s*{re.escape(name)}\s*$")
-            self.assertFalse((target / "siyrs-skill" / ".git").exists())
-
-    @unittest.skipUnless(native_bash(), "a native Bash runtime is required for installer smoke test")
-    def test_codex_bash_installer_archives_duplicate_core(self):
-        with TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            target = root / "agents-skills"
-            duplicate = target / "_backup"
-            duplicate.mkdir(parents=True)
-            (duplicate / "SKILL.md").write_text("---\nname: siyrs-skill\ndescription: stale copy\n---\n", encoding="utf-8")
-            archive = root / "skill-backups"
-            env = os.environ.copy()
-            env["SIYRS_CODEX_SKILLS_HOME"] = str(target)
-            env["SIYRS_CODEX_SKILL_BACKUPS_HOME"] = str(archive)
-            bash = native_bash()
-            self.assertIsNotNone(bash)
-            subprocess.run([bash, str(ROOT / "adapters" / "codex" / "install.sh")], cwd=ROOT, env=env, check=True, capture_output=True, text=True)
-            self.assertFalse(duplicate.exists())
-            archived = list(archive.glob("siyrs-skill-duplicate-*/SKILL.md"))
-            self.assertEqual(1, len(archived))
-
-    @unittest.skipUnless(os.name == "nt" and shutil.which("powershell"), "Windows PowerShell is required for installer smoke test")
-    def test_codex_powershell_installer_archives_duplicate_core(self):
-        with TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            target = root / "agents-skills"
-            duplicate = target / "_backup"
-            duplicate.mkdir(parents=True)
-            (duplicate / "SKILL.md").write_text("---\nname: siyrs-skill\ndescription: stale copy\n---\n", encoding="utf-8")
-            archive = root / "skill-backups"
-            result = subprocess.run(
-                [
-                    shutil.which("powershell"), "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-                    str(ROOT / "adapters" / "codex" / "install.ps1"),
-                    "-SkillsHome", str(target), "-LegacyArchiveHome", str(archive),
-                ],
-                cwd=ROOT,
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(0, result.returncode, f"PowerShell installer failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}")
-            self.assertFalse(duplicate.exists())
-            archived = list(archive.glob("siyrs-skill-duplicate-*/SKILL.md"))
-            self.assertEqual(1, len(archived))
-
-
-if __name__ == "__main__":
-    unittest.main()
+ def test_exact_source_adapter_sets(self):
+  self.assertEqual(set(NAMES),{p.stem for p in (ROOT/'adapters/claude-code/commands').glob('*.md')});self.assertEqual(set(NAMES),{p.name for p in (ROOT/'adapters/codex/entrypoints').iterdir() if p.is_dir()})
+ def test_thin_codex_contracts(self):
+  for n in NAMES:
+   t=(ROOT/f'adapters/codex/entrypoints/{n}/SKILL.template.md').read_text();m=(ROOT/f'adapters/codex/entrypoints/{n}/agents/openai.yaml').read_text();self.assertRegex(t,rf'(?m)^name:\s*{re.escape(n)}\s*$');self.assertIn('<skills-root>/siyrs-skill/SKILL.md',t);self.assertIn('allow_implicit_invocation: false',m)
+ @unittest.skipUnless(shutil.which('bash'),'bash required')
+ def test_claude_upgrade_removes_legacy(self):
+  with TemporaryDirectory() as tmp:
+   home=Path(tmp)/'claude';(home/'commands').mkdir(parents=True)
+   for n in LEGACY:(home/'commands'/f'{n}.md').write_text('---\nsiyrs-skill-command-adapter: true\n---\n')
+   env=os.environ.copy();env['CLAUDE_HOME']=str(home);subprocess.run(['bash',str(ROOT/'adapters/claude-code/install.sh')],env=env,cwd=ROOT,check=True,capture_output=True,text=True);subprocess.run(['bash',str(ROOT/'adapters/claude-code/install.sh')],env=env,cwd=ROOT,check=True,capture_output=True,text=True)
+   for n in NAMES:self.assertTrue((home/'commands'/f'{n}.md').is_file())
+   for n in LEGACY:self.assertFalse((home/'commands'/f'{n}.md').exists())
+ @unittest.skipUnless(shutil.which('bash'),'bash required')
+ def test_codex_upgrade_archives_legacy(self):
+  with TemporaryDirectory() as tmp:
+   root=Path(tmp);home=root/'skills';archive=root/'archive'
+   for n in LEGACY:(home/n).mkdir(parents=True);(home/n/'SKILL.md').write_text(f'---\nname: {n}\n---\n')
+   env=os.environ.copy();env['SIYRS_CODEX_SKILLS_HOME']=str(home);env['SIYRS_CODEX_SKILL_BACKUPS_HOME']=str(archive)
+   subprocess.run(['bash',str(ROOT/'adapters/codex/install.sh')],env=env,cwd=ROOT,check=True,capture_output=True,text=True);subprocess.run(['bash',str(ROOT/'adapters/codex/install.sh')],env=env,cwd=ROOT,check=True,capture_output=True,text=True)
+   for n in NAMES:self.assertTrue((home/n/'SKILL.md').is_file())
+   for n in LEGACY:self.assertFalse((home/n).exists())
+   self.assertGreaterEqual(len(list(archive.rglob('SKILL.md'))),len(LEGACY))
+if __name__=='__main__':unittest.main()

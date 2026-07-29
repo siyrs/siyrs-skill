@@ -1,4 +1,4 @@
-version: 1
+version: 2
 
 project:
   name: auto
@@ -11,27 +11,31 @@ git:
   sync_mode: current-branch
   integration: rebase
   create_pr: false
-  require_clean_preflight: true
 
 testing:
-  full_mode: strict
-  new_mode: standard
-  sync_mode: quick
+  authoring:
+    default_depth: standard
+  tiers:
+    t1:
+      commands: []
+      baseline: last-t1-or-t3
+    t2:
+      selector_id: smoke-v1
+      commands: []
+      required_per_module:
+        main_path: 1
+        boundary: 1
+    t3:
+      commands: []
+      require_real_uat: true
+      release_gate: true
+  preflight:
+    commit: t1
+    sync_after_integration: t1
+    pr: t2
   coverage:
     enabled: true
     minimum: 80
-  commands:
-    quick: []
-    standard: []
-    strict: []
-  android:
-    min_api: auto
-    representative_api: auto
-  web:
-    unit: true
-    integration: true
-    e2e: true
-    uat: true
 
 paths:
   docs: docs
@@ -49,4 +53,3 @@ exclude:
   - .gradle
   - .pytest_cache
   - __pycache__
-  - source

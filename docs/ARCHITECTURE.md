@@ -2,55 +2,26 @@
 
 ## Goal
 
-Provide one cross-platform `siyrs-skill` with four stable workflows, reusable Markdown subworkflows, and deterministic helpers that do not own business-policy decisions.
+Provide one cross-platform core Skill with **six stable commands**, Markdown-first reusable policy, deterministic helpers, and thin Claude Code/Codex discovery adapters.
 
 ## Layers
 
-1. **Manifest/router — `SKILL.md`**: triggers, aliases, shared invariants, completion contract.
-2. **Command workflows — `commands/`**: full test, incremental test, local commit, remote sync.
-3. **Reusable policy/subworkflows — `references/`**:
-   - common testing governance;
-   - project-specific test strategies;
-   - Git Index/outgoing-history scan;
-   - risk authorization ledger;
-   - subworkflow composition;
-   - authorization and report contracts.
-4. **Deterministic helpers — `scripts/`**: detection, Git fact collection, routing, fingerprint, repository-wide scan, state, validation.
-5. **Assets/schemas/adapters/tests/CI**: reusable templates, machine contracts, client entrypoints, package validation.
+1. `SKILL.md`: global invariants and routing model.
+2. `commands/*.md`: workflow plus machine-readable command frontmatter; the command registry is the single source of truth.
+3. `references/`: common testing, tiers, framework selectors, Git object scanning, risk authorization, composition, safety, output.
+4. `scripts/`: registry parsing, routing, project/Git evidence, fingerprints, state migration, repository audit, bundle validation.
+5. `assets/` and `schemas/`: project configuration/state contracts and documentation templates.
+6. `adapters/`: client discovery only; no duplicated business policy.
+7. `tests/` and CI: registry drift, migration, upgrade cleanup, cross-platform install, package/version contracts.
 
-## Markdown-first rule
+## Test composition
 
-Stable workflow judgment belongs in Markdown. Create or extend a script only when the behavior is deterministic and benefits from machine parsing, repeatability, or validation.
+`test-add` authors cases. T1 is dynamic regression, T2 is a fixed native selector, and T3 is strict full release gating. Git commit embeds T1 preflight; Git sync embeds commit, then reruns T1 after integration and may run T2 before PR creation.
 
-Examples:
+## State model
 
-- Markdown: conflict semantics, risk authorization, test-layer selection, completion decisions.
-- Script: parse NUL-delimited Git status, normalize commands, calculate fingerprints, validate package structure.
+State v2 separately records `last_authoring`, `last_t1_run`, `last_t2_run`, `last_t3_run`, and `last_release_gate`. Legacy v1 evidence is migrated as `unknown`, never silently treated as green.
 
-## Command composition
+## Upgrade model
 
-Commands remain modules under one root Skill because they share policy. `/siyk-git-sync` is a strict superset of local save and therefore loads `commands/git-commit.md` internally. It does not invoke a client slash command and does not copy the child rules.
-
-The child returns `committed`, `no-op`, `blocked`, or `failed` plus evidence. The parent continues to remote operations only after `committed`/`no-op`.
-
-## Git object model
-
-- local commit security scans the Git Index and candidate Tree;
-- remote sync security scans the outgoing commit range and final `HEAD` Tree;
-- worktree scanning is not authoritative for commit/push;
-- `scan_secrets.py` remains a repository-wide audit helper, not the Git path authority.
-
-## Risk ledger
-
-A git-sync run owns one in-memory `RISK-*` ledger shared by embedded commit and push stages. Explicit user authorization is scoped to the current run/repository/branch/finding. Unchanged findings inherit authorization; new findings are reviewed separately unless broad command-level authorization applies.
-
-## Test workflow composition
-
-`test-add`, `test-run-t1`, `test-run-t2`, and `test-run-t3` share `references/testing-common.md` (execution rules) and `references/testing-tiers.md` (T1/T2/T3 tier selection). The command files decide scope and baseline; the common reference owns implementation, execution, failure classification, evidence truth, documentation merge, and state-update rules; the tier reference owns how much to test and the diff-driven blast-radius expansion.
-
-## Side-effect model
-
-- Test commands may edit source/tests/docs and run local tooling.
-- Git commit creates a normal local commit only.
-- Git sync composes commit, fetches/integrates, resolves clear/testable conflicts, verifies, scans outgoing history, and normally pushes current branch.
-- Force/history rewrite, default-branch merge, release/deploy, and external production changes remain outside default scope.
+Client installers read command frontmatter at runtime, replace all current owned entries, and remove/archive registered legacy entries. Validator proves current command sets are exact and CI does not reference deprecated commands.

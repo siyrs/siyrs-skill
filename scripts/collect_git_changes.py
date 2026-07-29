@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect Git baseline and working-tree evidence without modifying the repository."""
+"""Collect Git baseline and working-tree evidence without mutation."""
 from __future__ import annotations
 
 import argparse
@@ -7,14 +7,13 @@ import json
 import subprocess
 from pathlib import Path
 
+from state import load as load_state
+
 CONFLICT_CODES = {"DD", "AU", "UD", "UA", "DU", "AA", "UU"}
 
 
 def run(root: Path, *args: str) -> tuple[int, bytes, bytes]:
-    cp = subprocess.run(
-        ["git", *args], cwd=root, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        check=False,
-    )
+    cp = subprocess.run(["git", *args], cwd=root, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     return cp.returncode, cp.stdout, cp.stderr
 
 
@@ -52,11 +51,9 @@ def parse_name_status_z(data: bytes) -> list[dict]:
     while i < len(fields):
         status_raw = fields[i]
         i += 1
-        if not status_raw:
+        if not status_raw or i >= len(fields):
             continue
         status = status_raw.decode("utf-8", errors="replace")
-        if i >= len(fields):
-            break
         path = fields[i].decode("utf-8", errors="replace")
         i += 1
         record = {"status": status, "path": path}
@@ -65,6 +62,18 @@ def parse_name_status_z(data: bytes) -> list[dict]:
             i += 1
         records.append(record)
     return records
+
+
+def verify_commit(repo: Path, ref: str | None) -> str | None:
+    if not ref:
+        return None
+    code, out, _ = run(repo, "rev-parse", "--verify", f"{ref}^{{commit}}")
+    return text(out) or None if code == 0 else None
+
+
+def is_ancestor(repo: Path, candidate: str, head: str) -> bool:
+    code, _, _ = run(repo, "merge-base", "--is-ancestor", candidate, head)
+    return code == 0
 
 
 def remote_map(repo: Path) -> dict[str, list[str]]:
@@ -87,21 +96,28 @@ def remote_default_branch(repo: Path, remote: str = "origin") -> str | None:
     return value or None if code == 0 else None
 
 
-def verify_commit(repo: Path, ref: str) -> str | None:
-    code, out, _ = run(repo, "rev-parse", "--verify", f"{ref}^{{commit}}")
-    return text(out) or None if code == 0 else None
+def state_candidates(repo: Path, purpose: str) -> list[tuple[str, str]]:
+    state_path = repo / ".siyrs" / "state.json"
+    try:
+        data = load_state(state_path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return []
+    keys = ("last_t1_run", "last_t3_run") if purpose == "t1" else ("last_authoring", "last_t3_run")
+    result: list[tuple[str, str]] = []
+    for key in keys:
+        record = data.get(key)
+        if isinstance(record, dict) and record.get("commit"):
+            result.append((str(record["commit"]), f"state:{key}"))
+    return result
 
 
-def collect(root: Path, base: str | None = None) -> dict:
+def collect(root: Path, base: str | None = None, purpose: str = "t1") -> dict:
+    if purpose not in {"t1", "add", "generic"}:
+        raise ValueError(f"unsupported purpose: {purpose}")
     root = root.resolve()
     inside, top, err = run(root, "rev-parse", "--show-toplevel")
     if inside != 0:
-        return {
-            "root": str(root),
-            "is_git_repository": False,
-            "error": text(err) or "not a Git repository",
-        }
-
+        return {"root": str(root), "is_git_repository": False, "error": text(err) or "not a Git repository"}
     repo = Path(text(top)).resolve()
     _, branch_raw, _ = run(repo, "branch", "--show-current")
     branch = text(branch_raw) or None
@@ -119,7 +135,13 @@ def collect(root: Path, base: str | None = None) -> dict:
         base_source = "explicit"
         if not selected_base:
             baseline_error = f"explicit baseline is not a commit: {base}"
-    elif head and upstream:
+    elif head and purpose in {"t1", "add"}:
+        for candidate, source in state_candidates(repo, purpose):
+            verified = verify_commit(repo, candidate)
+            if verified and is_ancestor(repo, verified, head):
+                selected_base, base_source = verified, source
+                break
+    if not selected_base and head and upstream:
         code, merge_base_raw, _ = run(repo, "merge-base", "HEAD", upstream)
         merge_base = text(merge_base_raw)
         if code == 0 and merge_base:
@@ -144,13 +166,12 @@ def collect(root: Path, base: str | None = None) -> dict:
     untracked = [r for r in status_records if r["status"] == "??"]
     ignored = [r for r in status_records if r["status"] == "!!"]
     conflicted = [r for r in status_records if r["status"] in CONFLICT_CODES]
-
-    changed_paths = set()
-    for record in committed_records + status_records:
-        for key in ("path", "new_path"):
-            value = record.get(key)
-            if value:
-                changed_paths.add(value)
+    changed_paths = {
+        value
+        for record in committed_records + status_records
+        for key in ("path", "new_path")
+        if (value := record.get(key))
+    }
 
     ahead = behind = None
     if head and upstream:
@@ -162,6 +183,7 @@ def collect(root: Path, base: str | None = None) -> dict:
     return {
         "root": str(repo),
         "is_git_repository": True,
+        "purpose": purpose,
         "branch": branch,
         "detached_head": bool(head and not branch),
         "head": head,
@@ -188,12 +210,17 @@ def collect(root: Path, base: str | None = None) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Collect Git changes for siyk-test-run-t1 / siyk-test-add")
+    parser = argparse.ArgumentParser(description="Collect Git changes for siyrs-skill")
     parser.add_argument("--root", default=".")
-    parser.add_argument("--base", default=None)
+    parser.add_argument("--base")
+    parser.add_argument("--purpose", choices=["t1", "add", "generic"], default="t1")
     parser.add_argument("--pretty", action="store_true")
     args = parser.parse_args()
-    result = collect(Path(args.root), args.base)
+    try:
+        result = collect(Path(args.root), args.base, args.purpose)
+    except ValueError as exc:
+        print(json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2))
+        return 2
     print(json.dumps(result, ensure_ascii=False, indent=2 if args.pretty else None))
     return 0 if result.get("is_git_repository") else 1
 

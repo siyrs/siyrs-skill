@@ -1,135 +1,80 @@
 ---
 name: siyrs-skill
-description: Project-level engineering quality workflows. Use when the user invokes /siyk-test-add, /siyk-test-run-t1, /siyk-test-run-t2, /siyk-test-run-t3, /siyk-git-commit, /siyk-git-sync, asks to "沉淀测试", "跑T1/T2/T3", "本地保存代码", or wants project-aware testing, durable evidence, local Git commits, conflict-aware remote synchronization, and explicit risk-authorization handling.
+description: Project-level engineering quality workflows. Use for /siyk-test-add, /siyk-test-run-t1, /siyk-test-run-t2, /siyk-test-run-t3, /siyk-git-commit, /siyk-git-sync, project-aware test authoring/execution, local commits, remote synchronization, and scoped risk authorization.
 ---
-
 # siyrs-skill
 
-Version: **0.2.0**
+Version: **0.2.2**
 Command prefix: **`siyk`**
 
-Use this Skill as a project-level engineering quality controller. Detect repository type before selecting test strategy. Produce real repository changes, execute real verification when possible, and report evidence rather than claiming completion from file generation alone.
+Use this Skill as a project-level engineering quality controller. Detect repository type before test selection, execute real verification, preserve evidence, and keep workflow policy in Markdown.
 
-## Command routing
+## Markdown command registry
 
-Recognize:
+The frontmatter of `commands/*.md` is the single source of truth for command name, kind, tier, supported strengths, aliases, legacy commands, and client discovery. Use `<skill-dir>/scripts/command_registry.py` and `<skill-dir>/scripts/route_command.py`; do not maintain independent hard-coded command lists.
 
-- `/siyk-test-add [quick|standard|strict] [extra instructions]` — **author/add** test cases for changed behavior
-- `/siyk-test-run-t1 [extra instructions]` — **T1 change regression**: diff-driven, blast-radius-expanded
-- `/siyk-test-run-t2 [quick|standard] [module scope]` — **T2 smoke**: fixed subset (main path + boundary per module)
-- `/siyk-test-run-t3 [quick|standard|strict] [extra instructions]` — **T3 full**: all layers incl. UAT, release gate
-- `/siyk-git-commit [--no-test] [--allow-risk[=<finding-id|all>]] [commit message or extra instructions]`
+Current commands:
+
+- `/siyk-test-add [quick|standard|strict] [extra instructions]`
+- `/siyk-test-run-t1 [extra instructions]`
+- `/siyk-test-run-t2 [module scope]`
+- `/siyk-test-run-t3 [extra instructions]`
+- `/siyk-git-commit [--no-test] [--allow-risk[=<finding-id|all>]] [message]`
 - `/siyk-git-sync [branch] [--pr] [--no-test] [--allow-risk[=<finding-id|all>]] [extra instructions]`
 
-`add` writes cases; `run-t1|t2|t3` execute them. Do not use `add` when the intent is to run.
+Compatibility routes:
 
-Aliases:
+- `/siyk-test-new` → `/siyk-test-add` with a deprecation warning.
+- `/siyk-test-full` → `/siyk-test-run-t3` with a deprecation warning; T3 is always strict.
 
-- `沉淀`、`沉淀测试` → `/siyk-test-add standard`
-- `跑t1`、`变更回测`、`跑改动相关的测试`、`regression` → `/siyk-test-run-t1`
-- `跑t2`、`冒烟`、`smoke` → `/siyk-test-run-t2 quick`
-- `跑t3`、`全量`、`全量沉淀`、`全量沉淀测试`、`完整沉淀测试`、`release gate`、`full` → `/siyk-test-run-t3 strict`
-- `本地保存`、`本地保存代码`、`保存本地代码`、`本地提交` → `/siyk-git-commit`
-- `同步代码`、`保存并同步远程仓库` → `/siyk-git-sync`
+Aliases are case-insensitive for Latin/T1/T2/T3 forms. Broad English words such as `full`, `smoke`, and `regression` match only as complete requests, not arbitrary sentence prefixes.
 
-When the user is unsure which tier to run, ask them to choose; propose a tier from diff size/nature (shared code? migration? permission?) and confirm before executing. See `references/testing-tiers.md`.
+## Test model
 
-Use `<skill-dir>/scripts/route_command.py` when normalization evidence is useful. The router does not execute workflows.
+- `test-add`: authors and validates cases; `quick|standard|strict` means authoring depth.
+- T1: dynamic diff-driven regression plus blast-radius expansion; no strength argument.
+- T2: fixed machine-selectable smoke subset; no strength argument.
+- T3: complete strict release gate; no strength argument.
 
-A literal command authorizes its normal bounded side effects. Content/privacy findings may be explicitly authorized under `references/risk-authorization.md`; destructive or scope-expanding operations still require separate authorization.
+All test workflows load `references/testing-tiers.md`, `references/testing-selectors.md`, `references/testing-common.md`, project detection, project-specific strategy, and output contract.
 
-## Client discovery model
+A literal T1 command authorizes an unambiguous normal-cost run. Ask only for semantic ambiguity, materially different plausible scopes, or expensive/real environments not already implied.
 
-The root Skill owns all policy. Client adapters may expose thin entrypoints for discovery, but they must load this root Skill and the selected `commands/*.md` file rather than duplicating workflow rules.
+## Project classification
 
-- Claude Code registers six command adapters.
-- Codex installs six thin skills named `siyk-test-add`, `siyk-test-run-t1`, `siyk-test-run-t2`, `siyk-test-run-t3`, `siyk-git-commit`, and `siyk-git-sync`; enabled skills then appear in Codex's `/` picker and remain invokable through `$skill-name`.
-- Thin entrypoints must disable implicit invocation so they do not compete with the root Skill's description-based routing.
+Before selecting frameworks:
 
-## Mandatory project classification
+1. locate repository root and read repository instructions;
+2. inspect manifests, source/test roots, CI, migrations, APIs/routes/screens/commands, deployment and existing evidence;
+3. run `<skill-dir>/scripts/detect_project.py --root <repo>` and verify its evidence;
+4. classify every meaningful monorepo module independently.
 
-Resolve `<skill-dir>` as this file's directory. Before test framework selection:
+## State and configuration
 
-1. locate repository root;
-2. read repository instructions/docs;
-3. inspect manifests, source/test roots, CI, migrations, APIs/routes/screens/commands, and deployment files;
-4. run `<skill-dir>/scripts/detect_project.py --root <repo>` when available and verify its evidence;
-5. classify frontend, backend, full-stack, Android, Python/CLI, script/Skill, monorepo, or custom modules independently.
+Target projects use configuration schema v2 and state schema v2. State v1 is migrated by `<skill-dir>/scripts/state.py --root <repo> migrate`, preserving legacy evidence as `unknown` rather than falsely green.
 
-Prefer actual manifests/source layout over README claims.
+State separately records authoring, T1, T2, T3, and release-gate results. T1 baseline selection prefers the last trustworthy T1 run, then T3, then upstream merge-base.
 
-## Execution strengths
+## Git workflows
 
-- `quick`: static checks, affected unit tests, smoke checks.
-- `standard`: relevant unit/integration/API plus affected E2E/UI and basic UAT evidence.
-- `strict`: full required suites, UAT, coverage, artifact/runtime and compatibility verification where runnable.
+`git-commit` internally embeds the T1 selection/execution policy as its default preflight, then stages intentional paths, scans the exact Git Index/tree, applies scoped risk authorization, and creates one local commit. It must not contact a remote.
 
-Defaults: run-t3=`strict`, run-t2=`quick`, run-t1=diff-driven (no fixed strength), add=`standard`, commit/sync preflight=repository policy or `quick`.
+`git-sync` embeds `git-commit`, fetches/integrates, resolves only clear/testable conflicts, reruns T1 on the integrated state, optionally runs T2 before PR creation, scans outgoing history/final tree, and normally pushes. It never force-pushes by default.
 
-## Global quality rules
+## Global truth and safety
 
-1. Never report a test as passed unless executed successfully.
-2. Generated-but-not-run and skipped are not passed.
-3. Do not weaken assertions or add unconditional skips to make suites green.
-4. Classify implementation, test, expectation, flaky, environment, and dependency failures.
-5. Preserve unrelated user changes.
-6. Add regression tests for defects fixed.
-7. Keep docs/state aligned with actual evidence.
-8. Do not claim coverage without a report.
-9. Do not silently rewrite Git history.
-10. Prefer Markdown policy/reference sedimentation; use scripts for deterministic fact collection, parsing, validation, and state only.
+- Executed success is required for `passed`; generated and skipped are not passed.
+- Do not weaken assertions or hide failures.
+- Preserve unrelated user work.
+- Coverage and counts require real reports.
+- Planned UAT is not executed UAT.
+- Risk authorization bypasses the stop decision, not scanning or audit evidence.
+- Force push, history rewrite, release/deploy, branch deletion, and external production changes require separate authorization.
 
-## `/siyk-test-add`
+## Client discovery
 
-Load `commands/test-add.md`. It establishes a trustworthy baseline, identifies changed behavior and blast radius, authors direct/regression test cases, validates them, and updates incremental evidence.
+Claude Code and Codex adapters consume the Markdown registry. Installers remove or archive deprecated owned entries so upgrades do not leave stale `/siyk-test-new` or `/siyk-test-full` candidates.
 
-## `/siyk-test-run-t1`
+## Completion
 
-Load `commands/test-run-t1.md`. T1 change regression: collect committed + uncommitted diff, identify changed behavior, expand blast radius across shared code, confirm the affected case set, and execute it in increasing cost order.
-
-## `/siyk-test-run-t2`
-
-Load `commands/test-run-t2.md`. T2 smoke: execute the fixed selectable subset — one representative main path plus one permission/boundary case per module.
-
-## `/siyk-test-run-t3`
-
-Load `commands/test-run-t3.md`. T3 full: inventory the entire repository, map behavior to test layers, close meaningful gaps, execute/repair all suites (incl. real UAT), and persist evidence and a full baseline.
-
-All four testing commands must load `references/testing-tiers.md` and `references/testing-common.md` plus detected project strategy references.
-
-## `/siyk-git-commit`
-
-Load `commands/git-commit.md`. It creates one cohesive local commit or verified no-op. It stages intentional paths, runs preflight, scans the exact Git Index/tree using Git-native commands, applies explicit risk authorizations, commits, and reports remaining worktree state.
-
-It is local-only and must not contact or mutate a remote.
-
-## `/siyk-git-sync`
-
-Load `commands/git-sync.md`. It must reuse `commands/git-commit.md` as an internal subworkflow, then fetch, integrate/resolve clear conflicts, reverify, scan the exact outgoing commit range/final tree, and normally push the current branch.
-
-Do not duplicate the local commit logic. Share the risk authorization ledger so unchanged authorized findings are not confirmed twice.
-
-## Supporting references
-
-Load only relevant files:
-
-- `references/testing-tiers.md`
-- `references/testing-common.md`
-- `references/project-detection.md`
-- `references/testing-web.md`
-- `references/testing-android.md`
-- `references/testing-python-skill.md`
-- `references/git-policy.md`
-- `references/git-content-scan.md`
-- `references/risk-authorization.md`
-- `references/subworkflow-composition.md`
-- `references/safety-and-authorization.md`
-- `references/output-contract.md`
-
-Use templates only when the project lacks equivalent docs. Never replace richer docs with smaller generated templates.
-
-## Completion contract
-
-Every result includes detected scope, files changed, commands actually executed, pass/fail/blocked evidence, defects/regressions, docs/state, remaining risks, and exact Git result when applicable.
-
-When blocked, finish independent work and mark `partially complete` or `failed`; do not pretend completion.
+Every result includes project/scope, workflow/tier, baseline, direct and expanded modules, selector/case IDs, files changed, exact commands and outcomes, pass/fail/skipped/blocked, defects/regressions, docs/state, risks, and exact Git result when applicable. Mark blocked work honestly.

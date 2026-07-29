@@ -1,24 +1,18 @@
 ---
 name: siyk-test-run-t1
-description: Run T1 change regression — identify changed behavior from git diff + uncommitted changes, expand blast radius across shared code, and execute affected cases. Use explicitly for /siyk-test-run-t1.
+description: 执行基于当前改动和影响范围的 T1 回归测试. Use explicitly for /siyk-test-run-t1.
 ---
-
 # Codex entrypoint: /siyk-test-run-t1
 
-This is a thin discovery adapter for the installed `siyrs-skill`. It owns no testing, Git, safety, or authorization policy.
+siyrs-skill-entrypoint: true
 
-1. Resolve `<skills-root>` as the parent directory of this Skill directory.
+This is a thin discovery adapter and owns no workflow policy.
+
+1. Resolve `<skills-root>` as the parent directory of this Skill.
 2. Read `<skills-root>/siyrs-skill/SKILL.md` completely.
-3. Load `<skills-root>/siyrs-skill/commands/test-run-t1.md` and every reference that command requires.
-4. Treat the remaining user prompt as arguments and supplemental instructions for `/siyk-test-run-t1`.
-5. Execute the workflow against the current repository and follow the root Skill's completion contract.
-6. Do not copy, weaken, or override core policy in this adapter.
+3. Load the root command registry and the command Markdown registered for `/siyk-test-run-t1`.
+4. Treat the remaining prompt as command arguments and supplemental instructions.
+5. Follow all shared references, safety, state, and evidence contracts.
+6. Do not duplicate, weaken, or override core policy.
 
-If `<skills-root>/siyrs-skill/SKILL.md` is missing, stop and report that the Codex adapter must be reinstalled; do not improvise a reduced workflow.
-
-Explicit invocation forms:
-
-```text
-/siyk-test-run-t1
-$siyk-test-run-t1
-```
+If the core is missing, stop and request reinstall.

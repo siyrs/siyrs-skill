@@ -1,4 +1,4 @@
 # Function Inventory
 
-| ID | Module | Behavior | Entry point | Dependencies | Existing tests | Missing tests | Risk | Status |
+| Function ID | Module | Behavior | Entry point | Dependencies | Risk | Existing layers | Missing layers | Status |
 |---|---|---|---|---|---|---|---|---|

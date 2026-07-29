@@ -1,114 +1,49 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
 adapter_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 skill_source="$(cd "${adapter_dir}/../.." && pwd -P)"
 skills_home="${SIYRS_CODEX_SKILLS_HOME:-${HOME}/.agents/skills}"
-entrypoints=(siyk-test-add siyk-test-run-t1 siyk-test-run-t2 siyk-test-run-t3 siyk-git-commit siyk-git-sync)
-
-mkdir -p "${skills_home}"
-skills_home="$(cd "${skills_home}" && pwd -P)"
 archive_home="${SIYRS_CODEX_SKILL_BACKUPS_HOME:-$(dirname "${skills_home}")/skill-backups}"
-mkdir -p "${archive_home}"
-archive_home="$(cd "${archive_home}" && pwd -P)"
+python_cmd="${PYTHON:-}"
+if [[ -z "${python_cmd}" ]]; then command -v python3 >/dev/null && python_cmd=python3 || python_cmd=python; fi
+mapfile -t entrypoints < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field names)
+mapfile -t legacy_names < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field legacy-names)
+mkdir -p "${skills_home}" "${archive_home}"
+skills_home="$(cd "${skills_home}" && pwd -P)"; archive_home="$(cd "${archive_home}" && pwd -P)"
 core_target="${skills_home}/siyrs-skill"
-
-case "${skills_home}/" in
-  "${skill_source}/"*)
-    echo "Refusing to install inside the source repository: ${skills_home}" >&2
-    exit 2
-    ;;
-esac
-
-case "${archive_home}/" in
-  "${skills_home}/"*)
-    echo "Legacy archive location must be outside the Codex Skills discovery directory: ${archive_home}" >&2
-    exit 5
-    ;;
-esac
-
-archived_legacy=()
-while IFS= read -r -d '' candidate; do
-  candidate_name="$(basename "${candidate}")"
-  if [[ "${candidate_name}" == "siyrs-skill" ]] || [[ " ${entrypoints[*]} " == *" ${candidate_name} "* ]]; then
-    continue
-  fi
-  manifest="${candidate}/SKILL.md"
-  if ! [[ -f "${manifest}" ]] || ! grep -Eq '^name:[[:space:]]*siyrs-skill[[:space:]]*$' "${manifest}"; then
-    continue
-  fi
-  stamp="$(date +%Y%m%d-%H%M%S)"
-  archive_target="${archive_home}/siyrs-skill-duplicate-${stamp}"
-  suffix=1
-  while [[ -e "${archive_target}" ]]; do
-    archive_target="${archive_home}/siyrs-skill-duplicate-${stamp}-${suffix}"
-    suffix=$((suffix + 1))
-  done
-  mv "${candidate}" "${archive_target}"
-  archived_legacy+=("${archive_target}")
-done < <(find "${skills_home}" -mindepth 1 -maxdepth 1 -type d -print0)
-
-stage_root="$(mktemp -d "${skills_home}/.siyrs-codex-install.XXXXXX")"
-cleanup() { rm -rf "${stage_root}"; }
-trap cleanup EXIT
-
-install_core=true
-if [[ -d "${core_target}" ]]; then
-  core_real="$(cd "${core_target}" && pwd -P)"
-  if [[ "${core_real}" == "${skill_source}" ]]; then
-    install_core=false
-  fi
-fi
-
-if [[ "${install_core}" == true ]]; then
-  mkdir -p "${stage_root}/siyrs-skill"
-  cp -R "${skill_source}/." "${stage_root}/siyrs-skill/"
-  rm -rf "${stage_root}/siyrs-skill/.git" \
-         "${stage_root}/siyrs-skill/__pycache__" \
-         "${stage_root}/siyrs-skill/.pytest_cache"
-  find "${stage_root}/siyrs-skill" -type d -name __pycache__ -prune -exec rm -rf {} +
-  find "${stage_root}/siyrs-skill" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
-fi
-
-for name in "${entrypoints[@]}"; do
-  source_dir="${adapter_dir}/entrypoints/${name}"
-  template="${source_dir}/SKILL.template.md"
-  target_stage="${stage_root}/${name}"
-  [[ -f "${template}" ]] || { echo "Missing entrypoint template: ${template}" >&2; exit 3; }
-  mkdir -p "${target_stage}"
-  cp "${template}" "${target_stage}/SKILL.md"
-  if [[ -d "${source_dir}/agents" ]]; then
-    cp -R "${source_dir}/agents" "${target_stage}/agents"
-  fi
-  grep -Eq "^name:[[:space:]]*${name}[[:space:]]*$" "${target_stage}/SKILL.md" || {
-    echo "Invalid entrypoint name in ${template}" >&2
-    exit 4
-  }
-done
-
-replace_target() {
-  local name="$1"
-  local staged="${stage_root}/${name}"
-  local target="${skills_home}/${name}"
-  rm -rf "${target}"
-  mv "${staged}" "${target}"
+case "${skills_home}/" in "${skill_source}/"*) echo "Refusing install inside source" >&2; exit 2;; esac
+case "${archive_home}/" in "${skills_home}/"*) echo "Archive must be outside discovery directory" >&2; exit 5;; esac
+archive_dir(){
+  local source="$1" label="$2" stamp target suffix=1
+  [[ -e "$source" ]] || return 0
+  stamp="$(date +%Y%m%d-%H%M%S)"; target="${archive_home}/${label}-${stamp}"
+  while [[ -e "$target" ]]; do target="${archive_home}/${label}-${stamp}-${suffix}"; suffix=$((suffix+1)); done
+  mv "$source" "$target"; echo "Archived $source -> $target"
 }
-
-if [[ "${install_core}" == true ]]; then
-  replace_target siyrs-skill
+# Archive duplicate roots not using the canonical directory.
+while IFS= read -r -d '' candidate; do
+  name="$(basename "$candidate")"; [[ "$name" == "siyrs-skill" ]] && continue
+  manifest="$candidate/SKILL.md"
+  if [[ -f "$manifest" ]] && grep -Eq '^name:[[:space:]]*siyrs-skill[[:space:]]*$' "$manifest"; then archive_dir "$candidate" "siyrs-skill-duplicate"; fi
+done < <(find "$skills_home" -mindepth 1 -maxdepth 1 -type d -print0)
+# Archive deprecated entrypoints so old picker entries disappear after upgrade.
+for name in "${legacy_names[@]}"; do archive_dir "${skills_home}/${name}" "siyrs-entrypoint-${name}"; done
+stage_root="$(mktemp -d "${skills_home}/.siyrs-codex-install.XXXXXX")"; trap 'rm -rf "${stage_root}"' EXIT
+install_core=true
+if [[ -d "$core_target" ]] && [[ "$(cd "$core_target" && pwd -P)" == "$skill_source" ]]; then install_core=false; fi
+if [[ "$install_core" == true ]]; then
+  mkdir -p "$stage_root/siyrs-skill"; cp -R "$skill_source/." "$stage_root/siyrs-skill/"
+  rm -rf "$stage_root/siyrs-skill/.git" "$stage_root/siyrs-skill/__pycache__" "$stage_root/siyrs-skill/.pytest_cache"
+  find "$stage_root/siyrs-skill" -type d -name __pycache__ -prune -exec rm -rf {} +
+  find "$stage_root/siyrs-skill" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 fi
 for name in "${entrypoints[@]}"; do
-  replace_target "${name}"
+  src="$adapter_dir/entrypoints/$name"; [[ -f "$src/SKILL.template.md" ]] || { echo "Missing $name template" >&2; exit 3; }
+  mkdir -p "$stage_root/$name"; cp "$src/SKILL.template.md" "$stage_root/$name/SKILL.md"
+  [[ -d "$src/agents" ]] && cp -R "$src/agents" "$stage_root/$name/agents"
+  grep -Eq "^name:[[:space:]]*${name}[[:space:]]*$" "$stage_root/$name/SKILL.md" || exit 4
 done
-
-legacy="${HOME}/.codex/skills/siyrs-skill"
-if [[ -e "${legacy}" ]]; then
-  echo "Note: legacy Codex Skill found at ${legacy}; remove it manually after verifying the new install." >&2
-fi
-
-echo "Installed siyrs-skill core to ${core_target}"
-echo "Installed Codex entrypoints: ${entrypoints[*]}"
-if (( ${#archived_legacy[@]} > 0 )); then
-  echo "Archived duplicate siyrs-skill copies: ${archived_legacy[*]}"
-fi
-echo "Restart Codex if /siyk autocomplete does not refresh immediately."
+replace(){ rm -rf "$skills_home/$1"; mv "$stage_root/$1" "$skills_home/$1"; }
+[[ "$install_core" == true ]] && replace siyrs-skill
+for name in "${entrypoints[@]}"; do replace "$name"; done
+echo "Installed siyrs-skill core and entrypoints: ${entrypoints[*]}"

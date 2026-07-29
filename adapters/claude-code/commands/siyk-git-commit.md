@@ -1,7 +1,8 @@
 ---
-description: 把目标改动安全保存为本地 Git 提交；扫描 Index，支持显式风险放行，不访问远程仓库。
-argument-hint: [--no-test] [--allow-risk[=<finding-id|all>]] [提交说明]
+description: 运行 T1 预检并安全保存为本地 Git 提交
+argument-hint: [补充参数或说明]
 disable-model-invocation: true
+siyrs-skill-command-adapter: true
 ---
 
-Use the installed `siyrs-skill` skill. Execute `/siyk-git-commit $ARGUMENTS` against the current repository. Follow the local-only workflow, intentional staging, Git Index/tree scan, explicit risk authorization, preflight, normal commit, and evidence rules. Do not perform any remote Git operation.
+Use the installed `siyrs-skill` core. Execute `/siyk-git-commit $ARGUMENTS` against the current repository and follow the root Skill, selected command Markdown, shared references, authorization, and evidence contracts.

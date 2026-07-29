@@ -1,19 +1,73 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/siyrs/siyrs-skill/schemas/state.schema.json",
-  "title": "siyrs-skill state",
+  "title": "siyrs-skill state v2",
   "type": "object",
-  "required": ["version"],
+  "required": ["version", "last_authoring", "last_t1_run", "last_t2_run", "last_t3_run"],
   "properties": {
-    "version": {"const": 1},
-    "last_full_test_commit": {"type": ["string", "null"]},
-    "last_full_test_fingerprint": {"type": ["string", "null"]},
-    "last_full_test_mode": {"enum": ["quick", "standard", "strict", null]},
-    "last_incremental_test_commit": {"type": ["string", "null"]},
-    "last_incremental_test_fingerprint": {"type": ["string", "null"]},
-    "last_incremental_test_mode": {"enum": ["quick", "standard", "strict", null]},
-    "last_results_file": {"type": ["string", "null"]},
+    "version": {"const": 2},
+    "last_authoring": {"$ref": "#/$defs/authoringRecord"},
+    "last_t1_run": {"$ref": "#/$defs/runRecord"},
+    "last_t2_run": {"$ref": "#/$defs/t2Record"},
+    "last_t3_run": {"$ref": "#/$defs/t3Record"},
+    "last_release_gate": {
+      "type": ["object", "null"],
+      "properties": {
+        "decision": {"enum": ["passed", "failed", "blocked", "unknown"]},
+        "commit": {"type": ["string", "null"]},
+        "fingerprint": {"type": ["string", "null"]},
+        "results_file": {"type": ["string", "null"]},
+        "updated_at": {"type": ["string", "null"], "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "migration": {"type": ["object", "null"], "additionalProperties": true},
     "updated_at": {"type": ["string", "null"], "format": "date-time"}
   },
-  "additionalProperties": true
+  "$defs": {
+    "baseRecord": {
+      "type": "object",
+      "required": ["kind", "case_ids", "modules", "expanded_modules", "blocked_suites"],
+      "properties": {
+        "kind": {"enum": ["authoring", "t1", "t2", "t3"]},
+        "commit": {"type": ["string", "null"]},
+        "fingerprint": {"type": ["string", "null"]},
+        "baseline_commit": {"type": ["string", "null"]},
+        "status": {"enum": ["complete", "partially-complete", "failed", "blocked", "unknown", null]},
+        "results_file": {"type": ["string", "null"]},
+        "case_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "expanded_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "blocked_suites": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "updated_at": {"type": ["string", "null"], "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "runRecord": {"$ref": "#/$defs/baseRecord"},
+    "authoringRecord": {
+      "allOf": [
+        {"$ref": "#/$defs/baseRecord"},
+        {"type": "object", "properties": {"depth": {"enum": ["quick", "standard", "strict", null]}}}
+      ]
+    },
+    "t2Record": {
+      "allOf": [
+        {"$ref": "#/$defs/baseRecord"},
+        {"type": "object", "properties": {"selector_id": {"type": ["string", "null"]}}}
+      ]
+    },
+    "t3Record": {
+      "allOf": [
+        {"$ref": "#/$defs/baseRecord"},
+        {
+          "type": "object",
+          "properties": {
+            "release_gate": {"enum": ["passed", "failed", "blocked", "unknown", null]},
+            "coverage": {"type": ["number", "null"], "minimum": 0, "maximum": 100}
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
 }

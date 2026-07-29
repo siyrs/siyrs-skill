@@ -1,75 +1,32 @@
+---
+command: "/siyk-test-run-t3"
+order: 40
+kind: "test-run"
+tier: "T3"
+strengths: []
+default_strength: null
+aliases_prefix: ["跑t3", "全量沉淀", "全量沉淀测试", "完整沉淀测试", "release gate", "run full"]
+aliases_exact: ["全量", "full"]
+legacy_commands: ["/siyk-test-full"]
+client_entrypoint: true
+deprecated_message: "Use /siyk-test-run-t3; /siyk-test-full is retained as a compatibility alias."
+---
 # Command: `/siyk-test-run-t3`
 
-Purpose: **execute the full suite** (T3): inspect the entire repository, refresh the behavior inventory, close meaningful gaps, execute all required suites across every layer (incl. real UAT), repair failures, and persist trustworthy evidence. T3 is the release gate. This command runs (and may close gaps); to only author new cases use `/siyk-test-add`.
-
-## Inputs
-
-- Strength: `strict` (default), `standard`, or `quick`. T3 is normally `strict`.
-- Optional user scope/exclusions.
-- Repository-local `.siyrs/config.yaml`.
+Purpose: execute and repair the complete release-gate suite across every required layer, refresh the behavior inventory and test matrix, close meaningful gaps, and persist trustworthy evidence.
 
 ## Required references
 
-Load `references/testing-tiers.md`, `references/testing-common.md`, `references/project-detection.md`, the detected project-type testing references, and `references/output-contract.md`.
+Load `references/testing-tiers.md`, `references/testing-selectors.md`, `references/testing-common.md`, `references/project-detection.md`, the detected project strategy, and `references/output-contract.md`.
 
 ## Procedure
 
-### 1. Establish repository and module scope
+1. Inspect the whole repository and classify every meaningful module.
+2. Refresh the behavior inventory, test matrix, tier selectors, UAT plan, and visible test debt.
+3. Add or repair missing high-value coverage, marking T2 cases with native framework selectors and documentation metadata.
+4. Execute static, unit, integration/API/repository/instrumented, UI/E2E, real UAT, build/package/runtime, coverage, and compatibility checks required by repository policy.
+5. Classify every failure, repair legitimate implementation/test defects, add regressions, and rerun complete affected suites.
+6. Distinguish planned UAT from executed UAT. A release gate cannot pass when required real UAT is merely planned or environment-blocked.
+7. Persist `last_t3_run` and `last_release_gate` with commit/fingerprint, status, coverage, blocked suites, evidence path, and release decision.
 
-Read repository instructions, architecture/PRD, manifests, source/test roots, CI, migrations, APIs/routes/screens/commands, jobs, deployment files, and existing test evidence. Detect every meaningful module independently in a monorepo. Record environment limitations before edits.
-
-### 2. Refresh behavior inventory
-
-Create or update `docs/testing/FUNCTION-INVENTORY.md` unless an equivalent source of truth exists. Inventory behavior rather than classes and include entry point, business rule/state transition, dependencies, existing/missing layers, risk, status, and evidence.
-
-Trace critical flows from entry point through business logic to persistence/external boundaries. Do not invent features from names.
-
-### 3. Refresh the test matrix and debt
-
-Create or update `docs/testing/TEST-MATRIX.md`. Map important behaviors to unit, integration/API/repository/instrumented, UI/E2E, UAT, compatibility, and smoke/build layers as appropriate.
-
-Prioritize:
-
-1. business rules/state transitions;
-2. authentication, authorization, tenancy/data isolation, validation;
-3. persistence/migration compatibility;
-4. public API/CLI/UI contracts;
-5. failure/retry/timeout/idempotency/boundaries;
-6. high-value user journeys;
-7. regressions for defects found.
-
-Keep deferred gaps visible as test debt with priority and rationale.
-
-### 4. Implement tests
-
-Apply `references/testing-common.md` and the detected project strategy. Prefer stable CI-suitable coverage. Do not over-generate low-value tests merely to increase file or coverage counts.
-
-When closing gaps, mark new cases per the tier policy (`references/testing-tiers.md`): `T2` for main-path/boundary cases worth smoke, blank for T3-only.
-
-### 5. Execute, diagnose, repair, rerun
-
-Run all layers in increasing cost order: static → unit → integration/API/repository → UI/E2E → real UAT/build/package/runtime. Capture exact commands and outcomes. Classify every failure, fix legitimate implementation/test defects, add regression coverage, then rerun the complete relevant suites.
-
-In `strict`, include configured coverage, artifact/build validation, compatibility, and real runtime/UI/UAT evidence where the environment permits. Mark planned manual UAT separately from executed UAT.
-
-### 6. Persist documentation and baseline
-
-Update or create:
-
-- `docs/TESTING.md`;
-- `docs/testing/FUNCTION-INVENTORY.md`;
-- `docs/testing/TEST-MATRIX.md`;
-- `docs/testing/UAT.md`;
-- `docs/testing/TEST-RESULTS.md`.
-
-Preserve richer existing documentation. Record actual results, blocked suites, measured coverage, remaining debt, and selected strength.
-
-Update `.siyrs/state.json` only after evidence is saved and the tested state is represented by a durable commit or deterministic fingerprint.
-
-### 7. Completion decision
-
-- **complete**: required suites for the selected strength passed and evidence/baseline are saved;
-- **partially complete**: meaningful tests/docs were added but named suites are blocked/failing with explicit evidence;
-- **failed**: no trustworthy result can be produced or the repository is left worse.
-
-Use `references/output-contract.md`.
+T3 is always the strict full release gate and does not accept a separate strength argument.
