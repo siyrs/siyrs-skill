@@ -5,7 +5,7 @@ description: Project-level engineering quality workflows. Use when the user invo
 
 # siyrs-skill
 
-Version: **0.1.3**  
+Version: **0.1.4**  
 Command prefix: **`siyk`**
 
 Use this Skill as a project-level engineering quality controller. Detect repository type before selecting test strategy. Produce real repository changes, execute real verification when possible, and report evidence rather than claiming completion from file generation alone.
@@ -29,6 +29,14 @@ Aliases:
 Use `<skill-dir>/scripts/route_command.py` when normalization evidence is useful. The router does not execute workflows.
 
 A literal command authorizes its normal bounded side effects. Content/privacy findings may be explicitly authorized under `references/risk-authorization.md`; destructive or scope-expanding operations still require separate authorization.
+
+## Client discovery model
+
+The root Skill owns all policy. Client adapters may expose thin entrypoints for discovery, but they must load this root Skill and the selected `commands/*.md` file rather than duplicating workflow rules.
+
+- Claude Code registers four command adapters.
+- Codex installs four thin skills named `siyk-test-full`, `siyk-test-new`, `siyk-git-commit`, and `siyk-git-sync`; enabled skills then appear in Codex's `/` picker and remain invokable through `$skill-name`.
+- Thin entrypoints must disable implicit invocation so they do not compete with the root Skill's description-based routing.
 
 ## Mandatory project classification
 
