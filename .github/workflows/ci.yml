@@ -63,3 +63,41 @@ jobs:
             if (-not (Test-Path (Join-Path $target "commands/$name.md"))) { throw "Command missing: $name" }
           }
           if (Test-Path (Join-Path $target "skills/siyrs-skill/.git")) { throw "Git metadata copied" }
+  codex-adapter-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash syntax
+        run: bash -n adapters/codex/install.sh
+      - name: Install and reinstall smoke
+        run: |
+          export SIYRS_CODEX_SKILLS_HOME="$RUNNER_TEMP/agents-skills"
+          bash adapters/codex/install.sh
+          bash adapters/codex/install.sh
+          test -f "$SIYRS_CODEX_SKILLS_HOME/siyrs-skill/SKILL.md"
+          for name in siyk-test-full siyk-test-new siyk-git-commit siyk-git-sync; do
+            test -f "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.md"
+            grep -Eq "^name:[[:space:]]*$name[[:space:]]*$" "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.md"
+            test -f "$SIYRS_CODEX_SKILLS_HOME/$name/agents/openai.yaml"
+            test ! -e "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.template.md"
+          done
+          test ! -e "$SIYRS_CODEX_SKILLS_HOME/siyrs-skill/.git"
+  codex-adapter-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and reinstall smoke
+        shell: pwsh
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP "agents-skills"
+          ./adapters/codex/install.ps1 -SkillsHome $target
+          ./adapters/codex/install.ps1 -SkillsHome $target
+          if (-not (Test-Path (Join-Path $target "siyrs-skill/SKILL.md"))) { throw "Core Skill missing" }
+          foreach ($name in @("siyk-test-full", "siyk-test-new", "siyk-git-commit", "siyk-git-sync")) {
+            $skill = Join-Path $target "$name/SKILL.md"
+            if (-not (Test-Path $skill)) { throw "Codex entrypoint missing: $name" }
+            if ((Get-Content -Raw $skill) -notmatch "(?m)^name:\s*$([regex]::Escape($name))\s*$") { throw "Invalid Codex entrypoint: $name" }
+            if (-not (Test-Path (Join-Path $target "$name/agents/openai.yaml"))) { throw "Codex metadata missing: $name" }
+            if (Test-Path (Join-Path $target "$name/SKILL.template.md")) { throw "Template leaked into installed Skill: $name" }
+          }
+          if (Test-Path (Join-Path $target "siyrs-skill/.git")) { throw "Git metadata copied" }
