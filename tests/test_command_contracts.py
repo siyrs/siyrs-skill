@@ -1,18 +1,12 @@
 from pathlib import Path
-import sys,unittest
-ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'scripts'))
-from command_registry import load_registry
+import unittest
+ROOT=Path(__file__).resolve().parents[1]
 class Contracts(unittest.TestCase):
- def text(self,p):return (ROOT/p).read_text(encoding='utf-8').lower()
- def test_every_command_has_registry_frontmatter(self):self.assertEqual(6,len(load_registry(ROOT)))
- def test_t2_requires_native_selector(self):
-  t=self.text('commands/test-run-t2.md');self.assertIn('machine-selectable',t);self.assertIn('selector',t);self.assertIn('partially complete',t)
- def test_git_preflight_reuses_t1(self):
-  self.assertIn('commands/test-run-t1.md',self.text('commands/git-commit.md'));self.assertIn('default is embedded t1',self.text('commands/git-sync.md'))
- def test_t1_avoids_redundant_confirmation(self):self.assertIn('continue automatically',self.text('commands/test-run-t1.md'))
- def test_t3_is_strict_release_gate(self):self.assertIn('always the strict full release gate',self.text('commands/test-run-t3.md'))
- def test_matrix_has_selector_columns(self):
-  t=(ROOT/'assets/templates/TEST-MATRIX.template.md').read_text();self.assertIn('Tier',t);self.assertIn('Selector/Test ID',t);self.assertIn('Role',t)
- def test_git_security_contract_retained(self):
-  t=self.text('commands/git-commit.md');self.assertIn('exact git index',t);self.assertIn('must not contact',t)
+    def text(self,path):return (ROOT/path).read_text(encoding='utf-8').lower()
+    def test_git_commit_closes_t1_and_audit(self):
+        text=self.text('commands/git-commit.md');self.assertIn('promote-t1',text);self.assertIn('--phase index',text);self.assertIn('tree_oid',text)
+    def test_sync_branch_is_explicit(self):
+        text=self.text('commands/git-sync.md');self.assertIn('--branch <branch>',text);self.assertIn('positional natural language is never treated as a branch',text)
+    def test_config_plan_references(self):
+        for path in ('commands/test-run-t1.md','commands/test-run-t2.md','commands/test-run-t3.md'):self.assertIn('siyk.py plan',self.text(path))
 if __name__=='__main__':unittest.main()

@@ -12,17 +12,12 @@ client_entrypoint: true
 ---
 # Command: `/siyk-git-commit`
 
-Purpose: safely save one cohesive local Git commit. It **must not contact or mutate a remote**. It is also the reusable local-save child of `/siyk-git-sync`.
+Purpose: safely save one cohesive local Git commit. It **must not contact or mutate a remote**.
 
-## Required references
-
-Load `references/git-content-scan.md`, `references/risk-authorization.md`, `references/git-policy.md`, `references/subworkflow-composition.md`, `references/testing-tiers.md`, `references/testing-common.md`, and `references/output-contract.md`.
-
-## Procedure
-
-1. Inspect repository, current branch, operation/conflict state, worktrees/submodules, and intentional change scope. Preserve unrelated work.
-2. Unless `--no-test` is explicit, execute the configured `testing.preflight.commit` profile. Default is the T1 selection/execution subworkflow from `commands/test-run-t1.md`, embedded without recursively invoking a client slash command. Do not add a redundant confirmation when the T1 scope is unambiguous.
-3. Stage explicit intentional paths. Never blindly include unrelated/generated/unknown files.
-4. Scan the exact Git Index and candidate tree using `references/git-content-scan.md`. Apply scoped risk authorizations without skipping the scan.
-5. Create one normal commit, allow hooks, and rescan/restage if hooks modify content. Do not amend, rewrite history, bypass hooks, fetch, pull, merge, rebase, push, or create a PR unless separately authorized by another workflow.
-6. Return `committed`, `no-op`, `blocked`, or `failed` with commit hash/files, preflight profile/results, Index findings, risk ledger, remaining worktree, and `remote result: not contacted and not modified`.
+1. Inspect repository, branch, operation/conflict state, worktrees/submodules, and intentional scope; preserve unrelated work.
+2. Unless `--no-test`, validate config and execute configured `testing.preflight.commit` (default embedded T1) without a redundant confirmation for an unambiguous normal-cost set.
+3. Stage explicit intentional paths. Compute the candidate tree and bind the complete T1 evidence to its fingerprint and `tree_oid`.
+4. Run `<skill-dir>/scripts/siyk.py audit --root <repo> --phase index`; the deterministic Git audit is the factual source for Index/tree findings. Apply scoped risk authorization without skipping audit.
+5. Create one normal commit and allow hooks. If hooks change staged content, restage, recompute the tree, rerun affected T1 verification, and reaudit.
+6. Promote the pre-commit T1 evidence with `<skill-dir>/scripts/state.py --root <repo> promote-t1 --commit HEAD`; promotion must verify the commit tree equals the tested candidate tree.
+7. Return `committed`, `no-op`, `blocked`, or `failed` with commit, T1 plan/evidence, audit findings, risk ledger, remaining worktree, and `remote result: not contacted and not modified`.

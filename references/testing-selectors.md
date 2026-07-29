@@ -1,59 +1,26 @@
 # Framework-native test selector policy
 
-T2 must be selected by deterministic project-native commands. Documentation metadata helps inventory cases but is not the execution authority.
+T2 must use deterministic project-native commands. Documentation metadata is linkage, not execution authority.
 
-## Configuration contract
+Validate and resolve configuration first:
 
-Projects define selectors under `.siyrs/config.yaml`:
-
-```yaml
-testing:
-  tiers:
-    t1:
-      commands: []
-    t2:
-      selector_id: smoke-v1
-      commands: []
-      required_per_module:
-        main_path: 1
-        boundary: 1
-    t3:
-      commands: []
-      require_real_uat: true
+```text
+python <skill-dir>/scripts/siyk.py config validate --root <repo>
+python <skill-dir>/scripts/siyk.py plan --root <repo> --tier t2
 ```
 
-Commands may be global or supplied per module in `project.modules`. Existing repository scripts are preferred over long inline shell expressions.
-
-## Recommended markers
+Recommended selectors:
 
 | Ecosystem | Marker | Typical selection |
 |---|---|---|
-| JUnit 5 / Maven | `@Tag("T2")` | `mvn test -Dgroups=T2` or project profile |
-| JUnit 5 / Gradle | `@Tag("T2")` | `useJUnitPlatform { includeTags("T2") }` task |
+| JUnit 5 / Maven | `@Tag("T2")` | repository profile or command selecting T2 |
+| JUnit 5 / Gradle | `@Tag("T2")` | task with `includeTags("T2")` |
 | pytest | `@pytest.mark.t2` | `pytest -m t2` |
-| Playwright | title/tag `@t2` | `playwright test --grep @t2` |
-| Jest/Vitest | project script or `[T2]` convention | repository script with deterministic pattern |
-| Android instrumentation | annotation/category or dedicated suite | Gradle/instrumentation task selecting annotation |
-| CLI/Skill | named unittest/pytest class or dedicated suite | repository script selecting smoke cases |
+| Playwright | `@t2` | `playwright test --grep @t2` |
+| Jest/Vitest | project script/tag convention | deterministic repository script |
+| Android | annotation/category/dedicated suite | instrumentation/Gradle selector |
+| CLI/Skill | dedicated smoke class/suite | deterministic named suite |
 
-Do not invent a command that the framework cannot execute. Validate the selector by listing or dry-running selected cases when supported.
+`TEST-MATRIX` links Tier, Role, Module, and Selector/Test ID to code. `test-add` adds marker and documentation together.
 
-## Documentation linkage
-
-`TEST-MATRIX` should include:
-
-- `Tier` (`T2` or blank/T3-only);
-- `Selector/test ID` mapping to real code;
-- `Module` and `Role` (`main-path` or `boundary`).
-
-`test-add` must add native markers and documentation rows together when a case enters T2. `test-run-t2` records selector ID, commands, and selected case IDs.
-
-## Selector debt
-
-When no deterministic selector exists:
-
-1. choose a conservative fallback set;
-2. run it if useful;
-3. label the result `partially complete`;
-4. record the missing selector as test debt;
-5. do not claim a stable T2 gate.
+When no deterministic selector exists, a conservative fallback may run but the result is `partially complete`, selector debt is recorded, and no stable T2 gate is claimed.

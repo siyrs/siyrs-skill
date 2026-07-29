@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Read, migrate, and atomically update .siyrs/state.json (schema v2)."""
+"""Read, migrate, atomically update, and promote .siyrs/state.json schema v2."""
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import subprocess
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
@@ -13,6 +14,11 @@ from typing import Any
 STATE_VERSION = 2
 STATUSES = {"complete", "partially-complete", "failed", "blocked", "unknown"}
 KINDS = {"authoring", "t1", "t2", "t3"}
+RELEASE_DECISIONS = {"passed", "failed", "blocked", "unknown", "provisional"}
+
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 def empty_record(kind: str) -> dict[str, Any]:
@@ -20,6 +26,7 @@ def empty_record(kind: str) -> dict[str, Any]:
         "kind": kind,
         "commit": None,
         "fingerprint": None,
+        "tree_oid": None,
         "baseline_commit": None,
         "status": None,
         "results_file": None,
@@ -31,6 +38,8 @@ def empty_record(kind: str) -> dict[str, Any]:
     }
     if kind == "authoring":
         record["depth"] = None
+    if kind == "t1":
+        record["promotion"] = None
     if kind == "t2":
         record["selector_id"] = None
     if kind == "t3":
@@ -57,8 +66,7 @@ def migrate_v1(data: dict[str, Any]) -> dict[str, Any]:
     incremental_commit = data.get("last_incremental_test_commit")
     incremental_fp = data.get("last_incremental_test_fingerprint")
     if incremental_commit or incremental_fp:
-        record = migrated["last_authoring"]
-        record.update({
+        migrated["last_authoring"].update({
             "commit": incremental_commit,
             "fingerprint": incremental_fp,
             "depth": data.get("last_incremental_test_mode"),
@@ -69,8 +77,7 @@ def migrate_v1(data: dict[str, Any]) -> dict[str, Any]:
     full_commit = data.get("last_full_test_commit")
     full_fp = data.get("last_full_test_fingerprint")
     if full_commit or full_fp:
-        record = migrated["last_t3_run"]
-        record.update({
+        migrated["last_t3_run"].update({
             "commit": full_commit,
             "fingerprint": full_fp,
             "status": "unknown",
@@ -85,23 +92,30 @@ def migrate_v1(data: dict[str, Any]) -> dict[str, Any]:
             "results_file": data.get("last_results_file"),
             "updated_at": data.get("updated_at"),
         }
+    migrated_at = now_iso()
     migrated["migration"] = {
         "from_version": 1,
-        "migrated_at": datetime.now(timezone.utc).isoformat(),
+        "migrated_at": migrated_at,
         "note": "Legacy full/incremental evidence preserved with unknown completion semantics.",
     }
-    migrated["updated_at"] = data.get("updated_at") or migrated["migration"]["migrated_at"]
+    migrated["updated_at"] = data.get("updated_at") or migrated_at
     return migrated
 
 
 def normalize_v2(data: dict[str, Any]) -> dict[str, Any]:
     result = default_state()
     result.update(data)
-    for key, kind in (("last_authoring", "authoring"), ("last_t1_run", "t1"), ("last_t2_run", "t2"), ("last_t3_run", "t3")):
+    for key, kind in (
+        ("last_authoring", "authoring"),
+        ("last_t1_run", "t1"),
+        ("last_t2_run", "t2"),
+        ("last_t3_run", "t3"),
+    ):
         record = empty_record(kind)
         existing = result.get(key)
         if isinstance(existing, dict):
             record.update(existing)
+        record["kind"] = kind
         result[key] = record
     result["version"] = STATE_VERSION
     return result
@@ -147,6 +161,7 @@ def update_state(
     status: str,
     commit: str | None = None,
     fingerprint: str | None = None,
+    tree_oid: str | None = None,
     baseline_commit: str | None = None,
     results_file: str | None = None,
     depth: str | None = None,
@@ -168,10 +183,14 @@ def update_state(
         raise ValueError("authoring update requires depth quick|standard|strict")
     if kind == "t2" and not selector_id:
         raise ValueError("T2 update requires selector_id")
-    if kind == "t3" and release_gate not in {"passed", "failed", "blocked", "unknown"}:
-        raise ValueError("T3 update requires release_gate passed|failed|blocked|unknown")
+    if kind == "t3" and release_gate not in RELEASE_DECISIONS:
+        raise ValueError("T3 update requires a valid release_gate decision")
+    if kind != "t1" and tree_oid is not None:
+        raise ValueError("tree_oid is currently supported only for T1 records")
     if coverage is not None and not 0 <= coverage <= 100:
         raise ValueError("coverage must be between 0 and 100")
+    if kind == "t3" and release_gate == "passed" and not commit:
+        raise ValueError("T3 release_gate=passed requires a durable commit; use provisional for a worktree fingerprint")
 
     updated = normalize_v2(deepcopy(data))
     key = {
@@ -180,11 +199,12 @@ def update_state(
         "t2": "last_t2_run",
         "t3": "last_t3_run",
     }[kind]
-    now = datetime.now(timezone.utc).isoformat()
+    timestamp = now_iso()
     record = empty_record(kind)
     record.update({
         "commit": commit,
         "fingerprint": fingerprint,
+        "tree_oid": tree_oid,
         "baseline_commit": baseline_commit,
         "status": status,
         "results_file": results_file,
@@ -192,13 +212,13 @@ def update_state(
         "modules": _unique(modules),
         "expanded_modules": _unique(expanded_modules),
         "blocked_suites": _unique(blocked_suites),
-        "updated_at": now,
+        "updated_at": timestamp,
     })
     if kind == "authoring":
         record["depth"] = depth
-    if kind == "t2":
+    elif kind == "t2":
         record["selector_id"] = selector_id
-    if kind == "t3":
+    elif kind == "t3":
         record["release_gate"] = release_gate
         record["coverage"] = coverage
         updated["last_release_gate"] = {
@@ -206,10 +226,65 @@ def update_state(
             "commit": commit,
             "fingerprint": fingerprint,
             "results_file": results_file,
-            "updated_at": now,
+            "updated_at": timestamp,
         }
     updated[key] = record
-    updated["updated_at"] = now
+    updated["updated_at"] = timestamp
+    return updated
+
+
+def _git(repo: Path, *args: str) -> str:
+    completed = subprocess.run(
+        ["git", *args], cwd=repo, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, check=False,
+    )
+    if completed.returncode != 0:
+        message = completed.stderr.strip() or completed.stdout.strip() or f"git {' '.join(args)} failed"
+        raise ValueError(message)
+    return completed.stdout.strip()
+
+
+def promote_t1(
+    root: Path,
+    data: dict[str, Any],
+    *,
+    commit: str = "HEAD",
+    expected_fingerprint: str | None = None,
+) -> dict[str, Any]:
+    root = root.resolve()
+    record = normalize_v2(data)["last_t1_run"]
+    if record.get("status") != "complete":
+        raise ValueError("only a complete T1 result can be promoted to a commit")
+    fingerprint = record.get("fingerprint")
+    if not fingerprint:
+        raise ValueError("T1 promotion requires a pre-commit fingerprint")
+    if expected_fingerprint and fingerprint != expected_fingerprint:
+        raise ValueError("T1 fingerprint does not match --expected-fingerprint")
+    expected_tree = record.get("tree_oid")
+    if not expected_tree:
+        raise ValueError("T1 promotion requires tree_oid captured from the staged candidate tree")
+
+    commit_sha = _git(root, "rev-parse", "--verify", f"{commit}^{{commit}}")
+    commit_tree = _git(root, "rev-parse", "--verify", f"{commit_sha}^{{tree}}")
+    if commit_tree != expected_tree:
+        raise ValueError(
+            f"commit tree {commit_tree} does not match tested candidate tree {expected_tree}; rerun T1 after restaging"
+        )
+
+    updated = normalize_v2(deepcopy(data))
+    promoted_at = now_iso()
+    promoted = dict(updated["last_t1_run"])
+    promoted["commit"] = commit_sha
+    promoted["tree_oid"] = commit_tree
+    promoted["promotion"] = {
+        "from_fingerprint": fingerprint,
+        "commit": commit_sha,
+        "tree_oid": commit_tree,
+        "promoted_at": promoted_at,
+    }
+    promoted["updated_at"] = promoted_at
+    updated["last_t1_run"] = promoted
+    updated["updated_at"] = promoted_at
     return updated
 
 
@@ -223,24 +298,31 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("show")
     sub.add_parser("migrate")
+
     update = sub.add_parser("update")
     update.add_argument("--kind", choices=sorted(KINDS), required=True)
     update.add_argument("--status", choices=sorted(STATUSES), required=True)
     update.add_argument("--commit")
     update.add_argument("--fingerprint")
+    update.add_argument("--tree-oid")
     update.add_argument("--baseline-commit")
     update.add_argument("--results-file")
     update.add_argument("--depth", choices=["quick", "standard", "strict"])
     update.add_argument("--selector-id")
-    update.add_argument("--release-gate", choices=["passed", "failed", "blocked", "unknown"])
+    update.add_argument("--release-gate", choices=sorted(RELEASE_DECISIONS))
     update.add_argument("--coverage", type=float)
     update.add_argument("--case-ids")
     update.add_argument("--modules")
     update.add_argument("--expanded-modules")
     update.add_argument("--blocked-suites")
-    args = parser.parse_args()
 
-    path = Path(args.root).resolve() / ".siyrs" / "state.json"
+    promote = sub.add_parser("promote-t1")
+    promote.add_argument("--commit", default="HEAD")
+    promote.add_argument("--expected-fingerprint")
+
+    args = parser.parse_args()
+    root = Path(args.root).resolve()
+    path = root / ".siyrs" / "state.json"
     try:
         data = load(path)
         if args.command == "show":
@@ -250,23 +332,27 @@ def main() -> int:
             save(path, data)
             print(json.dumps(data, ensure_ascii=False, indent=2))
             return 0
-        data = update_state(
-            data,
-            kind=args.kind,
-            status=args.status,
-            commit=args.commit,
-            fingerprint=args.fingerprint,
-            baseline_commit=args.baseline_commit,
-            results_file=args.results_file,
-            depth=args.depth,
-            selector_id=args.selector_id,
-            release_gate=args.release_gate,
-            coverage=args.coverage,
-            case_ids=_csv(args.case_ids),
-            modules=_csv(args.modules),
-            expanded_modules=_csv(args.expanded_modules),
-            blocked_suites=_csv(args.blocked_suites),
-        )
+        if args.command == "promote-t1":
+            data = promote_t1(root, data, commit=args.commit, expected_fingerprint=args.expected_fingerprint)
+        else:
+            data = update_state(
+                data,
+                kind=args.kind,
+                status=args.status,
+                commit=args.commit,
+                fingerprint=args.fingerprint,
+                tree_oid=args.tree_oid,
+                baseline_commit=args.baseline_commit,
+                results_file=args.results_file,
+                depth=args.depth,
+                selector_id=args.selector_id,
+                release_gate=args.release_gate,
+                coverage=args.coverage,
+                case_ids=_csv(args.case_ids),
+                modules=_csv(args.modules),
+                expanded_modules=_csv(args.expanded_modules),
+                blocked_suites=_csv(args.blocked_suites),
+            )
         save(path, data)
     except (ValueError, json.JSONDecodeError, OSError) as exc:
         print(json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2))

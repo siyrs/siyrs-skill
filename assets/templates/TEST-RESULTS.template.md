@@ -1,27 +1,23 @@
 # Test Results
 
-- Date/time:
-- Repository/commit/fingerprint:
-- Workflow: authoring / T1 / T2 / T3
+- Workflow/Tier:
+- Config validation:
+- Plan ID/selector:
+- Repository commit/fingerprint/tree:
 - Baseline:
-- Selector ID:
 - Direct modules:
 - Expanded modules:
-- Case IDs:
 - Status:
-- T3 release gate:
 
 ## Executed commands
 
-| Command | Exit | Result | Evidence |
-|---|---:|---|---|
+| ID | CWD | Command/argv | Exit | Result | Evidence |
+|---|---|---|---:|---|---|
 
-## Pass/fail/skipped/blocked
+## Findings, defects, and regressions
 
-## Defects and regression coverage
+## Blocked/skipped
 
-## UAT: planned vs executed
+## State promotion/release decision
 
-## Coverage
-
-## Remaining debt and risks
+## Remaining debt/risks

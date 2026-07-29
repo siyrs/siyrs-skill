@@ -1,16 +1,10 @@
-# v0.2.2 Acceptance
+# v0.2.3 Acceptance
 
-- [x] Six commands are loaded from Markdown frontmatter.
-- [x] Legacy test commands route with deprecation warnings.
-- [x] T1/T2/T3 reject unsupported strengths.
-- [x] T1/T2/T3 aliases are case-insensitive without broad-prefix false positives.
-- [x] CI contains only current command smoke checks.
-- [x] Claude and Codex installers remove/archive old test entrypoints.
-- [x] Config and state schemas are v2.
-- [x] State v1 migration preserves evidence as unknown.
-- [x] T1 prefers last trustworthy T1/T3 baseline.
-- [x] T2 has native selector configuration and framework conventions.
-- [x] Test matrix/result templates record tier and selector evidence.
-- [x] Git commit and post-integration sync preflight reuse T1; PR may require T2.
-- [x] Validator compares registry, adapters, installers, CI, schemas, docs, and release manifest.
-- [x] Unit/contract tests, compile, scans, and installer smoke checks pass before release.
+- [x] State record definitions are closed without broken `allOf` inheritance.
+- [x] macOS-compatible Bash installers and macOS CI exist.
+- [x] Config v2 validates through standard-library parsing.
+- [x] T1/T2/T3 plans resolve deterministically with module overrides.
+- [x] T1 promotion verifies fingerprint evidence against the exact commit tree.
+- [x] `git-sync` only accepts branches through validated `--branch`.
+- [x] Index and outgoing-history Git audits produce stable redacted findings.
+- [x] Unit/contract, installer, compile, bundle, and repository scan gates pass.
