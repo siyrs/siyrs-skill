@@ -13,11 +13,16 @@ ROOT = Path(__file__).resolve().parents[1]
 PARTS = ROOT / '.github' / 'v023-parts'
 SELF = ROOT / '.github' / 'apply_v023.py'
 WORKFLOW = ROOT / '.github' / 'workflows' / 'apply-v023.yml'
+CI = ROOT / '.github' / 'workflows' / 'ci.yml'
 
 
 def run(*args: str) -> None:
     print('+', ' '.join(args), flush=True)
     subprocess.run(args, cwd=ROOT, check=True)
+
+
+def git_bytes(*args: str) -> bytes:
+    return subprocess.check_output(['git', *args], cwd=ROOT)
 
 
 def safe_extract(payload: bytes) -> None:
@@ -35,6 +40,9 @@ def safe_extract(payload: bytes) -> None:
 
 
 def main() -> None:
+    original_apply_workflow = WORKFLOW.read_bytes()
+    original_ci = git_bytes('show', 'HEAD:.github/workflows/ci.yml')
+
     chunks = sorted(path for path in PARTS.iterdir() if path.is_file())
     if not chunks:
         raise RuntimeError('v0.2.3 payload chunks are missing')
@@ -56,6 +64,11 @@ def main() -> None:
     run('bash', '-n', 'adapters/codex/install.sh')
     run('python', 'scripts/siyk.py', 'config', 'validate', '--root', '.', '--file', 'assets/config.example.yaml', '--required')
     run('python', 'scripts/siyk.py', 'scan', '--root', '.', '--all')
+
+    # GITHUB_TOKEN cannot update workflow files in this repository. Restore them
+    # for this push; the connected GitHub app will atomically finalize CI later.
+    WORKFLOW.write_bytes(original_apply_workflow)
+    CI.write_bytes(original_ci)
 
     run('git', 'config', 'user.name', 'github-actions[bot]')
     run('git', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')
