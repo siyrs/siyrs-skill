@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.5 - 2026-07-29
+
+### Fixed
+
+- Codex installers archive duplicate `siyrs-skill` manifests outside the discovery directory, preventing stale backups from appearing as duplicate root-Skill picker entries.
+- Windows adapter tests now use Git Bash when available instead of accidentally invoking WSL's `bash.exe` with Windows paths.
+- The PowerShell installer excludes root Git metadata before copying, avoiding path-length failures from local Codex checkpoint refs.
+
+### Changed
+
+- Codex installer archive destination is configurable through `-LegacyArchiveHome` (PowerShell) or `SIYRS_CODEX_SKILL_BACKUPS_HOME` (Bash).
+
 ## 0.1.4 - 2026-07-29
 
 ### Added

@@ -1,6 +1,6 @@
 {
   "name": "siyrs-skill",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "python_requires": ">=3.10",
   "commands": [
     "/siyk-test-full",
@@ -59,6 +59,7 @@
     "docs/RELEASE-REPORT-v0.1.2.md",
     "docs/RELEASE-REPORT-v0.1.3.md",
     "docs/RELEASE-REPORT-v0.1.4.md",
+    "docs/RELEASE-REPORT-v0.1.5.md",
     "docs/ROADMAP.md",
     "references/git-content-scan.md",
     "references/git-policy.md",

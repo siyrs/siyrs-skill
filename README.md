@@ -6,7 +6,7 @@
 
 - Skill：`siyrs-skill`
 - 命令前缀：`siyk`
-- 当前版本：`v0.1.4`
+- 当前版本：`v0.1.5`
 - Python：3.10+
 - 原则：业务/流程判断优先沉淀为 Markdown；脚本只做确定性采集、解析、校验和状态维护
 
@@ -104,6 +104,8 @@ $siyk-git-sync
 ```
 
 四个入口只负责发现和路由，执行时会读取同级的 `siyrs-skill` 核心，不复制测试、Git、安全或授权规则。
+
+安装器会自动把 `$HOME/.agents/skills` 中其他声明为 `siyrs-skill` 的直接子目录移到 `$HOME/.agents/skill-backups`，避免旧副本导致重复候选。PowerShell 可用 `-LegacyArchiveHome`，Bash 可用 `SIYRS_CODEX_SKILL_BACKUPS_HOME` 指定归档位置。
 
 ## 测试模型
 

@@ -5,7 +5,7 @@ description: Project-level engineering quality workflows. Use when the user invo
 
 # siyrs-skill
 
-Version: **0.1.4**  
+Version: **0.1.5**
 Command prefix: **`siyk`**
 
 Use this Skill as a project-level engineering quality controller. Detect repository type before selecting test strategy. Produce real repository changes, execute real verification when possible, and report evidence rather than claiming completion from file generation alone.

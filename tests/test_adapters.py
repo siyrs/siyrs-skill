@@ -10,6 +10,13 @@ ROOT = Path(__file__).resolve().parents[1]
 NAMES = ("siyk-test-full", "siyk-test-new", "siyk-git-commit", "siyk-git-sync")
 
 
+def native_bash() -> str | None:
+    if os.name == "nt":
+        candidate = Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Git" / "bin" / "bash.exe"
+        return str(candidate) if candidate.is_file() else None
+    return shutil.which("bash")
+
+
 class AdapterTests(unittest.TestCase):
     def test_claude_command_adapters_exist(self):
         command_dir = ROOT / "adapters" / "claude-code" / "commands"
@@ -51,19 +58,23 @@ class AdapterTests(unittest.TestCase):
         self.assertIn("${HOME}/.agents/skills", bash_text)
         self.assertIn('".agents\\skills"', ps_text)
         self.assertNotIn(".codex/prompts", bash_text)
+        self.assertIn("SIYRS_CODEX_SKILL_BACKUPS_HOME", bash_text)
+        self.assertIn("LegacyArchiveHome", ps_text)
         for name in NAMES:
             self.assertIn(name, bash_text)
             self.assertIn(name, ps_text)
 
-    @unittest.skipUnless(shutil.which("bash"), "bash is required for installer smoke test")
+    @unittest.skipUnless(native_bash(), "a native Bash runtime is required for installer smoke test")
     def test_codex_bash_installer_is_idempotent(self):
         with TemporaryDirectory() as tmp:
             target = Path(tmp) / "agents-skills"
             env = os.environ.copy()
             env["SIYRS_CODEX_SKILLS_HOME"] = str(target)
             script = ROOT / "adapters" / "codex" / "install.sh"
-            subprocess.run(["bash", str(script)], cwd=ROOT, env=env, check=True, capture_output=True, text=True)
-            subprocess.run(["bash", str(script)], cwd=ROOT, env=env, check=True, capture_output=True, text=True)
+            bash = native_bash()
+            self.assertIsNotNone(bash)
+            subprocess.run([bash, str(script)], cwd=ROOT, env=env, check=True, capture_output=True, text=True)
+            subprocess.run([bash, str(script)], cwd=ROOT, env=env, check=True, capture_output=True, text=True)
             self.assertTrue((target / "siyrs-skill" / "SKILL.md").is_file())
             for name in NAMES:
                 installed = target / name
@@ -73,6 +84,49 @@ class AdapterTests(unittest.TestCase):
                 text = (installed / "SKILL.md").read_text(encoding="utf-8")
                 self.assertRegex(text, rf"(?m)^name:\s*{re.escape(name)}\s*$")
             self.assertFalse((target / "siyrs-skill" / ".git").exists())
+
+    @unittest.skipUnless(native_bash(), "a native Bash runtime is required for installer smoke test")
+    def test_codex_bash_installer_archives_duplicate_core(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "agents-skills"
+            duplicate = target / "_backup"
+            duplicate.mkdir(parents=True)
+            (duplicate / "SKILL.md").write_text("---\nname: siyrs-skill\ndescription: stale copy\n---\n", encoding="utf-8")
+            archive = root / "skill-backups"
+            env = os.environ.copy()
+            env["SIYRS_CODEX_SKILLS_HOME"] = str(target)
+            env["SIYRS_CODEX_SKILL_BACKUPS_HOME"] = str(archive)
+            bash = native_bash()
+            self.assertIsNotNone(bash)
+            subprocess.run([bash, str(ROOT / "adapters" / "codex" / "install.sh")], cwd=ROOT, env=env, check=True, capture_output=True, text=True)
+            self.assertFalse(duplicate.exists())
+            archived = list(archive.glob("siyrs-skill-duplicate-*/SKILL.md"))
+            self.assertEqual(1, len(archived))
+
+    @unittest.skipUnless(os.name == "nt" and shutil.which("powershell"), "Windows PowerShell is required for installer smoke test")
+    def test_codex_powershell_installer_archives_duplicate_core(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "agents-skills"
+            duplicate = target / "_backup"
+            duplicate.mkdir(parents=True)
+            (duplicate / "SKILL.md").write_text("---\nname: siyrs-skill\ndescription: stale copy\n---\n", encoding="utf-8")
+            archive = root / "skill-backups"
+            result = subprocess.run(
+                [
+                    shutil.which("powershell"), "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+                    str(ROOT / "adapters" / "codex" / "install.ps1"),
+                    "-SkillsHome", str(target), "-LegacyArchiveHome", str(archive),
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(0, result.returncode, f"PowerShell installer failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}")
+            self.assertFalse(duplicate.exists())
+            archived = list(archive.glob("siyrs-skill-duplicate-*/SKILL.md"))
+            self.assertEqual(1, len(archived))
 
 
 if __name__ == "__main__":

@@ -40,7 +40,7 @@ Custom target:
 SIYRS_CODEX_SKILLS_HOME=/tmp/agents-skills bash adapters/codex/install.sh
 ```
 
-The default target is `$HOME/.agents/skills`, the user-level local Skill location used by current Codex.
+The default target is `$HOME/.agents/skills`, the user-level local Skill location used by current Codex. During installation, any other direct child that declares `name: siyrs-skill` is moved to `$HOME/.agents/skill-backups` so stale copies cannot create duplicate picker entries. Override that archive location with `-LegacyArchiveHome` (PowerShell) or `SIYRS_CODEX_SKILL_BACKUPS_HOME` (Bash).
 
 ## Use
 
@@ -66,4 +66,4 @@ The old `$siyrs-skill /siyk-*` form remains compatible, but it is no longer requ
 
 ## Legacy location
 
-The adapter does not delete `~/.codex/skills` or `~/.codex/prompts`. Old copies may create confusing duplicates and should be removed manually after the new installation is verified.
+The adapter does not delete `~/.codex/skills` or `~/.codex/prompts`. A legacy copy there may still create confusing duplicates and should be removed manually after the new installation is verified.

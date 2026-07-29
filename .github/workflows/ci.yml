@@ -90,9 +90,15 @@ jobs:
         shell: pwsh
         run: |
           $target = Join-Path $env:RUNNER_TEMP "agents-skills"
-          ./adapters/codex/install.ps1 -SkillsHome $target
-          ./adapters/codex/install.ps1 -SkillsHome $target
+          $archive = Join-Path $env:RUNNER_TEMP "skill-backups"
+          $duplicate = Join-Path $target "_backup"
+          New-Item -ItemType Directory -Force -Path $duplicate | Out-Null
+          Set-Content -NoNewline -Path (Join-Path $duplicate "SKILL.md") -Value "---`nname: siyrs-skill`ndescription: stale copy`n---`n"
+          ./adapters/codex/install.ps1 -SkillsHome $target -LegacyArchiveHome $archive
+          ./adapters/codex/install.ps1 -SkillsHome $target -LegacyArchiveHome $archive
           if (-not (Test-Path (Join-Path $target "siyrs-skill/SKILL.md"))) { throw "Core Skill missing" }
+          if (Test-Path $duplicate) { throw "Duplicate core Skill was not archived" }
+          if (-not (Get-ChildItem -Path $archive -Directory -Filter "siyrs-skill-duplicate-*" -ErrorAction SilentlyContinue)) { throw "Archived duplicate core Skill missing" }
           foreach ($name in @("siyk-test-full", "siyk-test-new", "siyk-git-commit", "siyk-git-sync")) {
             $skill = Join-Path $target "$name/SKILL.md"
             if (-not (Test-Path $skill)) { throw "Codex entrypoint missing: $name" }
