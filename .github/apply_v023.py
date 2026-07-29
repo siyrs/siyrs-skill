@@ -64,7 +64,7 @@ def main() -> None:
     if status.returncode == 0:
         raise RuntimeError('payload produced no repository changes')
     run('git', 'commit', '-m', 'feat: close v0.2.3 runtime governance gaps')
-    branch = os.environ.get('GITHUB_REF_NAME', 'agent/v023-runtime-closure')
+    branch = os.environ.get('GITHUB_HEAD_REF') or os.environ.get('GITHUB_REF_NAME') or 'agent/v023-runtime-closure'
     run('git', 'push', 'origin', f'HEAD:{branch}')
 
 
