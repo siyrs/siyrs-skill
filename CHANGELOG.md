@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.4 - 2026-07-29
+
+### Added
+
+- Windows and macOS/Linux Codex installers using `$HOME/.agents/skills`.
+- Four thin Codex skills for `siyk-test-full`, `siyk-test-new`, `siyk-git-commit`, and `siyk-git-sync`.
+- Explicit-only Codex UI metadata and cross-platform reinstall smoke tests.
+
+### Changed
+
+- Codex `/` discovery now works per workflow while policy remains centralized in `siyrs-skill`.
+- Adapter validation checks exact entrypoint names, core delegation, metadata, and installers.
+
 ## 0.1.3 - 2026-07-28
 
 ### Added
