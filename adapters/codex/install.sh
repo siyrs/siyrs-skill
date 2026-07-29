@@ -4,7 +4,7 @@ set -euo pipefail
 adapter_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 skill_source="$(cd "${adapter_dir}/../.." && pwd -P)"
 skills_home="${SIYRS_CODEX_SKILLS_HOME:-${HOME}/.agents/skills}"
-entrypoints=(siyk-test-full siyk-test-new siyk-git-commit siyk-git-sync)
+entrypoints=(siyk-test-add siyk-test-run-t1 siyk-test-run-t2 siyk-test-run-t3 siyk-git-commit siyk-git-sync)
 
 mkdir -p "${skills_home}"
 skills_home="$(cd "${skills_home}" && pwd -P)"

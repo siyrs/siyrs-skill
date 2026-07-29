@@ -37,7 +37,7 @@
 
 ## Test workflows
 
-- [x] `test-full` and `test-new` load one common testing policy.
+- [x] `test-add`, `test-run-t1`, `test-run-t2`, `test-run-t3` load one common testing policy plus a shared tier policy.
 - [x] Behavior-first planning, execution ladder, failure classification, and evidence truth are centralized.
 - [x] Planned UAT is distinguished from executed UAT.
 - [x] Incremental scope expands for shared/cross-cutting behavior.

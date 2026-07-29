@@ -1,6 +1,6 @@
 # Common testing workflow policy
 
-This reference contains the shared quality rules for `/siyk-test-full` and `/siyk-test-new`. Command files define scope selection; this file defines how tests are planned, implemented, executed, repaired, and documented.
+This reference contains the shared quality rules for `/siyk-test-add`, `/siyk-test-run-t1`, `/siyk-test-run-t2`, and `/siyk-test-run-t3`. Command files define scope selection; this file defines how tests are planned, implemented, executed, repaired, and documented. Tier selection (how much to test) is defined in `references/testing-tiers.md`.
 
 ## Source-of-truth order
 

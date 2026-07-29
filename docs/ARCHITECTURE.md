@@ -46,7 +46,7 @@ A git-sync run owns one in-memory `RISK-*` ledger shared by embedded commit and 
 
 ## Test workflow composition
 
-`test-full` and `test-new` share `references/testing-common.md`. The command files decide scope and baseline; the common reference owns implementation, execution, failure classification, evidence truth, documentation merge, and state-update rules.
+`test-add`, `test-run-t1`, `test-run-t2`, and `test-run-t3` share `references/testing-common.md` (execution rules) and `references/testing-tiers.md` (T1/T2/T3 tier selection). The command files decide scope and baseline; the common reference owns implementation, execution, failure classification, evidence truth, documentation merge, and state-update rules; the tier reference owns how much to test and the diff-driven blast-radius expansion.
 
 ## Side-effect model
 

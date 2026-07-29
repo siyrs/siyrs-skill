@@ -9,8 +9,10 @@ from pathlib import Path
 
 REQUIRED = [
     "VERSION", "SKILL.md", "README.md", "CHANGELOG.md",
-    "commands/test-full.md", "commands/test-new.md", "commands/git-commit.md", "commands/git-sync.md",
-    "references/project-detection.md", "references/testing-common.md", "references/git-policy.md",
+    "commands/test-add.md", "commands/test-run-t1.md", "commands/test-run-t2.md", "commands/test-run-t3.md",
+    "commands/git-commit.md", "commands/git-sync.md",
+    "references/project-detection.md", "references/testing-common.md", "references/testing-tiers.md",
+    "references/git-policy.md",
     "references/git-content-scan.md", "references/risk-authorization.md", "references/subworkflow-composition.md",
     "references/safety-and-authorization.md", "references/output-contract.md",
     "scripts/detect_project.py", "scripts/collect_git_changes.py", "scripts/fingerprint.py",
@@ -18,7 +20,7 @@ REQUIRED = [
     "schemas/config.schema.json", "schemas/state.schema.json", ".github/workflows/ci.yml", "release-manifest.json",
     "adapters/codex/README.md", "adapters/codex/install.sh", "adapters/codex/install.ps1",
 ]
-COMMANDS = ("/siyk-test-full", "/siyk-test-new", "/siyk-git-commit", "/siyk-git-sync")
+COMMANDS = ("/siyk-test-add", "/siyk-test-run-t1", "/siyk-test-run-t2", "/siyk-test-run-t3", "/siyk-git-commit", "/siyk-git-sync")
 CODEX_NAMES = tuple(command[1:] for command in COMMANDS)
 IGNORED_PARTS = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 IGNORED_SUFFIXES = {".pyc", ".pyo"}

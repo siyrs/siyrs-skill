@@ -13,7 +13,8 @@ class BundleValidationTests(unittest.TestCase):
     def test_current_bundle_is_valid(self):
         result = validate(ROOT)
         self.assertTrue(result["valid"], result["errors"])
-        self.assertEqual("0.1.5", result["version"])
+        expected_version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        self.assertEqual(expected_version, result["version"])
 
     def test_version_drift_is_detected(self):
         with TemporaryDirectory() as tmp:
@@ -27,8 +28,8 @@ class BundleValidationTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             copy = Path(tmp) / "skill"
             shutil.copytree(ROOT, copy, ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc"))
-            template = copy / "adapters/codex/entrypoints/siyk-test-full/SKILL.template.md"
-            template.write_text(template.read_text(encoding="utf-8").replace("name: siyk-test-full", "name: wrong-name"), encoding="utf-8")
+            template = copy / "adapters/codex/entrypoints/siyk-test-add/SKILL.template.md"
+            template.write_text(template.read_text(encoding="utf-8").replace("name: siyk-test-add", "name: wrong-name"), encoding="utf-8")
             result = validate(copy)
             self.assertFalse(result["valid"])
             self.assertTrue(any("Codex entrypoint name mismatch" in error for error in result["errors"]))

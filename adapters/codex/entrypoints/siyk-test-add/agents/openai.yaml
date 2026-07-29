@@ -1,0 +1,6 @@
+interface:
+  display_name: "/siyk-test-add"
+  short_description: "沉淀新增功能及回归测试用例"
+  default_prompt: "Run /siyk-test-add against the current repository."
+policy:
+  allow_implicit_invocation: false

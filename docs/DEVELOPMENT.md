@@ -11,7 +11,7 @@ python -m unittest discover -s tests -v
 python scripts/validate_bundle.py --root .
 python -m compileall -q scripts tests
 bash -n adapters/claude-code/install.sh
-python scripts/siyk.py route "/siyk-test-full strict"
+python scripts/siyk.py route "/siyk-test-run-t3 strict"
 python scripts/siyk.py detect --root .
 python scripts/siyk.py fingerprint --root .
 python scripts/siyk.py scan --root . --all

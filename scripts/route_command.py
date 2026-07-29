@@ -7,10 +7,17 @@ import json
 import shlex
 from dataclasses import asdict, dataclass, field
 
-TEST_COMMANDS = {"/siyk-test-full": "strict", "/siyk-test-new": "standard"}
+TEST_COMMANDS = {
+    "/siyk-test-add": "standard",
+    "/siyk-test-run-t1": None,
+    "/siyk-test-run-t2": "quick",
+    "/siyk-test-run-t3": "strict",
+}
 VALID_STRENGTHS = {"quick", "standard", "strict"}
-FULL_ALIASES = ("全量沉淀测试", "完整沉淀测试", "全量沉淀")
-NEW_ALIASES = ("沉淀测试", "沉淀")
+ADD_ALIASES = ("沉淀测试", "沉淀")
+T1_ALIASES = ("跑t1", "变更回测", "跑改动相关的测试", "change regression", "regression")
+T2_ALIASES = ("跑t2", "冒烟", "smoke")
+T3_ALIASES = ("跑t3", "全量沉淀测试", "完整沉淀测试", "全量沉淀", "全量", "release gate", "full")
 COMMIT_ALIASES = ("保存本地代码", "本地保存代码", "本地保存", "本地提交")
 SYNC_ALIASES = ("保存并同步远程仓库", "同步代码")
 
@@ -58,7 +65,12 @@ def route(text: str) -> dict:
         if rest and rest[0] in VALID_STRENGTHS:
             strength = rest.pop(0)
         extra = " ".join(rest)
-        normalized = f"{first} {strength}" + (f" {extra}" if extra else "")
+        parts = [first]
+        if strength:
+            parts.append(strength)
+        if extra:
+            parts.append(extra)
+        normalized = " ".join(parts)
         return asdict(RouteResult(True, command=first, strength=strength, extra=extra, normalized=normalized, source="literal"))
 
     if first == "/siyk-git-commit":
@@ -97,13 +109,20 @@ def route(text: str) -> dict:
         return asdict(RouteResult(True, command=first, branch=branch, flags=flags, extra=" ".join(extra_tokens), normalized=" ".join(parts), source="literal", warnings=warnings))
 
     for aliases, command, strength in (
-        (FULL_ALIASES, "/siyk-test-full", "strict"),
-        (NEW_ALIASES, "/siyk-test-new", "standard"),
+        (T3_ALIASES, "/siyk-test-run-t3", "strict"),
+        (T2_ALIASES, "/siyk-test-run-t2", "quick"),
+        (T1_ALIASES, "/siyk-test-run-t1", None),
+        (ADD_ALIASES, "/siyk-test-add", "standard"),
     ):
         alias = _matches_alias(raw, aliases)
         if alias:
             extra = raw[len(alias):].strip()
-            normalized = f"{command} {strength}" + (f" {extra}" if extra else "")
+            parts = [command]
+            if strength:
+                parts.append(strength)
+            if extra:
+                parts.append(extra)
+            normalized = " ".join(parts)
             return asdict(RouteResult(True, command=command, strength=strength, extra=extra, normalized=normalized, source=f"alias:{alias}"))
 
     for aliases, command in ((COMMIT_ALIASES, "/siyk-git-commit"), (SYNC_ALIASES, "/siyk-git-sync")):

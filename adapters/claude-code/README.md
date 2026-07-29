@@ -1,10 +1,12 @@
 # Claude Code adapter
 
-The portable Skill remains `siyrs-skill`. These four command files expose separate autocomplete entries:
+The portable Skill remains `siyrs-skill`. These six command files expose separate autocomplete entries:
 
 ```text
-/siyk-test-full
-/siyk-test-new
+/siyk-test-add
+/siyk-test-run-t1
+/siyk-test-run-t2
+/siyk-test-run-t3
 /siyk-git-commit
 /siyk-git-sync
 ```

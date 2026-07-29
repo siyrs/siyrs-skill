@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.2.0 - 2026-07-29
+
+### Added
+
+- Three-tier test execution model (T1 / T2 / T3) via `references/testing-tiers.md`: T1 change regression (diff-driven with shared-code blast-radius expansion), T2 smoke (fixed main-path + boundary subset), T3 full (all layers incl. UAT, release gate).
+- Case tier marking convention (`T2` selectable, blank = T3-only, T1 dynamic) so tiers are machine-selectable.
+- Tier trigger aliases (跑T1/变更回测, 跑T2/冒烟, 跑T3/全量) routed through `scripts/route_command.py`.
+
+### Changed
+
+- **Command rename**: `/siyk-test-new` → `/siyk-test-add` (author/add cases; `add` writes, does not primarily execute). `/siyk-test-full` → `/siyk-test-run-t3` (inherits the full inventory + gap-closing + evidence workflow).
+- New run commands: `/siyk-test-run-t1` (change regression), `/siyk-test-run-t2` (smoke). The skill now exposes six commands instead of four.
+- All four testing commands load both `references/testing-tiers.md` (tier selection) and `references/testing-common.md` (execution rules).
+- Claude Code and Codex adapters, installers, route/validate scripts, release manifest, and tests updated for the new command names.
+
+### Migration
+
+- `/siyk-test-full` → `/siyk-test-run-t3`; `/siyk-test-new` → `/siyk-test-add`. Re-run the Codex/Claude installer to refresh `/siyk` autocomplete.
+
 ## 0.1.5 - 2026-07-29
 
 ### Fixed

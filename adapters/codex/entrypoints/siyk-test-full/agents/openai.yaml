@@ -1,6 +1,0 @@
-interface:
-  display_name: "/siyk-test-full"
-  short_description: "全量扫描项目并沉淀测试"
-  default_prompt: "Run /siyk-test-full against the current repository."
-policy:
-  allow_implicit_invocation: false

@@ -21,9 +21,12 @@ class CommandContractTests(unittest.TestCase):
         self.assertIn("--allow-risk",t)
         self.assertIn("do not ask the user again",t)
     def test_common_testing_policy_is_loaded(self):
-        for rel in ("commands/test-full.md","commands/test-new.md"):
+        for rel in ("commands/test-add.md","commands/test-run-t1.md","commands/test-run-t2.md","commands/test-run-t3.md"):
             self.assertIn("references/testing-common.md",(ROOT/rel).read_text(encoding="utf-8"))
+    def test_tier_policy_is_loaded(self):
+        for rel in ("commands/test-add.md","commands/test-run-t1.md","commands/test-run-t2.md","commands/test-run-t3.md"):
+            self.assertIn("references/testing-tiers.md",(ROOT/rel).read_text(encoding="utf-8"))
     def test_bundled_helpers_use_skill_dir_placeholder(self):
-        for rel in ("SKILL.md","commands/test-full.md","commands/test-new.md","commands/git-commit.md","commands/git-sync.md"):
+        for rel in ("SKILL.md","commands/test-add.md","commands/test-run-t1.md","commands/test-run-t2.md","commands/test-run-t3.md","commands/git-commit.md","commands/git-sync.md"):
             self.assertNotIn("python scripts/",(ROOT/rel).read_text(encoding="utf-8"))
 if __name__=="__main__": unittest.main()

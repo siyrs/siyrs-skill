@@ -6,18 +6,22 @@
 
 - Skill：`siyrs-skill`
 - 命令前缀：`siyk`
-- 当前版本：`v0.1.5`
+- 当前版本：`v0.2.0`
 - Python：3.10+
 - 原则：业务/流程判断优先沉淀为 Markdown；脚本只做确定性采集、解析、校验和状态维护
 
-## 四个稳定命令
+## 六个稳定命令
 
 ```text
-/siyk-test-full [quick|standard|strict] [补充要求]
-/siyk-test-new [quick|standard|strict] [补充要求]
+/siyk-test-add [quick|standard|strict] [补充要求]          # 编写/新增测试用例
+/siyk-test-run-t1 [补充要求]                               # T1 变更回测（diff 驱动 + 共享代码扩散）
+/siyk-test-run-t2 [quick|standard] [模块范围]              # T2 冒烟（主路径 + 权限边界子集）
+/siyk-test-run-t3 [quick|standard|strict] [补充要求]       # T3 全量（含真实 UAT，发布门禁）
 /siyk-git-commit [--no-test] [--allow-risk[=<finding-id|all>]] [提交说明]
 /siyk-git-sync [branch] [--pr] [--no-test] [--allow-risk[=<finding-id|all>]] [补充要求]
 ```
+
+`add` 负责写用例，`run-t1|t2|t3` 负责按档位执行。三档规则见 `references/testing-tiers.md`。
 
 ## Git 工作流
 
@@ -59,18 +63,20 @@ macOS/Linux：
 bash adapters/claude-code/install.sh
 ```
 
-安装后提供四个独立 `/siyk-*` 自动补全入口。
+安装后提供六个独立 `/siyk-*` 自动补全入口。
 
 ### Codex
 
-Codex 不会把一个根 Skill 内部的 `commands/*.md` 自动展开成多个候选。v0.1.4 的适配器会安装：
+Codex 不会把一个根 Skill 内部的 `commands/*.md` 自动展开成多个候选。适配器会安装：
 
 ```text
-$HOME/.agents/skills/siyrs-skill/      核心策略与工作流
-$HOME/.agents/skills/siyk-test-full/   薄入口 Skill
-$HOME/.agents/skills/siyk-test-new/    薄入口 Skill
-$HOME/.agents/skills/siyk-git-commit/  薄入口 Skill
-$HOME/.agents/skills/siyk-git-sync/    薄入口 Skill
+$HOME/.agents/skills/siyrs-skill/         核心策略与工作流
+$HOME/.agents/skills/siyk-test-add/        薄入口 Skill（写用例）
+$HOME/.agents/skills/siyk-test-run-t1/     薄入口 Skill（T1 变更回测）
+$HOME/.agents/skills/siyk-test-run-t2/     薄入口 Skill（T2 冒烟）
+$HOME/.agents/skills/siyk-test-run-t3/     薄入口 Skill（T3 全量）
+$HOME/.agents/skills/siyk-git-commit/      薄入口 Skill
+$HOME/.agents/skills/siyk-git-sync/        薄入口 Skill
 ```
 
 Windows：
@@ -85,11 +91,13 @@ macOS/Linux：
 bash adapters/codex/install.sh
 ```
 
-安装后重新打开 Codex；若当前会话未刷新，重启 Codex。之后输入 `/siyk` 应显示四个入口：
+安装后重新打开 Codex；若当前会话未刷新，重启 Codex。之后输入 `/siyk` 应显示六个入口：
 
 ```text
-/siyk-test-full
-/siyk-test-new
+/siyk-test-add
+/siyk-test-run-t1
+/siyk-test-run-t2
+/siyk-test-run-t3
 /siyk-git-commit
 /siyk-git-sync
 ```
@@ -97,25 +105,27 @@ bash adapters/codex/install.sh
 也可以使用 Codex 的技能提及方式：
 
 ```text
-$siyk-test-full strict
-$siyk-test-new standard 沉淀新增功能
+$siyk-test-add standard 沉淀新增功能
+$siyk-test-run-t1
+$siyk-test-run-t2
+$siyk-test-run-t3 strict
 $siyk-git-commit feat: 保存当前实现
 $siyk-git-sync
 ```
 
-四个入口只负责发现和路由，执行时会读取同级的 `siyrs-skill` 核心，不复制测试、Git、安全或授权规则。
+六个入口只负责发现和路由，执行时会读取同级的 `siyrs-skill` 核心，不复制测试、Git、安全或授权规则。
 
 安装器会自动把 `$HOME/.agents/skills` 中其他声明为 `siyrs-skill` 的直接子目录移到 `$HOME/.agents/skill-backups`，避免旧副本导致重复候选。PowerShell 可用 `-LegacyArchiveHome`，Bash 可用 `SIYRS_CODEX_SKILL_BACKUPS_HOME` 指定归档位置。
 
 ## 测试模型
 
-`test-full` 与 `test-new` 共用 `references/testing-common.md`，统一约束行为优先、分层覆盖、真实执行、失败分类、文档增量合并和证据后置更新。
+`test-add`、`test-run-t1`、`test-run-t2`、`test-run-t3` 共用 `references/testing-common.md`（执行规则）与 `references/testing-tiers.md`（三档分级），统一约束行为优先、分层覆盖、真实执行、失败分类、文档增量合并和证据后置更新。
 
 ## 结构
 
 ```text
 SKILL.md                 顶层路由与全局契约
-commands/                四个用户工作流
+commands/                六个用户工作流
 references/              公共策略、项目策略、Git/测试协议
 scripts/                 确定性工具
 assets/                  配置、状态与文档模板

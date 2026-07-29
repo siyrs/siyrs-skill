@@ -7,7 +7,7 @@ import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-NAMES = ("siyk-test-full", "siyk-test-new", "siyk-git-commit", "siyk-git-sync")
+NAMES = ("siyk-test-add", "siyk-test-run-t1", "siyk-test-run-t2", "siyk-test-run-t3", "siyk-git-commit", "siyk-git-sync")
 
 
 def native_bash() -> str | None:

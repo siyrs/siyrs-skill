@@ -5,7 +5,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$entrypoints = @("siyk-test-full", "siyk-test-new", "siyk-git-commit", "siyk-git-sync")
+$entrypoints = @("siyk-test-add", "siyk-test-run-t1", "siyk-test-run-t2", "siyk-test-run-t3", "siyk-git-commit", "siyk-git-sync")
 $sourceFull = [System.IO.Path]::GetFullPath([string]$SkillSource).TrimEnd('\', '/')
 $skillsHomeFull = [System.IO.Path]::GetFullPath($SkillsHome).TrimEnd('\', '/')
 $archiveHomeFull = if ([string]::IsNullOrWhiteSpace($LegacyArchiveHome)) {

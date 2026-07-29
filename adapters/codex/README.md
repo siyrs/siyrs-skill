@@ -2,12 +2,14 @@
 
 Codex discovers one entry per installed Skill. It does not expand the internal `commands/*.md` files of `siyrs-skill` into separate picker entries.
 
-This adapter installs one shared core plus four thin discovery skills:
+This adapter installs one shared core plus six thin discovery skills:
 
 ```text
 siyrs-skill
-siyk-test-full
-siyk-test-new
+siyk-test-add
+siyk-test-run-t1
+siyk-test-run-t2
+siyk-test-run-t3
 siyk-git-commit
 siyk-git-sync
 ```
@@ -47,8 +49,10 @@ The default target is `$HOME/.agents/skills`, the user-level local Skill locatio
 Restart Codex when an already-open session does not refresh automatically. Typing `/siyk` should show:
 
 ```text
-/siyk-test-full
-/siyk-test-new
+/siyk-test-add
+/siyk-test-run-t1
+/siyk-test-run-t2
+/siyk-test-run-t3
 /siyk-git-commit
 /siyk-git-sync
 ```
@@ -56,8 +60,10 @@ Restart Codex when an already-open session does not refresh automatically. Typin
 Codex also supports explicit Skill mentions:
 
 ```text
-$siyk-test-full strict
-$siyk-test-new standard 沉淀本轮功能
+$siyk-test-add standard 沉淀本轮功能
+$siyk-test-run-t1
+$siyk-test-run-t2
+$siyk-test-run-t3 strict
 $siyk-git-commit
 $siyk-git-sync
 ```

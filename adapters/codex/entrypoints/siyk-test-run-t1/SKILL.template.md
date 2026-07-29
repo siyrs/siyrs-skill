@@ -1,16 +1,16 @@
 ---
-name: siyk-test-full
-description: Run full-project test inventory, generation, execution, repair, UAT, and durable evidence. Use explicitly for /siyk-test-full or a complete test sedimentation request.
+name: siyk-test-run-t1
+description: Run T1 change regression — identify changed behavior from git diff + uncommitted changes, expand blast radius across shared code, and execute affected cases. Use explicitly for /siyk-test-run-t1.
 ---
 
-# Codex entrypoint: /siyk-test-full
+# Codex entrypoint: /siyk-test-run-t1
 
 This is a thin discovery adapter for the installed `siyrs-skill`. It owns no testing, Git, safety, or authorization policy.
 
 1. Resolve `<skills-root>` as the parent directory of this Skill directory.
 2. Read `<skills-root>/siyrs-skill/SKILL.md` completely.
-3. Load `<skills-root>/siyrs-skill/commands/test-full.md` and every reference that command requires.
-4. Treat the remaining user prompt as arguments and supplemental instructions for `/siyk-test-full`.
+3. Load `<skills-root>/siyrs-skill/commands/test-run-t1.md` and every reference that command requires.
+4. Treat the remaining user prompt as arguments and supplemental instructions for `/siyk-test-run-t1`.
 5. Execute the workflow against the current repository and follow the root Skill's completion contract.
 6. Do not copy, weaken, or override core policy in this adapter.
 
@@ -19,6 +19,6 @@ If `<skills-root>/siyrs-skill/SKILL.md` is missing, stop and report that the Cod
 Explicit invocation forms:
 
 ```text
-/siyk-test-full
-$siyk-test-full
+/siyk-test-run-t1
+$siyk-test-run-t1
 ```

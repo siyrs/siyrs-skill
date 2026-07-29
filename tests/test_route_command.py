@@ -5,8 +5,15 @@ from route_command import route
 
 class RouteCommandTests(unittest.TestCase):
     def test_test_defaults_and_aliases(self):
-        self.assertEqual("strict", route("/siyk-test-full")["strength"])
+        self.assertEqual("strict", route("/siyk-test-run-t3")["strength"])
+        self.assertEqual("quick", route("/siyk-test-run-t2")["strength"])
+        self.assertIsNone(route("/siyk-test-run-t1")["strength"])
+        self.assertEqual("standard", route("/siyk-test-add")["strength"])
         self.assertEqual("standard", route("沉淀测试 新功能")["strength"])
+    def test_tier_aliases(self):
+        self.assertEqual("/siyk-test-run-t1", route("跑t1")["command"])
+        self.assertEqual("/siyk-test-run-t2", route("冒烟")["command"])
+        self.assertEqual("/siyk-test-run-t3", route("全量")["command"])
     def test_commit_flags(self):
         r=route("/siyk-git-commit --no-test --allow-risk=RISK-001 feat: 保存")
         self.assertEqual(["--no-test","--allow-risk=RISK-001"],r["flags"])

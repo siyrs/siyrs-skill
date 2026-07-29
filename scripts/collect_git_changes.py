@@ -188,7 +188,7 @@ def collect(root: Path, base: str | None = None) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Collect Git changes for siyk-test-new")
+    parser = argparse.ArgumentParser(description="Collect Git changes for siyk-test-run-t1 / siyk-test-add")
     parser.add_argument("--root", default=".")
     parser.add_argument("--base", default=None)
     parser.add_argument("--pretty", action="store_true")

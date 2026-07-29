@@ -22,7 +22,7 @@
 python -m unittest discover -s tests -v
 python scripts/validate_bundle.py --root .
 python -m compileall -q scripts tests
-python scripts/siyk.py route "/siyk-test-new standard smoke"
+python scripts/siyk.py route "/siyk-test-add standard smoke"
 python scripts/siyk.py route "/siyk-git-commit --allow-risk=RISK-001 feat: smoke"
 python scripts/siyk.py route "/siyk-git-sync --allow-risk=all"
 python scripts/siyk.py detect --root .

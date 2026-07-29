@@ -1,0 +1,6 @@
+interface:
+  display_name: "/siyk-test-run-t1"
+  short_description: "T1 变更回测（diff 驱动 + 共享代码扩散）"
+  default_prompt: "Run /siyk-test-run-t1 against the current repository."
+policy:
+  allow_implicit_invocation: false

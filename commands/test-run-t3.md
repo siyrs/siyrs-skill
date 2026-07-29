@@ -1,16 +1,16 @@
-# Command: `/siyk-test-full`
+# Command: `/siyk-test-run-t3`
 
-Purpose: inspect the entire repository, build a durable behavior inventory, close meaningful test gaps, execute the required suites, repair failures, and persist trustworthy evidence.
+Purpose: **execute the full suite** (T3): inspect the entire repository, refresh the behavior inventory, close meaningful gaps, execute all required suites across every layer (incl. real UAT), repair failures, and persist trustworthy evidence. T3 is the release gate. This command runs (and may close gaps); to only author new cases use `/siyk-test-add`.
 
 ## Inputs
 
-- Strength: `quick`, `standard`, or `strict`; default `strict`.
+- Strength: `strict` (default), `standard`, or `quick`. T3 is normally `strict`.
 - Optional user scope/exclusions.
 - Repository-local `.siyrs/config.yaml`.
 
 ## Required references
 
-Load `references/testing-common.md`, `references/project-detection.md`, the detected project-type testing references, and `references/output-contract.md`.
+Load `references/testing-tiers.md`, `references/testing-common.md`, `references/project-detection.md`, the detected project-type testing references, and `references/output-contract.md`.
 
 ## Procedure
 
@@ -44,9 +44,11 @@ Keep deferred gaps visible as test debt with priority and rationale.
 
 Apply `references/testing-common.md` and the detected project strategy. Prefer stable CI-suitable coverage. Do not over-generate low-value tests merely to increase file or coverage counts.
 
+When closing gaps, mark new cases per the tier policy (`references/testing-tiers.md`): `T2` for main-path/boundary cases worth smoke, blank for T3-only.
+
 ### 5. Execute, diagnose, repair, rerun
 
-Run in increasing cost order. Capture exact commands and outcomes. Classify every failure, fix legitimate implementation/test defects, add regression coverage, then rerun the complete relevant suites.
+Run all layers in increasing cost order: static → unit → integration/API/repository → UI/E2E → real UAT/build/package/runtime. Capture exact commands and outcomes. Classify every failure, fix legitimate implementation/test defects, add regression coverage, then rerun the complete relevant suites.
 
 In `strict`, include configured coverage, artifact/build validation, compatibility, and real runtime/UI/UAT evidence where the environment permits. Mark planned manual UAT separately from executed UAT.
 

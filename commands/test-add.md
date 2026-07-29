@@ -1,16 +1,16 @@
-# Command: `/siyk-test-new`
+# Command: `/siyk-test-add`
 
-Purpose: identify behavior added or changed since a trustworthy baseline, add direct and regression coverage, execute it, and incrementally update durable test records.
+Purpose: **author and add** new test cases for behavior added or changed since a trustworthy baseline. This command writes cases; it executes them only enough to validate the new cases, not to run a tier sweep. To run tests by tier use `/siyk-test-run-t1|t2|t3`.
 
 ## Inputs
 
-- Strength: `quick`, `standard`, or `strict`; default `standard`.
+- Strength: `quick`, `standard`, or `strict`; default `standard`. Strength controls how thoroughly the new cases cover the changed behavior.
 - Optional user statement describing the feature/fix.
 - `.siyrs/config.yaml` and `.siyrs/state.json` when present.
 
 ## Required references
 
-Load `references/testing-common.md`, `references/project-detection.md`, the detected project-type testing references, and `references/output-contract.md`.
+Load `references/testing-tiers.md`, `references/testing-common.md`, `references/project-detection.md`, the detected project-type testing references, and `references/output-contract.md`.
 
 ## Baseline priority
 
@@ -31,7 +31,7 @@ Use `<skill-dir>/scripts/collect_git_changes.py` for deterministic Git evidence 
 
 Do not equate changed files with changed behavior. Identify new/changed/removed APIs, commands, pages/screens, state transitions, jobs, schemas, permissions, integrations, migrations, configuration, callers, consumers, and regressions.
 
-Expand scope beyond changed files for shared authentication/authorization, schemas, migrations, public APIs, common components, shared libraries, and build/runtime configuration.
+Expand scope beyond changed files per the shared-code expansion map in `references/testing-tiers.md`.
 
 ### 2. Build an incremental test plan
 
@@ -41,9 +41,11 @@ For every changed behavior record intended result, closest stable automated laye
 
 Apply `references/testing-common.md` and the detected project strategy. Update existing tests when the behavior intentionally changed; add new tests when a distinct behavior or regression contract is needed. Avoid duplicating broad full-suite coverage without a changed-behavior reason.
 
-### 4. Run targeted then broader regression
+When the project uses tier-marked case tables (see `references/testing-tiers.md`), mark each new case `T2` if it is a main-path or permission/boundary case worth including in smoke; leave blank for T3-only boundary cases.
 
-Run the narrowest diagnostic tests first, repair failures, then run the complete affected module/suite. In `strict`, run repository-wide suites required by policy. Explicitly record pre-existing, skipped, flaky, and environment-blocked results.
+### 4. Validate the new cases
+
+Run the narrowest tests that cover the newly added cases to confirm they compile, pass for the intended behavior, and fail for the wrong behavior. This is validation, not a tier sweep — do not claim a full suite passed.
 
 ### 5. Update durable records
 
@@ -53,12 +55,12 @@ Update `.siyrs/state.json` only after evidence is saved. A partial baseline must
 
 ### 6. Completion decision
 
-Changed behavior is not “沉淀完成” until it has:
+Changed behavior is not "沉淀完成" until it has:
 
 - appropriate automated coverage at the closest stable layer;
 - integration/UI/E2E coverage where the boundary warrants it;
 - meaningful negative/boundary coverage;
-- actual execution evidence;
+- actual execution evidence for the new cases;
 - documentation and baseline updates.
 
 Use `references/output-contract.md`.
