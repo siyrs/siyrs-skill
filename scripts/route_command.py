@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
+import subprocess
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -76,27 +77,61 @@ def _is_allow_risk(token: str) -> bool:
     return token == "--allow-risk" or token.startswith("--allow-risk=")
 
 
+def _valid_branch_name(value: str) -> bool:
+    if not value:
+        return False
+    completed = subprocess.run(
+        ["git", "check-ref-format", "--branch", value],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
+    )
+    return completed.returncode == 0
+
+
 def _route_git(spec: CommandSpec, tokens: list[str], *, source: str, warnings: list[str] | None = None) -> dict:
     warnings = list(warnings or [])
     flags: list[str] = []
     extra: list[str] = []
     branch: str | None = None
     valid = True
-    for token in tokens:
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
         if token == "--no-test" or _is_allow_risk(token) or (spec.command == "/siyk-git-sync" and token == "--pr"):
             if token not in flags:
                 flags.append(token)
+        elif spec.command == "/siyk-git-sync" and token == "--branch":
+            index += 1
+            if index >= len(tokens):
+                warnings.append("--branch requires a value")
+                valid = False
+            elif branch is not None:
+                warnings.append("--branch may only be supplied once")
+                valid = False
+            else:
+                branch = tokens[index]
+        elif spec.command == "/siyk-git-sync" and token.startswith("--branch="):
+            candidate = token.split("=", 1)[1]
+            if branch is not None:
+                warnings.append("--branch may only be supplied once")
+                valid = False
+            else:
+                branch = candidate
         elif token.startswith("--"):
             warnings.append(f"unknown flag: {token}")
             valid = False
             extra.append(token)
-        elif spec.command == "/siyk-git-sync" and branch is None:
-            branch = token
         else:
+            # Positional text is always supplemental intent. Branch selection is explicit-only.
             extra.append(token)
+        index += 1
+
+    if branch is not None and not _valid_branch_name(branch):
+        warnings.append(f"invalid Git branch name: {branch!r}")
+        valid = False
+
     parts = [spec.command]
     if branch:
-        parts.append(branch)
+        parts.extend(["--branch", branch])
     parts.extend(flags)
     parts.extend(extra)
     return asdict(RouteResult(
@@ -130,7 +165,6 @@ def route(text: str, root: Path | None = None) -> dict:
 
     if first in by_command:
         return _route_spec(by_command[first], tokens[1:], "literal")
-
     if first in legacy:
         spec = legacy[first]
         rest = tokens[1:]
@@ -152,7 +186,6 @@ def route(text: str, root: Path | None = None) -> dict:
             if normalized_raw == key:
                 prefix_matches.append((spec, alias, ""))
             elif normalized_raw.startswith(key + " "):
-                # Slice from normalized text. This is safe for routing semantics; exact user casing is not required.
                 prefix_matches.append((spec, alias, normalized_raw[len(key):].strip()))
     if exact_matches:
         spec, alias = exact_matches[0]
@@ -160,7 +193,6 @@ def route(text: str, root: Path | None = None) -> dict:
     if prefix_matches:
         spec, alias, remainder = sorted(prefix_matches, key=lambda item: len(_norm(item[1])), reverse=True)[0]
         return _route_spec(spec, _split(remainder), f"alias:{alias}")
-
     return asdict(RouteResult(matched=False))
 
 

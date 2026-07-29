@@ -7,66 +7,131 @@
   "properties": {
     "version": {"const": 2},
     "last_authoring": {"$ref": "#/$defs/authoringRecord"},
-    "last_t1_run": {"$ref": "#/$defs/runRecord"},
+    "last_t1_run": {"$ref": "#/$defs/t1Record"},
     "last_t2_run": {"$ref": "#/$defs/t2Record"},
     "last_t3_run": {"$ref": "#/$defs/t3Record"},
-    "last_release_gate": {
-      "type": ["object", "null"],
-      "properties": {
-        "decision": {"enum": ["passed", "failed", "blocked", "unknown"]},
-        "commit": {"type": ["string", "null"]},
-        "fingerprint": {"type": ["string", "null"]},
-        "results_file": {"type": ["string", "null"]},
-        "updated_at": {"type": ["string", "null"], "format": "date-time"}
-      },
-      "additionalProperties": false
-    },
+    "last_release_gate": {"$ref": "#/$defs/releaseGateRecord"},
     "migration": {"type": ["object", "null"], "additionalProperties": true},
     "updated_at": {"type": ["string", "null"], "format": "date-time"}
   },
   "$defs": {
-    "baseRecord": {
+    "status": {"enum": ["complete", "partially-complete", "failed", "blocked", "unknown", null]},
+    "commonProperties": {
+      "kind": {"enum": ["authoring", "t1", "t2", "t3"]},
+      "commit": {"type": ["string", "null"]},
+      "fingerprint": {"type": ["string", "null"]},
+      "tree_oid": {"type": ["string", "null"]},
+      "baseline_commit": {"type": ["string", "null"]},
+      "status": {"$ref": "#/$defs/status"},
+      "results_file": {"type": ["string", "null"]},
+      "case_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+      "modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+      "expanded_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+      "blocked_suites": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+      "updated_at": {"type": ["string", "null"], "format": "date-time"}
+    },
+    "authoringRecord": {
       "type": "object",
-      "required": ["kind", "case_ids", "modules", "expanded_modules", "blocked_suites"],
+      "required": ["kind", "case_ids", "modules", "expanded_modules", "blocked_suites", "depth"],
       "properties": {
-        "kind": {"enum": ["authoring", "t1", "t2", "t3"]},
+        "kind": {"const": "authoring"},
         "commit": {"type": ["string", "null"]},
         "fingerprint": {"type": ["string", "null"]},
+        "tree_oid": {"type": ["string", "null"]},
         "baseline_commit": {"type": ["string", "null"]},
-        "status": {"enum": ["complete", "partially-complete", "failed", "blocked", "unknown", null]},
+        "status": {"$ref": "#/$defs/status"},
         "results_file": {"type": ["string", "null"]},
         "case_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
         "modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
         "expanded_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
         "blocked_suites": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "updated_at": {"type": ["string", "null"], "format": "date-time"}
+        "updated_at": {"type": ["string", "null"], "format": "date-time"},
+        "depth": {"enum": ["quick", "standard", "strict", null]}
       },
       "additionalProperties": false
     },
-    "runRecord": {"$ref": "#/$defs/baseRecord"},
-    "authoringRecord": {
-      "allOf": [
-        {"$ref": "#/$defs/baseRecord"},
-        {"type": "object", "properties": {"depth": {"enum": ["quick", "standard", "strict", null]}}}
-      ]
+    "t1Record": {
+      "type": "object",
+      "required": ["kind", "case_ids", "modules", "expanded_modules", "blocked_suites", "promotion"],
+      "properties": {
+        "kind": {"const": "t1"},
+        "commit": {"type": ["string", "null"]},
+        "fingerprint": {"type": ["string", "null"]},
+        "tree_oid": {"type": ["string", "null"]},
+        "baseline_commit": {"type": ["string", "null"]},
+        "status": {"$ref": "#/$defs/status"},
+        "results_file": {"type": ["string", "null"]},
+        "case_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "expanded_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "blocked_suites": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "updated_at": {"type": ["string", "null"], "format": "date-time"},
+        "promotion": {
+          "type": ["object", "null"],
+          "required": ["from_fingerprint", "commit", "tree_oid", "promoted_at"],
+          "properties": {
+            "from_fingerprint": {"type": "string"},
+            "commit": {"type": "string"},
+            "tree_oid": {"type": "string"},
+            "promoted_at": {"type": "string", "format": "date-time"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     },
     "t2Record": {
-      "allOf": [
-        {"$ref": "#/$defs/baseRecord"},
-        {"type": "object", "properties": {"selector_id": {"type": ["string", "null"]}}}
-      ]
+      "type": "object",
+      "required": ["kind", "case_ids", "modules", "expanded_modules", "blocked_suites", "selector_id"],
+      "properties": {
+        "kind": {"const": "t2"},
+        "commit": {"type": ["string", "null"]},
+        "fingerprint": {"type": ["string", "null"]},
+        "tree_oid": {"type": ["string", "null"]},
+        "baseline_commit": {"type": ["string", "null"]},
+        "status": {"$ref": "#/$defs/status"},
+        "results_file": {"type": ["string", "null"]},
+        "case_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "expanded_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "blocked_suites": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "updated_at": {"type": ["string", "null"], "format": "date-time"},
+        "selector_id": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
     },
     "t3Record": {
-      "allOf": [
-        {"$ref": "#/$defs/baseRecord"},
-        {
-          "type": "object",
-          "properties": {
-            "release_gate": {"enum": ["passed", "failed", "blocked", "unknown", null]},
-            "coverage": {"type": ["number", "null"], "minimum": 0, "maximum": 100}
-          }
-        }
-      ]
+      "type": "object",
+      "required": ["kind", "case_ids", "modules", "expanded_modules", "blocked_suites", "release_gate", "coverage"],
+      "properties": {
+        "kind": {"const": "t3"},
+        "commit": {"type": ["string", "null"]},
+        "fingerprint": {"type": ["string", "null"]},
+        "tree_oid": {"type": ["string", "null"]},
+        "baseline_commit": {"type": ["string", "null"]},
+        "status": {"$ref": "#/$defs/status"},
+        "results_file": {"type": ["string", "null"]},
+        "case_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "expanded_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "blocked_suites": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "updated_at": {"type": ["string", "null"], "format": "date-time"},
+        "release_gate": {"enum": ["passed", "failed", "blocked", "unknown", "provisional", null]},
+        "coverage": {"type": ["number", "null"], "minimum": 0, "maximum": 100}
+      },
+      "additionalProperties": false
+    },
+    "releaseGateRecord": {
+      "type": ["object", "null"],
+      "required": ["decision", "commit", "fingerprint", "results_file", "updated_at"],
+      "properties": {
+        "decision": {"enum": ["passed", "failed", "blocked", "unknown", "provisional"]},
+        "commit": {"type": ["string", "null"]},
+        "fingerprint": {"type": ["string", "null"]},
+        "results_file": {"type": ["string", "null"]},
+        "updated_at": {"type": ["string", "null"], "format": "date-time"}
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

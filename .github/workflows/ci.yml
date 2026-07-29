@@ -21,84 +21,90 @@ jobs:
       - run: python -m unittest discover -s tests -v
       - run: python scripts/validate_bundle.py --root .
       - run: python -m compileall -q scripts tests
-      - name: Current command routing smoke
+      - run: python scripts/siyk.py config validate --root . --file assets/config.example.yaml --required
+      - name: Routing smoke
         run: |
           python scripts/siyk.py route "/siyk-test-add standard CI"
           python scripts/siyk.py route "/siyk-test-run-t1"
           python scripts/siyk.py route "/siyk-test-run-t2"
           python scripts/siyk.py route "/siyk-test-run-t3"
           python scripts/siyk.py route "/siyk-git-commit"
-          python scripts/siyk.py route "/siyk-git-sync"
+          python scripts/siyk.py route "/siyk-git-sync --branch feature/ci --pr"
       - run: python scripts/siyk.py scan --root . --all
 
-  claude-linux-upgrade:
+  linux-installers:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: bash -n adapters/claude-code/install.sh
-      - name: Upgrade, cleanup, reinstall
+      - run: bash -n adapters/codex/install.sh
+      - name: Install, upgrade cleanup, reinstall
         run: |
           export CLAUDE_HOME="$RUNNER_TEMP/claude-home"
-          mkdir -p "$CLAUDE_HOME/commands"
+          export SIYRS_CODEX_SKILLS_HOME="$RUNNER_TEMP/agents-skills"
+          export SIYRS_CODEX_SKILL_BACKUPS_HOME="$RUNNER_TEMP/skill-backups"
+          mkdir -p "$CLAUDE_HOME/commands" "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new" "$SIYRS_CODEX_SKILLS_HOME/siyk-test-full"
           printf '%s\n' '---' 'siyrs-skill-command-adapter: true' '---' > "$CLAUDE_HOME/commands/siyk-test-new.md"
-          printf '%s\n' '---' 'siyrs-skill-command-adapter: true' '---' > "$CLAUDE_HOME/commands/siyk-test-full.md"
+          printf '%s\n' '---' 'name: siyk-test-new' '---' > "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new/SKILL.md"
+          printf '%s\n' '---' 'name: siyk-test-full' '---' > "$SIYRS_CODEX_SKILLS_HOME/siyk-test-full/SKILL.md"
           bash adapters/claude-code/install.sh
           bash adapters/claude-code/install.sh
-          for name in siyk-test-add siyk-test-run-t1 siyk-test-run-t2 siyk-test-run-t3 siyk-git-commit siyk-git-sync; do test -f "$CLAUDE_HOME/commands/$name.md"; done
+          bash adapters/codex/install.sh
+          bash adapters/codex/install.sh
+          for name in siyk-test-add siyk-test-run-t1 siyk-test-run-t2 siyk-test-run-t3 siyk-git-commit siyk-git-sync; do
+            test -f "$CLAUDE_HOME/commands/$name.md"
+            test -f "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.md"
+          done
           test ! -e "$CLAUDE_HOME/commands/siyk-test-new.md"
-          test ! -e "$CLAUDE_HOME/commands/siyk-test-full.md"
+          test ! -e "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new"
+          test ! -e "$SIYRS_CODEX_SKILLS_HOME/siyk-test-full"
 
-  claude-windows-upgrade:
+  windows-installers:
     runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Upgrade, cleanup, reinstall
-        shell: pwsh
-        run: |
-          $home = Join-Path $env:RUNNER_TEMP "claude-home"
-          New-Item -ItemType Directory -Force (Join-Path $home "commands") | Out-Null
-          Set-Content (Join-Path $home "commands/siyk-test-new.md") "---`nsiyrs-skill-command-adapter: true`n---"
-          Set-Content (Join-Path $home "commands/siyk-test-full.md") "---`nsiyrs-skill-command-adapter: true`n---"
-          ./adapters/claude-code/install.ps1 -ClaudeHome $home
-          ./adapters/claude-code/install.ps1 -ClaudeHome $home
-          foreach ($name in @("siyk-test-add","siyk-test-run-t1","siyk-test-run-t2","siyk-test-run-t3","siyk-git-commit","siyk-git-sync")) { if(-not(Test-Path (Join-Path $home "commands/$name.md"))){throw "missing $name"} }
-          if(Test-Path (Join-Path $home "commands/siyk-test-new.md")){throw "stale test-new"}
-          if(Test-Path (Join-Path $home "commands/siyk-test-full.md")){throw "stale test-full"}
-
-  codex-linux-upgrade:
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: bash -n adapters/codex/install.sh
-      - name: Upgrade, archive legacy, reinstall
-        run: |
-          export SIYRS_CODEX_SKILLS_HOME="$RUNNER_TEMP/agents-skills"
-          export SIYRS_CODEX_SKILL_BACKUPS_HOME="$RUNNER_TEMP/skill-backups"
-          mkdir -p "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new" "$SIYRS_CODEX_SKILLS_HOME/siyk-test-full"
-          printf '%s\n' '---' 'name: siyk-test-new' '---' > "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new/SKILL.md"
-          printf '%s\n' '---' 'name: siyk-test-full' '---' > "$SIYRS_CODEX_SKILLS_HOME/siyk-test-full/SKILL.md"
-          bash adapters/codex/install.sh
-          bash adapters/codex/install.sh
-          for name in siyk-test-add siyk-test-run-t1 siyk-test-run-t2 siyk-test-run-t3 siyk-git-commit siyk-git-sync; do test -f "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.md"; done
-          test ! -e "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new"
-          test ! -e "$SIYRS_CODEX_SKILLS_HOME/siyk-test-full"
-          find "$SIYRS_CODEX_SKILL_BACKUPS_HOME" -type f -name SKILL.md | grep -q .
-
-  codex-windows-upgrade:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Upgrade, archive legacy, reinstall
+      - name: Install and reinstall
         shell: pwsh
         run: |
-          $home=Join-Path $env:RUNNER_TEMP "agents-skills"; $archive=Join-Path $env:RUNNER_TEMP "skill-backups"
-          foreach($old in @("siyk-test-new","siyk-test-full")){New-Item -ItemType Directory -Force (Join-Path $home $old)|Out-Null;Set-Content (Join-Path $home "$old/SKILL.md") "---`nname: $old`n---"}
-          ./adapters/codex/install.ps1 -SkillsHome $home -LegacyArchiveHome $archive
-          ./adapters/codex/install.ps1 -SkillsHome $home -LegacyArchiveHome $archive
-          foreach ($name in @("siyk-test-add","siyk-test-run-t1","siyk-test-run-t2","siyk-test-run-t3","siyk-git-commit","siyk-git-sync")) { if(-not(Test-Path (Join-Path $home "$name/SKILL.md"))){throw "missing $name"} }
-          if(Test-Path (Join-Path $home "siyk-test-new")){throw "stale test-new"}
-          if(Test-Path (Join-Path $home "siyk-test-full")){throw "stale test-full"}
+          $claude = Join-Path $env:RUNNER_TEMP "claude-home"
+          $codex = Join-Path $env:RUNNER_TEMP "agents-skills"
+          $archive = Join-Path $env:RUNNER_TEMP "skill-backups"
+          ./adapters/claude-code/install.ps1 -ClaudeHome $claude
+          ./adapters/claude-code/install.ps1 -ClaudeHome $claude
+          ./adapters/codex/install.ps1 -SkillsHome $codex -LegacyArchiveHome $archive
+          ./adapters/codex/install.ps1 -SkillsHome $codex -LegacyArchiveHome $archive
+          foreach ($name in @("siyk-test-add","siyk-test-run-t1","siyk-test-run-t2","siyk-test-run-t3","siyk-git-commit","siyk-git-sync")) {
+            if (-not (Test-Path (Join-Path $claude "commands/$name.md"))) { throw "Claude missing $name" }
+            if (-not (Test-Path (Join-Path $codex "$name/SKILL.md"))) { throw "Codex missing $name" }
+          }
+
+  macos-installers:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: bash -n adapters/claude-code/install.sh
+      - run: bash -n adapters/codex/install.sh
+      - name: macOS install, cleanup, and reinstall
+        run: |
+          export CLAUDE_HOME="$RUNNER_TEMP/claude-home"
+          export SIYRS_CODEX_SKILLS_HOME="$RUNNER_TEMP/agents-skills"
+          export SIYRS_CODEX_SKILL_BACKUPS_HOME="$RUNNER_TEMP/skill-backups"
+          mkdir -p "$CLAUDE_HOME/commands" "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new"
+          printf '%s\n' '---' 'siyrs-skill-command-adapter: true' '---' > "$CLAUDE_HOME/commands/siyk-test-new.md"
+          printf '%s\n' '---' 'name: siyk-test-new' '---' > "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new/SKILL.md"
+          bash adapters/claude-code/install.sh
+          bash adapters/claude-code/install.sh
+          bash adapters/codex/install.sh
+          bash adapters/codex/install.sh
+          for name in siyk-test-add siyk-test-run-t1 siyk-test-run-t2 siyk-test-run-t3 siyk-git-commit siyk-git-sync; do
+            test -f "$CLAUDE_HOME/commands/$name.md"
+            test -f "$SIYRS_CODEX_SKILLS_HOME/$name/SKILL.md"
+          done
+          test ! -e "$CLAUDE_HOME/commands/siyk-test-new.md"
+          test ! -e "$SIYRS_CODEX_SKILLS_HOME/siyk-test-new"

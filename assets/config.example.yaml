@@ -43,13 +43,7 @@ paths:
 
 exclude:
   - .git
-  - .idea
-  - .vscode
   - node_modules
   - target
   - build
   - dist
-  - coverage
-  - .gradle
-  - .pytest_cache
-  - __pycache__
