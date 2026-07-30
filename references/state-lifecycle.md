@@ -1,28 +1,21 @@
-# State lifecycle and T1 commit promotion
+# State lifecycle and optional T1 commit promotion
 
 State schema v2 records authoring, T1, T2, T3, and release-gate evidence independently.
 
-## T1 pre-commit lifecycle
+## Explicit T1 promotion
 
-1. Execute T1 against the intended change.
-2. Persist the worktree fingerprint and result evidence.
-3. Stage only intentional paths.
-4. Compute the exact candidate tree (`git write-tree`) and attach its `tree_oid` to the complete T1 record.
-5. Audit the Index/tree and create the normal commit.
-6. Run:
+T1 promotion is available only when a user explicitly requested T1 and the workflow intentionally binds that evidence to a candidate commit tree. It is not a default step of `/siyk-git-commit` or `/siyk-git-sync`.
 
-```text
-python <skill-dir>/scripts/state.py --root <repo> promote-t1 --commit HEAD
-```
+For an explicit T1-to-commit flow:
 
-Promotion succeeds only when:
+1. execute T1 against the intended change;
+2. persist the worktree fingerprint and result evidence;
+3. stage only intentional paths;
+4. compute the exact candidate tree (`git write-tree`) and attach its `tree_oid` to the complete T1 record;
+5. audit and commit that exact tree;
+6. run `python <skill-dir>/scripts/state.py --root <repo> promote-t1 --commit HEAD`.
 
-- T1 status is `complete`;
-- the record has a pre-commit fingerprint;
-- the record has the staged candidate `tree_oid`;
-- the created commit tree equals that candidate tree.
-
-Promotion sets the durable commit and records the fingerprint-to-commit relationship. If hooks or restaging change the tree, rerun affected T1 verification and update the candidate tree before committing.
+Promotion succeeds only when T1 is complete, fingerprint/tree evidence exists, and the commit tree equals the tested candidate tree. If hooks/restaging change the tree, rerun the explicitly requested verification before promotion.
 
 ## T3 release decisions
 

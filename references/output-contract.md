@@ -8,10 +8,10 @@ Include status; workflow/tier or UAT-only scope; resolved testing documentation 
 
 ## Git commit
 
-Include embedded T1 plan/evidence; testing documentation authority/evidence path; staged candidate tree; deterministic Index audit; redacted risk ledger; hook/restage actions; T1 promotion result; commit/no-op; remaining worktree; and confirmation that the remote was not contacted.
+Include repository/branch; intentional staging scope; candidate tree; deterministic Index audit; redacted risk ledger and authorization disposition; `git diff --check`/hook result; commit/no-op; remaining worktree; explicit-test result only when the user requested one; and confirmation that the remote was not contacted. Do not report T1/testing documentation/state work when none was requested or executed.
 
 ## Git sync
 
-Include explicit current/target branch, embedded commit, fetch/divergence/integration/conflicts, post-integration T1 and optional PR T2, testing documentation/evidence updates, outgoing base/head audit, risk ledger, push/PR result, and remaining risks.
+Include current/target branch, embedded commit/no-op, fetch/divergence/integration/conflicts, Git integrity verification, outgoing base/head audit, redacted risk ledger, push/PR result, remaining risks, and any explicit user-requested test result. Do not imply T1/T2/T3 from ordinary synchronization or `--pr`.
 
 Never fabricate evidence or reveal complete secret values.

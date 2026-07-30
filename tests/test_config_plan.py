@@ -64,6 +64,17 @@ testing:
             root=Path(tmp);(root/'.siyrs').mkdir();(root/'.siyrs/config.yaml').write_text('version: 2\n')
             plan=resolve_plan(root,'t2');self.assertFalse(plan['valid']);self.assertTrue(any('no machine-selectable' in x or 'no configured' in x for x in plan['debts']))
 
+    def test_git_preflight_defaults_none_and_legacy_warns(self):
+        with TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'.siyrs').mkdir();(root/'.siyrs/config.yaml').write_text("""version: 2
+testing:
+  preflight:
+    commit: t1
+    sync_after_integration: "none"
+    pr: "none"
+""",encoding='utf-8')
+            loaded=load_config(root);self.assertTrue(loaded['valid'],loaded['errors']);self.assertTrue(any('deprecated and ignored' in warning for warning in loaded['warnings']))
+
     def test_invalid_module_path_is_rejected(self):
         with TemporaryDirectory() as tmp:
             root=Path(tmp);(root/'.siyrs').mkdir();(root/'.siyrs/config.yaml').write_text('''version: 2

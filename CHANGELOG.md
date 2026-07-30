@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.6 - 2026-07-30
+
+### Fixed
+
+- Decoupled `/siyk-git-commit` and `/siyk-git-sync` from T1/T2/T3 authoring, execution, documentation, and state promotion. Git save/sync now default to Git scope plus deterministic secret/privacy auditing only.
+- `/siyk-git-sync --pr` no longer silently runs T2, and remote integration no longer silently reruns T1.
+- Existing `testing.preflight` values are retained only for configuration compatibility, default to `none`, and emit a deprecation warning when set to a test tier; Git workflows ignore them.
+- `--no-test` remains accepted as a compatibility no-op and reports that tests are already disabled by default.
+
+### Changed
+
+- Tests run from a Git workflow only when the current user request explicitly asks for a named test tier, UAT, or specific test command. Project configuration, the presence of `docs/testing`, or PR creation is not implicit test authorization.
+- Git conflict verification uses Git integrity checks and deterministic Index/outgoing-history audit rather than generating or running tests.
+
 ## 0.2.5 - 2026-07-30
 
 ### Fixed

@@ -3,8 +3,22 @@
 ## Safe defaults
 
 - `/siyk-git-commit` creates one normal local commit only and never contacts a remote.
-- `/siyk-git-sync` composes the local commit subworkflow, fetches/integrates the current remote branch, verifies, scans outgoing history, and normally pushes the current branch.
+- `/siyk-git-sync` composes the local commit subworkflow, fetches/integrates the intended remote branch, audits outgoing history, and normally pushes.
 - Git Index and Git history are the authoritative content sources for commit/push scanning.
+- Git commands do not run or author tests by default.
+
+## Git/test separation
+
+The Git workflows are not test workflows. By default they must not:
+
+- create or modify T1/T2/T3/UAT cases;
+- resolve or execute test plans;
+- read/update `docs/testing` or testing evidence;
+- update T1/T2/T3 state or promote T1 evidence;
+- run T1 after integration;
+- run T2 because `--pr` was supplied.
+
+Only the current user request can explicitly add a named test tier, UAT, or a specific test command. Old `testing.preflight` configuration values and repository documentation are not implicit authorization. Repository Git hooks remain enabled and may perform their own checks; report hook behavior without creating tests to satisfy it unless explicitly asked.
 
 ## Local commit boundary
 
@@ -12,7 +26,7 @@
 
 ## Sync composition
 
-`/siyk-git-sync` must load `commands/git-commit.md` internally instead of duplicating staging, preflight, Index scan, commit, and local verification rules. Continue to remote operations only after the child returns `committed` or `no-op`.
+`/siyk-git-sync` must load `commands/git-commit.md` internally instead of duplicating staging, Index audit, commit, and local verification rules. Continue to remote operations only after the child returns `committed` or `no-op`.
 
 ## Integration policy
 
@@ -22,7 +36,8 @@ Prefer repository-local policy. Otherwise:
 - fast-forward when possible;
 - rebase a safe unpublished local branch onto upstream when appropriate;
 - use merge when policy or published-history safety favors it;
-- resolve conflicts only when intent is clear and testable;
+- resolve conflicts only when intent is clear;
+- verify no unmerged entries and no unresolved conflict markers;
 - never hide conflict semantics with blanket `ours`/`theirs` choices;
 - stop recoverably when correct resolution is ambiguous.
 
@@ -44,9 +59,7 @@ Findings default to review/stop according to severity, but the user may explicit
 
 ## Commit quality
 
-Create cohesive commits with corresponding tests/docs. Suggested types: `feat`, `fix`, `test`, `refactor`, `docs`, `build`, `ci`, `chore`.
-
-Do not claim a commit is tested unless the named checks actually ran.
+Create cohesive commits. Do not claim a commit or sync is tested unless the named checks were explicitly requested and actually ran.
 
 ## Unrelated changes
 

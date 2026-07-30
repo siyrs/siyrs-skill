@@ -266,22 +266,30 @@
               "enum": [
                 "t1",
                 "none"
-              ]
+              ],
+              "description": "Deprecated compatibility value; ignored by Git workflows.",
+              "deprecated": true
             },
             "sync_after_integration": {
               "enum": [
                 "t1",
                 "none"
-              ]
+              ],
+              "description": "Deprecated compatibility value; ignored by Git workflows.",
+              "deprecated": true
             },
             "pr": {
               "enum": [
                 "t2",
                 "none"
-              ]
+              ],
+              "description": "Deprecated compatibility value; ignored by Git workflows.",
+              "deprecated": true
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "description": "Deprecated compatibility keys. Git commit/sync ignore these values; request tests explicitly.",
+          "deprecated": true
         },
         "coverage": {
           "type": "object",

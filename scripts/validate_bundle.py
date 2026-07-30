@@ -27,7 +27,7 @@ REQUIRED_STATIC = {
     "assets/templates/TEST-EVIDENCE.template.md", "assets/templates/TEST-SHARED-REFERENCE.template.md",
     "assets/templates/TEST-CROSS-MODULE.template.md", ".github/workflows/ci.yml",
     "adapters/claude-code/install.sh", "adapters/claude-code/install.ps1",
-    "adapters/codex/install.sh", "adapters/codex/install.ps1", "docs/RELEASE-REPORT-v0.2.4.md",
+    "adapters/codex/install.sh", "adapters/codex/install.ps1",
 }
 
 
@@ -73,6 +73,8 @@ def validate(root: Path) -> dict:
     version = (root / "VERSION").read_text(encoding="utf-8").strip() if (root / "VERSION").is_file() else None
     if version and not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
         errors.append(f"invalid VERSION: {version!r}")
+    if version and not (root / f"docs/RELEASE-REPORT-v{version}.md").is_file():
+        errors.append(f"missing current release report: docs/RELEASE-REPORT-v{version}.md")
 
     try:
         specs = load_registry(root)
@@ -204,10 +206,22 @@ def validate(root: Path) -> dict:
     route_text = (root / "scripts" / "route_command.py").read_text(encoding="utf-8")
     if "check-ref-format" not in route_text or "--branch" not in route_text:
         errors.append("git-sync explicit branch validation is missing")
-    if "audit --root" not in (root / "commands" / "git-commit.md").read_text(encoding="utf-8"):
-        errors.append("git-commit does not invoke deterministic Git audit")
-    if "promote-t1" not in (root / "commands" / "git-commit.md").read_text(encoding="utf-8"):
-        errors.append("git-commit does not promote T1 evidence")
+    git_commit_text = (root / "commands" / "git-commit.md").read_text(encoding="utf-8").casefold()
+    git_sync_text = (root / "commands" / "git-sync.md").read_text(encoding="utf-8").casefold()
+    if "audit --root" not in git_commit_text or "--phase index" not in git_commit_text:
+        errors.append("git-commit does not invoke deterministic Index audit")
+    if "--phase outgoing" not in git_sync_text:
+        errors.append("git-sync does not invoke deterministic outgoing audit")
+    for token in ("promote-t1", "default embedded t1", "execute configured post-integration t1"):
+        if token in git_commit_text or token in git_sync_text:
+            errors.append(f"Git workflow retains implicit test coupling: {token}")
+    if "does not run or author tests by default" not in git_commit_text:
+        errors.append("git-commit does not declare default test separation")
+    if "does not run or author tests by default" not in git_sync_text:
+        errors.append("git-sync does not declare default test separation")
+    preflight = config_result["config"].get("testing", {}).get("preflight", {}) if config_result.get("valid") else {}
+    if preflight != {"commit": "none", "sync_after_integration": "none", "pr": "none"}:
+        errors.append(f"config example Git preflight must default to none: {preflight}")
 
     return {
         "root": str(root),
