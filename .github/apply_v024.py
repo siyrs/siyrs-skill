@@ -10,11 +10,12 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PARTS = ROOT / '.github' / 'v024-patch-parts'
+PARTS = ROOT / '.github' / 'v024-patch-small'
 SELF = ROOT / '.github' / 'apply_v024.py'
 CI = ROOT / '.github' / 'workflows' / 'ci.yml'
 WORKFLOW = ROOT / '.github' / 'workflows' / 'export-v024-workspace.yml'
 OLD_PARTS = ROOT / '.github' / 'v024-parts'
+OLD_BAD_PARTS = ROOT / '.github' / 'v024-patch-parts'
 
 
 def run(*args: str, input_bytes: bytes | None = None) -> None:
@@ -43,6 +44,7 @@ def main() -> None:
 
         shutil.rmtree(PARTS)
         shutil.rmtree(OLD_PARTS, ignore_errors=True)
+        shutil.rmtree(OLD_BAD_PARTS, ignore_errors=True)
         SELF.unlink(missing_ok=True)
         WORKFLOW.unlink(missing_ok=True)
 
