@@ -59,3 +59,7 @@ In `strict` mode, when an emulator/device is available:
 - verify signing/build variant/package identity as appropriate.
 
 When no emulator/device exists, finish JVM tests and build checks, then mark instrumentation/UI/UAT as blocked with reproducible commands.
+
+## Documentation workspace
+
+Android cases use the same authoritative testing workspace as backend/frontend modules. Mark module documents with `platforms: ["android"]` or mixed platform values. Evidence records build variant, package/application ID, device/emulator and API level, install or upgrade path, instrumentation/UI commands, screenshots/video, logcat, permissions, process recreation/background recovery, persisted/device-owner state, and backend/API state where relevant. Do not fragment Android UAT into an unindexed parallel directory.

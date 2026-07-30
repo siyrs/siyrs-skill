@@ -13,14 +13,36 @@ deprecated_message: "Use /siyk-test-add; /siyk-test-new is retained as a compati
 ---
 # Command: `/siyk-test-add`
 
-Purpose: author and validate tests for new or changed behavior. It writes cases and does not claim a T1/T2/T3 sweep.
+Purpose: author and validate canonical test cases for new or changed behavior. This command writes durable testing contracts; it does not claim a T1/T2/T3 sweep.
 
-1. Validate `.siyrs/config.yaml` with `<skill-dir>/scripts/siyk.py config validate --root <repo>` when present.
-2. Resolve project/modules and a trustworthy baseline with `<skill-dir>/scripts/collect_git_changes.py --purpose add --root <repo>`.
-3. Identify changed behavior and blast radius, then implement focused automated and UAT coverage at the closest stable layers.
-4. Add project-native T2 markers and documentation linkage when a case belongs to smoke.
-5. Run the narrowest commands required to prove the new cases compile and pass.
-6. Merge inventory, matrix, UAT, and results without erasing richer documentation.
-7. Persist `last_authoring` only after evidence is saved.
+## Required references
 
-Depth: `quick` direct positive coverage; `standard` adds negative/boundary and integration contracts; `strict` adds warranted cross-module/failure/UI/UAT evidence.
+Load `references/testing-documentation.md`, `testing-tiers.md`, `testing-selectors.md`, `testing-common.md`, project detection, the applicable platform strategies, and `output-contract.md`.
+
+## Documentation authority
+
+Resolve the workspace before planning:
+
+```text
+python <skill-dir>/scripts/siyk.py docs resolve --root <repo>
+```
+
+Resolution priority is explicit user entry/root, project config, then `docs/testing/README.md`. A user override is run-scoped unless persistence is explicitly requested. If the authority is missing, safely create the minimum workspace with `docs ensure`, read the index, and preserve all richer existing Markdown.
+
+## Procedure
+
+1. Resolve project/modules, testing documentation authority, and trustworthy baseline.
+2. Read the index, governance, tier policy, shared references, and relevant module/cross-module documents.
+3. Identify changed behavior and blast radius; do not equate files with behavior.
+4. Add or update one canonical `TC-*` definition per behavior in the appropriate module document. Preserve IDs and history; evidence must reference rather than redefine cases.
+5. Add framework-native tests. When a case belongs to T2, update the native selector and Markdown Tier/Role/Selector linkage together.
+6. Cover backend, frontend/full-stack, Android, CLI, data, or custom layers actually present. Use `_shared-*` documents for cross-module roles, data scope, formulas, time zones, fixtures, and test data.
+7. Run the narrowest commands proving the new cases compile and pass. Generated-but-not-run is not passed.
+8. Write lightweight Markdown evidence under the resolved evidence directory; raw artifacts stay in configured report paths.
+9. Update the managed README index and run `docs validate`. Update state only after durable evidence exists.
+
+## Depth
+
+- `quick`: direct positive behavior and targeted execution.
+- `standard`: positive, negative/boundary, and relevant integration contract.
+- `strict`: standard plus cross-module, failure/retry, UI/E2E/UAT, device, or compatibility evidence when warranted.

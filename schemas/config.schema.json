@@ -3,23 +3,42 @@
   "$id": "https://github.com/siyrs/siyrs-skill/schemas/config.schema.json",
   "title": "siyrs-skill project configuration v2",
   "type": "object",
-  "required": ["version"],
+  "required": [
+    "version"
+  ],
   "properties": {
-    "version": {"const": 2},
+    "version": {
+      "const": 2
+    },
     "project": {
       "type": "object",
       "properties": {
-        "name": {"type": "string"},
-        "type": {"type": "string"},
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
         "modules": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["name", "path"],
+            "required": [
+              "name",
+              "path"
+            ],
             "properties": {
-              "name": {"type": "string", "minLength": 1},
-              "path": {"type": "string", "minLength": 1},
-              "testing": {"$ref": "#/$defs/moduleTesting"}
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "testing": {
+                "$ref": "#/$defs/moduleTesting"
+              }
             },
             "additionalProperties": true
           }
@@ -30,36 +49,113 @@
     "git": {
       "type": "object",
       "properties": {
-        "default_branch": {"type": "string"},
-        "remote": {"type": "string"},
-        "sync_mode": {"const": "current-branch"},
-        "integration": {"enum": ["rebase", "merge", "ff-only"]},
-        "create_pr": {"type": "boolean"}
+        "default_branch": {
+          "type": "string"
+        },
+        "remote": {
+          "type": "string"
+        },
+        "sync_mode": {
+          "const": "current-branch"
+        },
+        "integration": {
+          "enum": [
+            "rebase",
+            "merge",
+            "ff-only"
+          ]
+        },
+        "create_pr": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": true
     },
-    "testing": {"$ref": "#/$defs/testing"},
-    "paths": {"type": "object", "additionalProperties": {"type": "string"}},
-    "exclude": {"type": "array", "items": {"type": "string"}}
+    "testing": {
+      "$ref": "#/$defs/testing"
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "exclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "$defs": {
     "commandSpec": {
       "oneOf": [
-        {"type": "string", "minLength": 1},
+        {
+          "type": "string",
+          "minLength": 1
+        },
         {
           "type": "object",
           "properties": {
-            "id": {"type": "string", "minLength": 1},
-            "command": {"type": "string", "minLength": 1},
-            "argv": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-            "cwd": {"type": "string", "minLength": 1},
-            "timeout_seconds": {"type": "integer", "minimum": 1},
-            "environment": {"type": "object", "additionalProperties": {"type": "string"}},
-            "network": {"enum": ["allow", "deny", "inherit"]}
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "command": {
+              "type": "string",
+              "minLength": 1
+            },
+            "argv": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "cwd": {
+              "type": "string",
+              "minLength": 1
+            },
+            "timeout_seconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "environment": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "network": {
+              "enum": [
+                "allow",
+                "deny",
+                "inherit"
+              ]
+            }
           },
           "oneOf": [
-            {"required": ["command"], "not": {"required": ["argv"]}},
-            {"required": ["argv"], "not": {"required": ["command"]}}
+            {
+              "required": [
+                "command"
+              ],
+              "not": {
+                "required": [
+                  "argv"
+                ]
+              }
+            },
+            {
+              "required": [
+                "argv"
+              ],
+              "not": {
+                "required": [
+                  "command"
+                ]
+              }
+            }
           ],
           "additionalProperties": false
         }
@@ -68,8 +164,15 @@
     "tierCommands": {
       "type": "object",
       "properties": {
-        "commands": {"type": "array", "items": {"$ref": "#/$defs/commandSpec"}},
-        "baseline": {"type": "string"}
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/commandSpec"
+          }
+        },
+        "baseline": {
+          "type": "string"
+        }
       },
       "additionalProperties": true
     },
@@ -78,25 +181,54 @@
       "properties": {
         "authoring": {
           "type": "object",
-          "properties": {"default_depth": {"enum": ["quick", "standard", "strict"]}},
+          "properties": {
+            "default_depth": {
+              "enum": [
+                "quick",
+                "standard",
+                "strict"
+              ]
+            }
+          },
           "additionalProperties": true
         },
         "tiers": {
           "type": "object",
           "properties": {
-            "t1": {"$ref": "#/$defs/tierCommands"},
+            "t1": {
+              "$ref": "#/$defs/tierCommands"
+            },
             "t2": {
               "type": "object",
               "properties": {
-                "commands": {"type": "array", "items": {"$ref": "#/$defs/commandSpec"}},
-                "baseline": {"type": "string"},
-                "selector_id": {"type": "string", "minLength": 1},
+                "commands": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/commandSpec"
+                  }
+                },
+                "baseline": {
+                  "type": "string"
+                },
+                "selector_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
                 "required_per_module": {
                   "type": "object",
-                  "required": ["main_path", "boundary"],
+                  "required": [
+                    "main_path",
+                    "boundary"
+                  ],
                   "properties": {
-                    "main_path": {"type": "integer", "minimum": 1},
-                    "boundary": {"type": "integer", "minimum": 1}
+                    "main_path": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "boundary": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
                   },
                   "additionalProperties": false
                 }
@@ -106,10 +238,21 @@
             "t3": {
               "type": "object",
               "properties": {
-                "commands": {"type": "array", "items": {"$ref": "#/$defs/commandSpec"}},
-                "baseline": {"type": "string"},
-                "require_real_uat": {"type": "boolean"},
-                "release_gate": {"type": "boolean"}
+                "commands": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/commandSpec"
+                  }
+                },
+                "baseline": {
+                  "type": "string"
+                },
+                "require_real_uat": {
+                  "type": "boolean"
+                },
+                "release_gate": {
+                  "type": "boolean"
+                }
               },
               "additionalProperties": true
             }
@@ -119,19 +262,62 @@
         "preflight": {
           "type": "object",
           "properties": {
-            "commit": {"enum": ["t1", "none"]},
-            "sync_after_integration": {"enum": ["t1", "none"]},
-            "pr": {"enum": ["t2", "none"]}
+            "commit": {
+              "enum": [
+                "t1",
+                "none"
+              ]
+            },
+            "sync_after_integration": {
+              "enum": [
+                "t1",
+                "none"
+              ]
+            },
+            "pr": {
+              "enum": [
+                "t2",
+                "none"
+              ]
+            }
           },
           "additionalProperties": false
         },
         "coverage": {
           "type": "object",
           "properties": {
-            "enabled": {"type": "boolean"},
-            "minimum": {"type": "number", "minimum": 0, "maximum": 100}
+            "enabled": {
+              "type": "boolean"
+            },
+            "minimum": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
           },
           "additionalProperties": true
+        },
+        "documentation": {
+          "type": "object",
+          "properties": {
+            "root": {
+              "type": "string",
+              "minLength": 1
+            },
+            "index": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^/\\\\]+[.]md$"
+            },
+            "evidence_root": {
+              "type": "string",
+              "minLength": 1
+            },
+            "agent_discovery": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": true
@@ -142,9 +328,15 @@
         "tiers": {
           "type": "object",
           "properties": {
-            "t1": {"$ref": "#/$defs/tierCommands"},
-            "t2": {"$ref": "#/$defs/tierCommands"},
-            "t3": {"$ref": "#/$defs/tierCommands"}
+            "t1": {
+              "$ref": "#/$defs/tierCommands"
+            },
+            "t2": {
+              "$ref": "#/$defs/tierCommands"
+            },
+            "t3": {
+              "$ref": "#/$defs/tierCommands"
+            }
           },
           "additionalProperties": false
         }

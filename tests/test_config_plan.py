@@ -57,6 +57,7 @@ testing:
             plan=resolve_plan(root,'t2');self.assertTrue(plan['valid'],plan)
             self.assertEqual('backend-smoke',plan['steps'][0]['id']);self.assertEqual('backend',plan['steps'][0]['cwd'])
             self.assertEqual('smoke-v1',plan['selector_id'])
+            self.assertEqual('docs/testing/README.md',plan['documentation']['workspace']['entry'])
 
     def test_missing_commands_is_plan_debt(self):
         with TemporaryDirectory() as tmp:

@@ -15,6 +15,7 @@ from git_audit import audit_index, audit_outgoing
 from route_command import route
 from scan_secrets import scan
 from test_plan import resolve_plan
+from testing_docs import ensure_workspace, index_workspace, resolve_workspace, validate_workspace
 from validate_bundle import validate
 
 
@@ -55,6 +56,18 @@ def main() -> int:
     plan_parser.add_argument("--config")
     plan_parser.add_argument("--tier", choices=["t1", "t2", "t3"], required=True)
     plan_parser.add_argument("--module", action="append", default=[])
+    plan_parser.add_argument("--docs-root")
+    plan_parser.add_argument("--docs-index")
+    plan_parser.add_argument("--docs-entry")
+
+    docs_parser = sub.add_parser("docs")
+    docs_parser.add_argument("action", choices=["resolve", "ensure", "index", "validate"])
+    docs_parser.add_argument("--root", default=".")
+    docs_parser.add_argument("--config")
+    docs_parser.add_argument("--docs-root")
+    docs_parser.add_argument("--index")
+    docs_parser.add_argument("--entry")
+    docs_parser.add_argument("--strict", action="store_true")
 
     audit_parser = sub.add_parser("audit")
     audit_parser.add_argument("--root", default=".")
@@ -95,8 +108,29 @@ def main() -> int:
             result = resolve_plan(
                 Path(args.root), args.tier, args.module,
                 Path(args.config) if args.config else None,
+                docs_root=args.docs_root, docs_index=args.docs_index, docs_entry=args.docs_entry,
             )
             code = 0 if result["valid"] else 1
+        elif args.command == "docs":
+            docs_kwargs = {
+                "docs_root": args.docs_root,
+                "index": args.index,
+                "entry": args.entry,
+                "config_path": Path(args.config) if args.config else None,
+            }
+            if args.action == "resolve":
+                from dataclasses import asdict
+                result = asdict(resolve_workspace(Path(args.root), **docs_kwargs))
+                code = 0
+            elif args.action == "ensure":
+                result = ensure_workspace(Path(args.root), **docs_kwargs)
+                code = 0
+            elif args.action == "index":
+                result = index_workspace(Path(args.root), **docs_kwargs)
+                code = 0
+            else:
+                result = validate_workspace(Path(args.root), strict=args.strict, **docs_kwargs)
+                code = 0 if result["valid"] else 1
         elif args.command == "audit":
             if args.phase == "index":
                 result = audit_index(Path(args.root), large_limit=args.large_limit)

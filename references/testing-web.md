@@ -56,3 +56,7 @@ Select based on the repository, not this list:
 - Node backend: Vitest/Jest, Supertest, framework test harness, Testcontainers.
 
 Do not install all examples by default.
+
+## Documentation workspace
+
+Record web/backend/full-stack cases in the authoritative testing workspace. Module documents may span backend and frontend, while shared roles/data scope/formulas live in `_shared-*` references. UAT evidence reconciles browser-visible behavior, API responses, database/final durable state, and audit/events; an HTTP success alone is insufficient.

@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'scripts'))
 from validate_bundle import validate
 class ValidationTests(unittest.TestCase):
     def test_current_bundle(self):
-        result=validate(ROOT);self.assertTrue(result['valid'],result['errors']);self.assertEqual('0.2.3',result['version'])
+        result=validate(ROOT);self.assertTrue(result['valid'],result['errors']);self.assertEqual('0.2.4',result['version'])
     def test_state_schema_has_no_broken_allof(self):
         schema=json.loads((ROOT/'schemas/state.schema.json').read_text())
         for name in ('authoringRecord','t1Record','t2Record','t3Record'):self.assertNotIn('allOf',schema['$defs'][name]);self.assertFalse(schema['$defs'][name]['additionalProperties'])

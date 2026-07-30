@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from config_model import ConfigError, load_config
+from testing_docs import resolve_workspace, validate_workspace
 
 VALID_TIERS = {"t1", "t2", "t3"}
 DEFAULT_TIMEOUT = 900
@@ -54,7 +55,10 @@ def _step(command: Any, *, root: Path, default_cwd: str, source: str, index: int
     }
 
 
-def resolve_plan(root: Path, tier: str, modules: list[str] | None = None, config_path: Path | None = None) -> dict[str, Any]:
+def resolve_plan(
+    root: Path, tier: str, modules: list[str] | None = None, config_path: Path | None = None,
+    *, docs_root: str | None = None, docs_index: str | None = None, docs_entry: str | None = None,
+) -> dict[str, Any]:
     root = root.resolve()
     tier = tier.casefold()
     if tier not in VALID_TIERS:
@@ -71,6 +75,14 @@ def resolve_plan(root: Path, tier: str, modules: list[str] | None = None, config
             "debts": ["configuration is invalid"],
         }
     config = loaded["config"]
+    workspace = resolve_workspace(
+        root, docs_root=docs_root, index=docs_index, entry=docs_entry, config_path=config_path,
+    )
+    documentation_result = None
+    if (root / workspace.docs_root).is_dir():
+        documentation_result = validate_workspace(
+            root, docs_root=workspace.docs_root, index=workspace.index, config_path=config_path, strict=False,
+        )
     all_modules = config.get("project", {}).get("modules", [])
     by_name = {module["name"]: module for module in all_modules if isinstance(module, dict) and module.get("name")}
     requested = list(dict.fromkeys(modules or []))
@@ -151,6 +163,11 @@ def resolve_plan(root: Path, tier: str, modules: list[str] | None = None, config
         "debts": list(dict.fromkeys(debts)),
         "errors": [],
         "warnings": warnings,
+        "documentation": {
+            "workspace": workspace.__dict__,
+            "validation": documentation_result,
+            "exists": (root / workspace.docs_root).is_dir(),
+        },
         "environment": {"platform": os.name, "repository": str(root)},
     }
 
@@ -161,11 +178,15 @@ def main() -> int:
     parser.add_argument("--config")
     parser.add_argument("--tier", required=True, choices=sorted(VALID_TIERS))
     parser.add_argument("--module", action="append", default=[])
+    parser.add_argument("--docs-root")
+    parser.add_argument("--docs-index")
+    parser.add_argument("--docs-entry")
     args = parser.parse_args()
     try:
         result = resolve_plan(
             Path(args.root), args.tier, args.module,
             Path(args.config) if args.config else None,
+            docs_root=args.docs_root, docs_index=args.docs_index, docs_entry=args.docs_entry,
         )
     except (OSError, ConfigError) as exc:
         result = {"valid": False, "errors": [str(exc)], "steps": [], "debts": []}

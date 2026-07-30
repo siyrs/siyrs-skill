@@ -1,10 +1,13 @@
-# v0.2.3 Acceptance
+# v0.2.4 Acceptance
 
-- [x] State record definitions are closed without broken `allOf` inheritance.
-- [x] macOS-compatible Bash installers and macOS CI exist.
-- [x] Config v2 validates through standard-library parsing.
-- [x] T1/T2/T3 plans resolve deterministically with module overrides.
-- [x] T1 promotion verifies fingerprint evidence against the exact commit tree.
-- [x] `git-sync` only accepts branches through validated `--branch`.
-- [x] Index and outgoing-history Git audits produce stable redacted findings.
-- [x] Unit/contract, installer, compile, bundle, and repository scan gates pass.
+- [x] Default testing authority is `docs/testing/README.md`.
+- [x] Explicit user entry/root overrides config and default without implicit persistence.
+- [x] Existing case-insensitive README variants are reused.
+- [x] Natural-language full testing and UAT discover the testing index.
+- [x] `test-add`, T1, T2, and T3 load the same Markdown-first documentation policy.
+- [x] Backend, frontend/full-stack, Android, CLI, data, and custom platforms share one workspace.
+- [x] Stable case documents and execution evidence are separated.
+- [x] Relative links, orphan docs, duplicate canonical IDs, undefined evidence references, and T2 debt are reported.
+- [x] Managed index updates preserve richer project prose.
+- [x] Config schema/example and test plans expose documentation authority.
+- [x] Cross-platform tests and release validation pass before merge.

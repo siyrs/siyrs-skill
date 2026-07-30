@@ -47,6 +47,12 @@ DEFAULT_CONFIG: dict[str, Any] = {
         },
         "preflight": {"commit": "t1", "sync_after_integration": "t1", "pr": "t2"},
         "coverage": {"enabled": True, "minimum": 80},
+        "documentation": {
+            "root": "docs/testing",
+            "index": "README.md",
+            "evidence_root": "evidence",
+            "agent_discovery": True,
+        },
     },
     "paths": {"docs": "docs", "reports": "reports/testing"},
     "exclude": [
@@ -359,6 +365,25 @@ def validate_config(data: Any, root: Path | None = None) -> dict[str, Any]:
         for key in ("main_path", "boundary"):
             if not isinstance(required.get(key), int) or required.get(key, 0) < 1:
                 errors.append(f"testing.tiers.t2.required_per_module.{key} must be >= 1")
+
+    documentation = testing.get("documentation", {})
+    if not isinstance(documentation, dict):
+        errors.append("testing.documentation must be an object")
+    else:
+        for key in ("root", "evidence_root"):
+            value = documentation.get(key, DEFAULT_CONFIG["testing"]["documentation"][key])
+            if not isinstance(value, str) or not _is_safe_relative_path(value):
+                errors.append(f"testing.documentation.{key} must be a safe relative path")
+        index_name = documentation.get("index", DEFAULT_CONFIG["testing"]["documentation"]["index"])
+        if (
+            not isinstance(index_name, str)
+            or not _is_safe_relative_path(index_name)
+            or len(Path(index_name).parts) != 1
+            or not index_name.casefold().endswith(".md")
+        ):
+            errors.append("testing.documentation.index must be a Markdown file name inside the documentation root")
+        if not isinstance(documentation.get("agent_discovery", True), bool):
+            errors.append("testing.documentation.agent_discovery must be boolean")
 
     preflight = testing.get("preflight", {})
     if not isinstance(preflight, dict):

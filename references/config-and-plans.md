@@ -37,3 +37,16 @@ commands:
 ```
 
 Agent responsibilities begin after factual validation/resolution: verify business appropriateness, execute in cost order, diagnose failures, and preserve evidence.
+
+## Testing documentation configuration
+
+```yaml
+testing:
+  documentation:
+    root: docs/testing
+    index: README.md
+    evidence_root: evidence
+    agent_discovery: true
+```
+
+An explicit user-provided root/entry overrides configuration for the current request. Resolved plans include documentation root/index, existence, and validation facts. The plan helper never creates or rewrites testing documentation; use `siyk.py docs ensure|index|validate` for that deterministic lifecycle.
