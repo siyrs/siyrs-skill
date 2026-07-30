@@ -1,0 +1,25 @@
+name: Export v0.2.5 workspace
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Build workspace archive
+        run: tar --exclude=.git -czf "$RUNNER_TEMP/siyrs-skill-v025-workspace.tar.gz" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: siyrs-skill-v025-workspace
+          path: ${{ runner.temp }}/siyrs-skill-v025-workspace.tar.gz
+          if-no-files-found: error
+          retention-days: 1
