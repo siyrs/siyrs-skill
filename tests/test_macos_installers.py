@@ -15,6 +15,14 @@ class MacInstallerTests(unittest.TestCase):
             self.assertNotIn('-mindepth', text)
             self.assertNotIn('-maxdepth', text)
 
+    def test_bash_installers_strip_cr_from_registry_output(self):
+        # command_registry.py uses print(), which emits CRLF on Windows. The
+        # bash installers consume its output via `while read`; without stripping
+        # CR, each name keeps a trailing \r and breaks the cp/replace targets.
+        for relative in ('adapters/claude-code/install.sh', 'adapters/codex/install.sh'):
+            text = (ROOT / relative).read_text(encoding='utf-8')
+            self.assertIn("tr -d '\\r'", text)
+
     @unittest.skipIf(os.name == 'nt', 'Bash syntax is validated by Linux/macOS jobs; Windows uses PowerShell')
     @unittest.skipUnless(shutil.which('bash'), 'bash required')
     def test_bash_syntax(self):

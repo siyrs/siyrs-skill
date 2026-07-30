@@ -10,8 +10,10 @@ if [[ -z "${python_cmd}" ]]; then
 fi
 entrypoints=()
 legacy_names=()
-while IFS= read -r value; do [[ -n "${value}" ]] && entrypoints+=("${value}"); done < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field names)
-while IFS= read -r value; do [[ -n "${value}" ]] && legacy_names+=("${value}"); done < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field legacy-names)
+# Strip CR: command_registry.py uses print(), which emits CRLF on Windows and
+# would otherwise leave a trailing \r on each name and break the paths below.
+while IFS= read -r value; do [[ -n "${value}" ]] && entrypoints+=("${value}"); done < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field names | tr -d '\r')
+while IFS= read -r value; do [[ -n "${value}" ]] && legacy_names+=("${value}"); done < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field legacy-names | tr -d '\r')
 mkdir -p "${skills_home}" "${archive_home}"
 skills_home="$(cd "${skills_home}" && pwd -P)"
 archive_home="$(cd "${archive_home}" && pwd -P)"

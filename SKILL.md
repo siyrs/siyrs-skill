@@ -4,7 +4,7 @@ description: Project-level engineering quality workflows for test authoring, reg
 ---
 # siyrs-skill
 
-Version: **0.2.4**
+Version: **0.2.5**
 Command prefix: **`siyk`**
 
 Use this Skill as a project-level engineering quality controller. Workflow policy and durable testing contracts are Markdown-first; deterministic scripts resolve paths/configuration/plans, validate documentation, collect Git facts, maintain state, and audit exact Git objects.

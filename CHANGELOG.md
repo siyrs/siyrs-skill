@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.5 - 2026-07-30
+
+### Fixed
+
+- Bash installers (`claude-code`, `codex`) now strip CR from `command_registry.py` output. On Windows `print()` emits CRLF, which left a trailing `\r` on each command name and broke `cp` with `cannot stat 'siyk-test-add\r.md'`. Both installers pipe registry output through `tr -d '\r'`, restoring identical behavior on Windows and POSIX.
+- Added a regression test asserting the CR stripping is present in both bash installers.
+
 ## 0.2.4 - 2026-07-30
 
 ### Added

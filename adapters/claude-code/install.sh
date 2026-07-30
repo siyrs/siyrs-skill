@@ -11,8 +11,10 @@ if [[ -z "${python_cmd}" ]]; then
 fi
 names=()
 legacy_names=()
-while IFS= read -r value; do [[ -n "${value}" ]] && names+=("${value}"); done < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field names)
-while IFS= read -r value; do [[ -n "${value}" ]] && legacy_names+=("${value}"); done < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field legacy-names)
+# Strip CR: command_registry.py uses print(), which emits CRLF on Windows and
+# would otherwise leave a trailing \r on each name and break the cp targets below.
+while IFS= read -r value; do [[ -n "${value}" ]] && names+=("${value}"); done < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field names | tr -d '\r')
+while IFS= read -r value; do [[ -n "${value}" ]] && legacy_names+=("${value}"); done < <("${python_cmd}" "${skill_source}/scripts/command_registry.py" --root "${skill_source}" --field legacy-names | tr -d '\r')
 mkdir -p "$(dirname "${skill_target}")" "${command_target}"
 source_real="$("${python_cmd}" -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "${skill_source}")"
 target_real="$("${python_cmd}" -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "${skill_target}")"

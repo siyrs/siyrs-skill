@@ -1,6 +1,6 @@
 # siyrs-skill
 
-- 当前版本：`v0.2.4`
+- 当前版本：`v0.2.5`
 - 六个稳定 `/siyk-*` 工作流
 - Markdown-first 测试文档工作区
 - T1/T2/T3、UAT 与多端测试治理
