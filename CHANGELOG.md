@@ -1,17 +1,21 @@
 # Changelog
 
-## 0.2.3 - 2026-07-29
-
-### Fixed
-
-- Replaced the broken closed-base `allOf` State Schema composition with explicit closed record definitions.
-- Removed Bash 4/GNU-find-only installer dependencies and added real macOS CI installer coverage.
-- Made `/siyk-git-sync` branch selection explicit through `--branch`, preventing natural-language text from becoming a branch name.
+## 0.2.4 - 2026-07-30
 
 ### Added
 
-- Standard-library `.siyrs/config.yaml` validation and normalization.
-- Deterministic T1/T2/T3 test plan resolver with module overrides and structured execution steps.
-- T1 fingerprint/candidate-tree to commit promotion with exact tree verification.
-- Deterministic `git_audit.py` for staged Index/candidate tree and outgoing-history/final-tree inspection with redacted stable findings.
-- Configuration, plan, state-lifecycle, and Git-audit Markdown contracts and tests.
+- Markdown-first testing documentation workspace with default authority `docs/testing/README.md` and explicit-user/config/default resolution precedence.
+- Deterministic `docs resolve|ensure|index|validate` helpers for index casing, links, orphan documents, document metadata, canonical `TC-*` uniqueness, evidence references, and T2 documentation debt.
+- Project-level agent discovery contract for natural-language full testing, regression, UAT, frontend/backend/full-stack, and Android verification.
+- Reusable governance, tier, module-case, shared-reference, cross-module, and execution-evidence Markdown templates.
+
+### Changed
+
+- `test-add`, T1, T2, and T3 now resolve/read/update one authoritative testing workspace and keep stable case contracts separate from execution evidence.
+- Config schema v2 adds `testing.documentation.root/index/evidence_root/agent_discovery`.
+- Test plans expose the resolved documentation authority and validation facts.
+- Platform guidance now unifies backend, frontend/full-stack, Android, CLI, data, and custom testing under the same indexed Markdown contract.
+
+## 0.2.3 - 2026-07-29
+
+- Closed deterministic configuration/plan, T1 promotion, macOS installation, explicit branch, and Git-object audit gaps.

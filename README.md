@@ -1,45 +1,40 @@
 # siyrs-skill
 
-- 当前版本：`v0.2.3`
+- 当前版本：`v0.2.4`
 - 六个稳定 `/siyk-*` 工作流
-- Markdown 命令注册表
+- Markdown-first 测试文档工作区
+- T1/T2/T3、UAT 与多端测试治理
 - Config/State Schema v2
-- T1/T2/T3 测试治理
 - Git Index/Outgoing History 确定性审计
 - Claude Code、Codex 跨平台入口
 
-## v0.2.3
+## v0.2.4
 
-本版完成六项执行闭环：修复 State Schema 组合问题；Bash 安装器兼容 macOS 并加入 CI；新增配置校验和测试计划解析；T1 指纹结果可在树一致时晋升到最终 commit；`git-sync` 使用显式 `--branch`；新增 `git_audit.py` 对 Index 和待推送历史进行确定性、脱敏审计。
+默认测试文档权威入口为：
 
 ```text
-/siyk-test-add standard
-/siyk-test-run-t1
-/siyk-test-run-t2
-/siyk-test-run-t3
-/siyk-git-commit
-/siyk-git-sync --branch feature/example --pr
+docs/testing/README.md
 ```
 
-确定性工具：
+用户本次明确指定的测试目录或入口优先，其次使用 `.siyrs/config.yaml`，最后使用默认值。`test-add`、T1、T2、T3 统一读取和维护这一入口。
+
+即使用户没有输入 `/siyk-*`，只说“全量测试”“UAT”“回归测试”“前后端测试”或“Android 测试”，Skill 也会先读取项目测试索引和 canonical `TC-*` 用例。UAT-only 不会被错误描述为完整 T3。
 
 ```bash
-python scripts/siyk.py config validate --root <repo>
-python scripts/siyk.py plan --root <repo> --tier t2
-python scripts/siyk.py audit --root <repo> --phase index
-python scripts/state.py --root <repo> promote-t1 --commit HEAD
+python scripts/siyk.py docs resolve --root <repo>
+python scripts/siyk.py docs ensure --root <repo>
+python scripts/siyk.py docs index --root <repo>
+python scripts/siyk.py docs validate --root <repo>
 ```
 
-macOS/Linux 安装：
+工作区支持：
 
-```bash
-bash adapters/claude-code/install.sh
-bash adapters/codex/install.sh
-```
+- `README.md` 唯一总索引和智能体发现合同；
+- `00-*` 治理与分档规则；
+- 模块 canonical 用例；
+- `_shared-*` 共享角色、数据范围、公式、时区和测试数据；
+- `99-*` 跨模块业务链路；
+- `evidence/` 追加式 Markdown 执行证据；
+- 后端、前端/全栈、Android、CLI、数据与自定义模块混合治理。
 
-Windows 安装：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\adapters\claude-code\install.ps1
-powershell -ExecutionPolicy Bypass -File .\adapters\codex\install.ps1
-```
+测试代码仍放在框架原生目录，原始截图、视频、coverage、logcat 等放在配置的报告目录；`docs/testing` 保存稳定合同和轻量、脱敏、可追溯的 Markdown 证据。

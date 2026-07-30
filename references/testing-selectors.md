@@ -24,3 +24,7 @@ Recommended selectors:
 `TEST-MATRIX` links Tier, Role, Module, and Selector/Test ID to code. `test-add` adds marker and documentation together.
 
 When no deterministic selector exists, a conservative fallback may run but the result is `partially complete`, selector debt is recorded, and no stable T2 gate is claimed.
+
+## Documentation linkage
+
+The authoritative testing index and module documents map canonical case IDs to native selectors. Every T2 module must document at least one `main-path` and one `boundary`/permission case. `docs validate` reports missing or inconsistent linkage as debt; it never treats a Markdown Tier cell as executable authority.

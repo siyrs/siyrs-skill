@@ -16,13 +16,18 @@ IGNORED_SUFFIXES = {".pyc", ".pyo"}
 REQUIRED_STATIC = {
     "VERSION", "SKILL.md", "README.md", "CHANGELOG.md", "release-manifest.json",
     "references/testing-common.md", "references/testing-tiers.md", "references/testing-selectors.md",
+    "references/testing-documentation.md",
     "references/config-and-plans.md", "references/state-lifecycle.md", "references/git-content-scan.md",
     "references/output-contract.md", "scripts/command_registry.py", "scripts/config_model.py",
-    "scripts/test_plan.py", "scripts/git_audit.py", "scripts/state.py", "scripts/route_command.py",
+    "scripts/test_plan.py", "scripts/testing_docs.py", "scripts/git_audit.py", "scripts/state.py", "scripts/route_command.py",
     "scripts/siyk.py", "schemas/config.schema.json", "schemas/state.schema.json",
-    "assets/config.example.yaml", "assets/state.example.json", ".github/workflows/ci.yml",
+    "assets/config.example.yaml", "assets/state.example.json",
+    "assets/templates/TESTING-README.template.md", "assets/templates/TEST-GOVERNANCE.template.md",
+    "assets/templates/TEST-TIERS.template.md", "assets/templates/TEST-CASE-MODULE.template.md",
+    "assets/templates/TEST-EVIDENCE.template.md", "assets/templates/TEST-SHARED-REFERENCE.template.md",
+    "assets/templates/TEST-CROSS-MODULE.template.md", ".github/workflows/ci.yml",
     "adapters/claude-code/install.sh", "adapters/claude-code/install.ps1",
-    "adapters/codex/install.sh", "adapters/codex/install.ps1", "docs/RELEASE-REPORT-v0.2.3.md",
+    "adapters/codex/install.sh", "adapters/codex/install.ps1", "docs/RELEASE-REPORT-v0.2.4.md",
 }
 
 
@@ -160,6 +165,28 @@ def validate(root: Path) -> dict:
     config_result = load_config(root, root / "assets" / "config.example.yaml", required=True)
     if not config_result["valid"]:
         errors.extend(f"config example: {message}" for message in config_result["errors"])
+    else:
+        documentation = config_result["config"].get("testing", {}).get("documentation", {})
+        expected_documentation = {
+            "root": "docs/testing", "index": "README.md",
+            "evidence_root": "evidence", "agent_discovery": True,
+        }
+        if documentation != expected_documentation:
+            errors.append(f"config example documentation contract drift: {documentation}")
+
+    testing_docs_text = (root / "scripts" / "testing_docs.py").read_text(encoding="utf-8") if (root / "scripts" / "testing_docs.py").is_file() else ""
+    for token in ("resolve_workspace", "ensure_workspace", "index_workspace", "validate_workspace", "RISK-"):
+        if token == "RISK-":
+            continue
+        if token not in testing_docs_text:
+            errors.append(f"testing documentation helper missing {token}")
+    for command_path in ("test-add.md", "test-run-t1.md", "test-run-t2.md", "test-run-t3.md"):
+        text = (root / "commands" / command_path).read_text(encoding="utf-8")
+        if "testing-documentation.md" not in text or "docs validate" not in text:
+            errors.append(f"test command does not load documentation authority: {command_path}")
+    for token in ("全量测试", "UAT", "docs/testing/README.md"):
+        if token not in skill_text:
+            errors.append(f"SKILL.md missing natural-language testing discovery token: {token}")
 
     # Portable Bash contracts and macOS CI.
     ci = (root / ".github/workflows/ci.yml").read_text(encoding="utf-8") if (root / ".github/workflows/ci.yml").is_file() else ""

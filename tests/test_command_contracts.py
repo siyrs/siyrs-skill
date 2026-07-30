@@ -8,5 +8,8 @@ class Contracts(unittest.TestCase):
     def test_sync_branch_is_explicit(self):
         text=self.text('commands/git-sync.md');self.assertIn('--branch <branch>',text);self.assertIn('positional natural language is never treated as a branch',text)
     def test_config_plan_references(self):
-        for path in ('commands/test-run-t1.md','commands/test-run-t2.md','commands/test-run-t3.md'):self.assertIn('siyk.py plan',self.text(path))
+        for path in ('commands/test-run-t1.md','commands/test-run-t2.md','commands/test-run-t3.md'):
+            text=self.text(path);self.assertIn('siyk.py plan',text);self.assertIn('testing-documentation.md',text);self.assertIn('docs validate',text)
+    def test_natural_language_full_and_uat_discovery(self):
+        text=self.text('SKILL.md');self.assertIn('全量测试',text);self.assertIn('uat',text);self.assertIn('docs/testing/readme.md',text)
 if __name__=='__main__':unittest.main()

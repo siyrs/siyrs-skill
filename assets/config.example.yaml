@@ -36,6 +36,11 @@ testing:
   coverage:
     enabled: true
     minimum: 80
+  documentation:
+    root: docs/testing
+    index: README.md
+    evidence_root: evidence
+    agent_discovery: true
 
 paths:
   docs: docs

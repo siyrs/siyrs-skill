@@ -1,6 +1,6 @@
 {
   "name": "siyrs-skill",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "python_requires": ">=3.10",
   "commands": [
     "/siyk-test-add",
@@ -51,8 +51,15 @@
     "assets/config.example.yaml",
     "assets/state.example.json",
     "assets/templates/FUNCTION-INVENTORY.template.md",
+    "assets/templates/TEST-CASE-MODULE.template.md",
+    "assets/templates/TEST-CROSS-MODULE.template.md",
+    "assets/templates/TEST-EVIDENCE.template.md",
+    "assets/templates/TEST-GOVERNANCE.template.md",
     "assets/templates/TEST-MATRIX.template.md",
     "assets/templates/TEST-RESULTS.template.md",
+    "assets/templates/TEST-SHARED-REFERENCE.template.md",
+    "assets/templates/TEST-TIERS.template.md",
+    "assets/templates/TESTING-README.template.md",
     "assets/templates/TESTING.template.md",
     "assets/templates/UAT.template.md",
     "commands/git-commit.md",
@@ -74,6 +81,7 @@
     "docs/RELEASE-REPORT-v0.2.1.md",
     "docs/RELEASE-REPORT-v0.2.2.md",
     "docs/RELEASE-REPORT-v0.2.3.md",
+    "docs/RELEASE-REPORT-v0.2.4.md",
     "docs/ROADMAP.md",
     "references/config-and-plans.md",
     "references/git-content-scan.md",
@@ -86,6 +94,7 @@
     "references/subworkflow-composition.md",
     "references/testing-android.md",
     "references/testing-common.md",
+    "references/testing-documentation.md",
     "references/testing-python-skill.md",
     "references/testing-selectors.md",
     "references/testing-tiers.md",
@@ -104,6 +113,7 @@
     "scripts/siyk.py",
     "scripts/state.py",
     "scripts/test_plan.py",
+    "scripts/testing_docs.py",
     "scripts/validate_bundle.py",
     "tests/test_adapters.py",
     "tests/test_collect_git_changes.py",
@@ -118,6 +128,7 @@
     "tests/test_scan_secrets.py",
     "tests/test_state.py",
     "tests/test_state_promotion.py",
+    "tests/test_testing_docs.py",
     "tests/test_validate_bundle.py"
   ]
 }

@@ -1,23 +1,31 @@
-# Test Results
+---
+siyrs_testing_document: 1
+document_type: evidence
+title: "Test execution evidence"
+platforms: []
+indexed: true
+---
+# Test execution evidence
 
-- Workflow/Tier:
-- Config validation:
-- Plan ID/selector:
+- Workflow/Tier/UAT scope:
+- Testing documentation root/index:
+- Config validation and plan/selector:
 - Repository commit/fingerprint/tree:
 - Baseline:
-- Direct modules:
-- Expanded modules:
+- Direct/expanded modules and platforms:
+- Canonical case IDs:
+- Environment/browser/device/tool versions:
 - Status:
 
 ## Executed commands
 
-| ID | CWD | Command/argv | Exit | Result | Evidence |
-|---|---|---|---:|---|---|
+| ID | Platform/device/browser | CWD | Command/argv | Exit | Result | Evidence/artifact |
+|---|---|---|---|---:|---|---|
+
+## User-visible and durable-state reconciliation
 
 ## Findings, defects, and regressions
 
-## Blocked/skipped
+## Blocked/skipped and documentation debt
 
 ## State promotion/release decision
-
-## Remaining debt/risks

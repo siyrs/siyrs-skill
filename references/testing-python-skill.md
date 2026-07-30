@@ -44,3 +44,7 @@ Recommended contract tests:
 - package excludes caches, secrets, and generated artifacts.
 
 For instruction-only behavior that cannot be fully unit-tested, add scenario fixtures and a human/eval checklist rather than pretending ordinary unit tests validate model judgment.
+
+## Documentation workspace contract tests
+
+For projects using the Markdown-first testing workspace, test resolution precedence, case-insensitive README reuse, safe path handling, non-destructive index updates, relative links, orphan documents, canonical `TC-*` uniqueness, evidence references, T2 main-path/boundary debt, UTF-8/non-ASCII paths, and mixed backend/frontend/Android metadata.
