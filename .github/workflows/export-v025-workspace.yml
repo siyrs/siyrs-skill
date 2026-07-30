@@ -3,6 +3,7 @@ name: Apply v0.2.6 Git workflow scope
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: write
