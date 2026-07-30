@@ -44,7 +44,9 @@ testing:
             workspace = resolve_workspace(root)
             self.assertEqual("readme.md", workspace.index)
             ensure_workspace(root)
-            self.assertFalse((docs / "README.md").exists())
+            entry_names = {path.name for path in docs.iterdir()}
+            self.assertIn("readme.md", entry_names)
+            self.assertNotIn("README.md", entry_names)
 
     def test_ensure_creates_minimum_workspace_and_managed_index(self):
         with TemporaryDirectory() as tmp:
