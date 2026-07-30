@@ -19,30 +19,58 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Apply verified patch, validate, and commit
+      - name: Verify parts, apply patch, validate, and commit
         env:
           TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           python - <<'PY'
           from pathlib import Path
           import base64
+          import hashlib
           import lzma
           import os
+          import shutil
           import subprocess
           import tempfile
 
           root = Path.cwd()
-          payload = root / '.github' / 'v026.patch.xz.b64'
+          parts_dir = root / '.github' / 'v026-parts'
           workflow = root / '.github' / 'workflows' / 'export-v025-workspace.yml'
-          patch = lzma.decompress(base64.b64decode(payload.read_text(encoding='ascii'), validate=True))
+          trigger = root / '.github' / '__pycache__' / 'v026.trigger'
+          expected = {
+              'part-00': 'ef611570c8bec6a790ccfa80d529a3e3e3cc47f0f7dde3b85e87716dc461b437',
+              'part-01': '7e41a04cf974737675829f1dc73bf745123e3d7088f7d92c319cb4eba64880ca',
+              'part-02': 'a1096805f537dd3fe28ed9346f2d2b2ec64e77d45ae0fd9fabe2501c7a977d39',
+              'part-03': 'a2c66cef2a12b822ef35e1d98936c79490793bedf4f83bfdb610c5713050e3bc',
+              'part-04': '37e726a1f73d4838948caee4f22723da1cd4a06cba3778fcb9e8c9d246a03b0c',
+              'part-05': 'cda4dae6dd49a768fef95e5f8e0a8f7d1dd89d05d9ebf7166ded18029a2087df',
+              'part-06': '99e5db201a699d05887589f4c88dbf392d98891683b5ea67f4705d20bc48f6d8',
+              'part-07': '791abb0fd9a251ee76443ada527b84b3e6f1acdf9d350ce4cb8c7d0b0c02f383',
+              'part-08': 'b5e78df1aedfaac2796b46af22047b16b8dde1e93e0b6a718136c7b73d1fa42f',
+              'part-09': 'd113d94c00e4813e5e4a45ace73af6c9b841c503f7919e148cbc471c735993f0',
+              'part-10': '25eac5b8e3ea4adf10a2595180797d1e0c3badb0f5522a631a1e1ea46763c89f',
+          }
+          files = sorted(path for path in parts_dir.iterdir() if path.is_file())
+          names = [path.name for path in files]
+          if names != sorted(expected):
+              raise RuntimeError(f'v0.2.6 patch parts mismatch: {names}')
+          chunks = []
+          for path in files:
+              data = path.read_bytes()
+              actual = hashlib.sha256(data).hexdigest()
+              if actual != expected[path.name]:
+                  raise RuntimeError(f'{path.name} sha256 mismatch: {actual}')
+              chunks.append(data.decode('ascii'))
+          encoded = ''.join(chunks)
+          patch = lzma.decompress(base64.b64decode(encoded, validate=True))
           subprocess.run(['git', 'apply', '--binary', '--whitespace=nowarn', '-'], input=patch, check=True)
-          payload.unlink()
+          shutil.rmtree(parts_dir)
+          trigger.unlink(missing_ok=True)
 
           with tempfile.TemporaryDirectory() as temp:
               saved = Path(temp) / workflow.name
               saved.write_bytes(workflow.read_bytes())
               workflow.unlink()
-
               checks = [
                   ['python', '-m', 'unittest', 'discover', '-s', 'tests', '-v'],
                   ['python', 'scripts/validate_bundle.py', '--root', '.'],
@@ -58,7 +86,6 @@ jobs:
               for command in checks:
                   print('+', ' '.join(command), flush=True)
                   subprocess.run(command, cwd=root, check=True)
-
               workflow.parent.mkdir(parents=True, exist_ok=True)
               workflow.write_bytes(saved.read_bytes())
 
@@ -67,6 +94,5 @@ jobs:
           subprocess.run(['git', 'add', '-A'], check=True)
           subprocess.run(['git', 'diff', '--cached', '--check'], check=True)
           subprocess.run(['git', 'commit', '-m', 'fix: decouple Git sync from implicit testing'], check=True)
-          branch = os.environ['TARGET_BRANCH']
-          subprocess.run(['git', 'push', 'origin', f'HEAD:{branch}'], check=True)
+          subprocess.run(['git', 'push', 'origin', f"HEAD:{os.environ['TARGET_BRANCH']}"] , check=True)
           PY
