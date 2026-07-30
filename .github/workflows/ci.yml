@@ -22,6 +22,7 @@ jobs:
       - run: python scripts/validate_bundle.py --root .
       - run: python -m compileall -q scripts tests
       - run: python scripts/siyk.py config validate --root . --file assets/config.example.yaml --required
+      - run: python scripts/siyk.py docs resolve --root .
       - name: Routing smoke
         run: |
           python scripts/siyk.py route "/siyk-test-add standard CI"
