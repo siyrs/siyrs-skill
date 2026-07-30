@@ -96,7 +96,11 @@ def _route_git(spec: CommandSpec, tokens: list[str], *, source: str, warnings: l
     index = 0
     while index < len(tokens):
         token = tokens[index]
-        if token == "--no-test" or _is_allow_risk(token) or (spec.command == "/siyk-git-sync" and token == "--pr"):
+        if token == "--no-test":
+            if token not in flags:
+                flags.append(token)
+                warnings.append("--no-test is retained for compatibility; Git workflows already disable tests by default")
+        elif _is_allow_risk(token) or (spec.command == "/siyk-git-sync" and token == "--pr"):
             if token not in flags:
                 flags.append(token)
         elif spec.command == "/siyk-git-sync" and token == "--branch":

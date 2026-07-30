@@ -30,9 +30,9 @@ testing:
       require_real_uat: true
       release_gate: true
   preflight:
-    commit: t1
-    sync_after_integration: t1
-    pr: t2
+    commit: "none"
+    sync_after_integration: "none"
+    pr: "none"
   coverage:
     enabled: true
     minimum: 80

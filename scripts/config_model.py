@@ -45,7 +45,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
             },
             "t3": {"commands": [], "require_real_uat": True, "release_gate": True},
         },
-        "preflight": {"commit": "t1", "sync_after_integration": "t1", "pr": "t2"},
+        "preflight": {"commit": "none", "sync_after_integration": "none", "pr": "none"},
         "coverage": {"enabled": True, "minimum": 80},
         "documentation": {
             "root": "docs/testing",
@@ -262,10 +262,9 @@ def _validate_command(value: Any, location: str, errors: list[str]) -> None:
             errors.append(f"{location} must not be empty")
         return
     if not isinstance(value, dict):
-        errors.append(f"{location} must be a string or object")
+        errors.append(f"{location} must be a string or command object")
         return
-    command = value.get("command")
-    argv = value.get("argv")
+    command, argv = value.get("command"), value.get("argv")
     if (command is None) == (argv is None):
         errors.append(f"{location} must define exactly one of command or argv")
     if command is not None and (not isinstance(command, str) or not command.strip()):
@@ -390,8 +389,14 @@ def validate_config(data: Any, root: Path | None = None) -> dict[str, Any]:
         errors.append("testing.preflight must be an object")
     else:
         for key, allowed in VALID_PREFLIGHT.items():
-            if preflight.get(key, DEFAULT_CONFIG["testing"]["preflight"][key]) not in allowed:
+            value = preflight.get(key, DEFAULT_CONFIG["testing"]["preflight"][key])
+            if value not in allowed:
                 errors.append(f"testing.preflight.{key} must be one of {sorted(allowed)}")
+            elif value != "none":
+                warnings.append(
+                    f"testing.preflight.{key}={value} is deprecated and ignored by Git workflows; "
+                    "request the test explicitly when needed"
+                )
 
     # Validate module command overrides with the same contract.
     for index, module in enumerate(modules):

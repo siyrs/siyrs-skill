@@ -1,13 +1,12 @@
-# v0.2.4 Acceptance
+# v0.2.6 Acceptance
 
-- [x] Default testing authority is `docs/testing/README.md`.
-- [x] Explicit user entry/root overrides config and default without implicit persistence.
-- [x] Existing case-insensitive README variants are reused.
-- [x] Natural-language full testing and UAT discover the testing index.
-- [x] `test-add`, T1, T2, and T3 load the same Markdown-first documentation policy.
-- [x] Backend, frontend/full-stack, Android, CLI, data, and custom platforms share one workspace.
-- [x] Stable case documents and execution evidence are separated.
-- [x] Relative links, orphan docs, duplicate canonical IDs, undefined evidence references, and T2 debt are reported.
-- [x] Managed index updates preserve richer project prose.
-- [x] Config schema/example and test plans expose documentation authority.
-- [x] Cross-platform tests and release validation pass before merge.
+- [x] `git-commit` does not run or author tests by default.
+- [x] `git-sync` does not run T1 after integration or T2 for `--pr`.
+- [x] Git commands do not read/update `docs/testing` or testing state by default.
+- [x] Old non-`none` `testing.preflight` values are accepted with a deprecation warning but cannot trigger Git tests.
+- [x] Legacy `--no-test` is accepted as a compatibility no-op.
+- [x] An explicit current user instruction may compose a named test workflow without changing the default Git scope.
+- [x] Commit still audits the exact Git Index/candidate tree.
+- [x] Sync still audits outgoing history/final `HEAD` before normal push.
+- [x] Risk authorization continues to allow explicit user release of identified privacy/security findings without skipping audit.
+- [x] Linux, Windows, macOS, Python version, package, route, and repository scan checks pass before merge.

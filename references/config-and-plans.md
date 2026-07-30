@@ -1,6 +1,6 @@
 # Configuration validation and deterministic test plans
 
-`.siyrs/config.yaml` uses schema version 2. Stable configuration parsing and plan resolution are deterministic helpers, not Agent guesswork.
+`.siyrs/config.yaml` uses schema version 2. Stable configuration parsing and plan resolution are deterministic helpers for explicit test workflows, not Git commit/sync prerequisites.
 
 ## Validate
 
@@ -8,9 +8,9 @@
 python <skill-dir>/scripts/siyk.py config validate --root <repo>
 ```
 
-Validation covers YAML subset syntax, version, module uniqueness/safe paths, tier commands, T2 selector requirements, preflight profiles, command working directories, timeouts, environment maps, and network mode.
+Validation covers YAML subset syntax, version, module uniqueness/safe paths, tier commands, T2 selector requirements, command working directories, timeouts, environment maps, network mode, and testing documentation paths.
 
-## Resolve
+## Resolve explicit test plans
 
 ```text
 python <skill-dir>/scripts/siyk.py plan --root <repo> --tier t1
@@ -22,21 +22,11 @@ The resolver returns structured steps with source, cwd, command/argv, timeout, e
 
 Global tier commands run once. Module-specific commands supplement them and default to the module path. A plan with no executable commands is invalid and reports configuration debt rather than inventing framework commands.
 
-Command entries may be strings or objects:
+## Deprecated preflight compatibility
 
-```yaml
-commands:
-  - mvn test -Dgroups=T2
-  - id: frontend-t2
-    argv: ["npm", "run", "test:t2"]
-    cwd: frontend
-    timeout_seconds: 900
-    environment:
-      CI: "true"
-    network: deny
-```
+Legacy `testing.preflight.commit`, `testing.preflight.sync_after_integration`, and `testing.preflight.pr` keys remain parseable in config schema v2 so existing project files do not break. Their defaults are `none`.
 
-Agent responsibilities begin after factual validation/resolution: verify business appropriateness, execute in cost order, diagnose failures, and preserve evidence.
+Non-`none` values produce a deprecation warning and are ignored by `/siyk-git-commit` and `/siyk-git-sync`. A Git workflow runs tests only when the current user request explicitly asks for a named tier, UAT, or a specific test command.
 
 ## Testing documentation configuration
 
@@ -49,4 +39,4 @@ testing:
     agent_discovery: true
 ```
 
-An explicit user-provided root/entry overrides configuration for the current request. Resolved plans include documentation root/index, existence, and validation facts. The plan helper never creates or rewrites testing documentation; use `siyk.py docs ensure|index|validate` for that deterministic lifecycle.
+An explicit user-provided root/entry overrides configuration for the current test request. Resolved test plans include documentation root/index, existence, and validation facts. The plan helper never creates or rewrites testing documentation; use `siyk.py docs ensure|index|validate` for that deterministic lifecycle.

@@ -8,58 +8,36 @@ Client slash-command behavior differs across Claude Code, Codex, and other agent
 
 ## Invocation contract
 
-A parent workflow loads the child Markdown file and supplies an execution context containing:
+A parent workflow loads the child Markdown file and supplies:
 
 - `parent_command`;
-- repository and branch;
+- repository, branch, and intentional file scope;
 - relevant user arguments;
-- preflight mode and `--no-test` state;
 - the shared risk authorization ledger;
 - whether the child is standalone or embedded;
 - constraints the child must preserve.
 
-The child executes its complete logic and returns one of:
-
-- `committed`: a normal local commit was created and verified;
-- `no-op`: no intentional local changes required a commit;
-- `blocked`: the child could not safely complete;
-- `failed`: execution caused or discovered a non-recoverable failure.
-
-Return evidence:
-
-- commit hash/message/files when committed;
-- checks executed;
-- Index scan findings and authorizations;
-- remaining worktree state;
-- blockers.
+The child returns `committed`, `no-op`, `blocked`, or `failed`, with commit/files, Index audit findings, authorizations, hook result, remaining worktree, and blockers.
 
 ## Embedded git-commit inside git-sync
 
-`/siyk-git-sync` must load `commands/git-commit.md` as its local-save subworkflow.
+`/siyk-git-sync` loads `commands/git-commit.md` as its local-save subworkflow. The child remains local-only. The parent may fetch, integrate, audit outgoing history, and push only after `committed` or `no-op`.
 
-The child remains local-only while it executes. After it returns `committed` or `no-op`, the parent resumes under `/siyk-git-sync` authorization and may fetch, integrate, verify, and push.
+The parent must not inject T1/T2/T3, UAT, documentation maintenance, or test-state promotion into the child. Tests are composed separately only when the current user request explicitly asks for them.
 
-This is not a violation of the child boundary: the child performs no remote operation; the parent performs remote operations only after the child has returned.
-
-If the child returns `blocked` or `failed`, the parent must not fetch or push merely to make partial progress unless the user explicitly changes the requested scope.
+If the child returns `blocked` or `failed`, the parent must not fetch or push merely to make partial progress unless the user explicitly changes scope.
 
 ## Shared state
 
 The parent and child share:
 
 - risk finding identifiers and authorizations;
-- test/preflight evidence;
 - intentional file scope;
 - explicit user constraints;
 - report context.
 
-Do not duplicate user confirmation for an unchanged finding already authorized in the same parent run.
+Do not duplicate confirmation for an unchanged finding already authorized in the same parent run.
 
 ## Report composition
 
-The parent report embeds a concise child result rather than repeating every child instruction. It must still expose:
-
-- local commit result;
-- risk findings and authorization inheritance;
-- remaining local changes before integration;
-- remote integration and push results.
+The parent report embeds a concise child result and exposes local commit/no-op, risk findings/authorization inheritance, remaining local changes, integration state, outgoing audit, and push result.
