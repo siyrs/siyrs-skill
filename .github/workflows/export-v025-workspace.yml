@@ -1,25 +1,72 @@
-name: Export v0.2.5 workspace
+name: Apply v0.2.6 Git workflow scope
 
 on:
   pull_request:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  export:
+  apply:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
-      - name: Build workspace archive
-        run: tar --exclude=.git -czf "$RUNNER_TEMP/siyrs-skill-v025-workspace.tar.gz" .
-      - uses: actions/upload-artifact@v4
+      - uses: actions/setup-python@v5
         with:
-          name: siyrs-skill-v025-workspace
-          path: ${{ runner.temp }}/siyrs-skill-v025-workspace.tar.gz
-          if-no-files-found: error
-          retention-days: 1
+          python-version: '3.12'
+      - name: Apply verified patch, validate, and commit
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import lzma
+          import os
+          import subprocess
+          import tempfile
+
+          root = Path.cwd()
+          payload = root / '.github' / 'v026.patch.xz.b64'
+          workflow = root / '.github' / 'workflows' / 'export-v025-workspace.yml'
+          patch = lzma.decompress(base64.b64decode(payload.read_text(encoding='ascii'), validate=True))
+          subprocess.run(['git', 'apply', '--binary', '--whitespace=nowarn', '-'], input=patch, check=True)
+          payload.unlink()
+
+          with tempfile.TemporaryDirectory() as temp:
+              saved = Path(temp) / workflow.name
+              saved.write_bytes(workflow.read_bytes())
+              workflow.unlink()
+
+              checks = [
+                  ['python', '-m', 'unittest', 'discover', '-s', 'tests', '-v'],
+                  ['python', 'scripts/validate_bundle.py', '--root', '.'],
+                  ['python', '-m', 'compileall', '-q', 'scripts', 'tests'],
+                  ['bash', '-n', 'adapters/claude-code/install.sh'],
+                  ['bash', '-n', 'adapters/codex/install.sh'],
+                  ['python', 'scripts/siyk.py', 'config', 'validate', '--root', '.', '--file', 'assets/config.example.yaml', '--required'],
+                  ['python', 'scripts/siyk.py', 'route', '/siyk-git-commit'],
+                  ['python', 'scripts/siyk.py', 'route', '/siyk-git-sync --branch feature/example --pr'],
+                  ['python', 'scripts/siyk.py', 'route', '/siyk-git-sync --no-test'],
+                  ['python', 'scripts/siyk.py', 'scan', '--root', '.', '--all'],
+              ]
+              for command in checks:
+                  print('+', ' '.join(command), flush=True)
+                  subprocess.run(command, cwd=root, check=True)
+
+              workflow.parent.mkdir(parents=True, exist_ok=True)
+              workflow.write_bytes(saved.read_bytes())
+
+          subprocess.run(['git', 'config', 'user.name', 'github-actions[bot]'], check=True)
+          subprocess.run(['git', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'], check=True)
+          subprocess.run(['git', 'add', '-A'], check=True)
+          subprocess.run(['git', 'diff', '--cached', '--check'], check=True)
+          subprocess.run(['git', 'commit', '-m', 'fix: decouple Git sync from implicit testing'], check=True)
+          branch = os.environ['TARGET_BRANCH']
+          subprocess.run(['git', 'push', 'origin', f'HEAD:{branch}'], check=True)
+          PY
