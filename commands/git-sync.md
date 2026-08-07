@@ -22,7 +22,7 @@ This command does not run or author tests by default. It is a Git synchronizatio
 
 ## Procedure
 
-1. Resolve the current repository/branch/upstream. `--branch` is optional and explicit; otherwise use the current branch.
+1. Resolve the current repository/branch/upstream. `--branch` is optional and explicit; otherwise use the current branch. Positional natural language is never treated as a branch.
 2. Reuse `commands/git-commit.md` to create the local commit or return `no-op`. Do not add any test preflight.
 3. Pull/fetch and integrate the remote branch using the repository's normal Git pull strategy. If Git reports conflicts, resolve only conflicts whose combined intent is clear; otherwise stop and report the conflicting files.
 4. Before push, perform one **quick privacy check** on only the outgoing textual additions and changed paths relative to the fetched upstream:
@@ -30,7 +30,7 @@ This command does not run or author tests by default. It is a Git synchronizatio
    - scan patch additions only; do not enumerate the final repository tree, every reachable blob, large-object inventories, or unrelated history objects;
    - if the local commit was just checked and integration produced no content changes, reuse that result instead of scanning the same content again.
 5. If a new privacy finding exists, report it as a redacted `RISK-*` finding. Explicit user authorization may allow the push to continue.
-6. Run a normal `git push`. Never force-push unless separately and explicitly requested. Create a PR only when `--pr` is explicit; `--pr` does not imply tests.
+6. Run a normal `git push`. Never force-push unless separately and explicitly requested. Create a PR only when `--pr` is explicit. PR creation does not imply T2 or any other test execution.
 7. Report concisely: local commit/no-op, pull/integration/conflicts, privacy result, push/PR result.
 
 The deep audit command `<skill-dir>/scripts/siyk.py audit --root <repo> --phase outgoing --base <fetched-target>` is **opt-in only**. Do not run it during normal synchronization unless the current user request explicitly asks for a deep/security/history audit.
