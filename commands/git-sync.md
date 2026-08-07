@@ -14,20 +14,23 @@ client_entrypoint: true
 
 Syntax: `/siyk-git-sync [--branch <branch>] [--pr] [--allow-risk[=<id|all>]] [extra instructions]`.
 
-Purpose: commit local work, fetch and integrate the intended remote branch, audit the exact content that would become remote-reachable, and normally push.
+Purpose: save local changes, pull the remote branch, handle Git conflicts when necessary, and push normally.
 
-## Default scope
+## Simple default
 
-This command does not run or author tests by default. It must not add T1 cases, execute T1/T2/T3 or UAT, maintain `docs/testing`, or update test state because of project configuration, remote integration, conflict resolution, or `--pr`. `testing.preflight` cannot trigger testing from this workflow.
-
-Only a direct instruction in the current user request—such as “先跑 T1 再同步” or “同步前执行指定测试”—adds a separate explicit test subworkflow. Legacy `--no-test` is accepted as a compatibility no-op.
+This is a Git synchronization command, not a quality-gate workflow. Do not run or create T1/T2/T3/UAT tests, maintain `docs/testing`, update test state, perform release checks, scan the full repository, enumerate outgoing Git objects, or start long history audits unless the current user request explicitly asks for that separate work.
 
 ## Procedure
 
-1. Resolve repository, current branch, remote, upstream, operation state, and target. Branch selection is explicit-only through `--branch`; validate it with `git check-ref-format --branch`. Positional natural language is never treated as a branch.
-2. Embed `commands/git-commit.md` with the intentional file scope and shared risk ledger. Continue only on `committed` or `no-op`. Do not inject a testing preflight into the child.
-3. Fetch fresh remote state and determine ahead/behind/diverged state. Integrate through repository policy: fast-forward, safe rebase, or normal merge. Never blanket-select ours/theirs.
-4. Resolve conflicts only when combined intent is clear. Verify Git integrity with no unmerged entries (`git ls-files -u`), clean conflict markers/patch checks (`git diff --check` where applicable), and a reviewed final status/log. If semantic correctness remains ambiguous, stop recoverably instead of silently running or generating tests.
-5. Run `<skill-dir>/scripts/siyk.py audit --root <repo> --phase outgoing --base <fetched-target>` to inspect every outgoing commit, final `HEAD`, sensitive paths, secrets/privacy findings, and reachable large objects. Reuse unchanged authorized findings from the commit phase and request authorization only for new/materially changed findings.
-6. Push normally to the resolved upstream. Never force-push by default. Create a PR only when `--pr` is explicit; PR creation does not imply T2 or any other test execution.
-7. Report embedded commit/no-op, fetch/divergence/integration/conflicts, Git integrity verification, outgoing audit base/head/findings, redacted risk ledger, push/PR result, and remaining worktree/risks.
+1. Resolve the current repository/branch/upstream. `--branch` is optional and explicit; otherwise use the current branch.
+2. Reuse `commands/git-commit.md` to create the local commit or return `no-op`. Do not add any test preflight.
+3. Pull/fetch and integrate the remote branch using the repository's normal Git pull strategy. If Git reports conflicts, resolve only conflicts whose combined intent is clear; otherwise stop and report the conflicting files.
+4. Before push, perform one **quick privacy check** on only the outgoing textual additions and changed paths relative to the fetched upstream:
+   - look for credentials/secrets/private keys/tokens/password assignments and clearly sensitive credential files;
+   - scan patch additions only; do not enumerate the final repository tree, every reachable blob, large-object inventories, or unrelated history objects;
+   - if the local commit was just checked and integration produced no content changes, reuse that result instead of scanning the same content again.
+5. If a new privacy finding exists, report it as a redacted `RISK-*` finding. Explicit user authorization may allow the push to continue.
+6. Run a normal `git push`. Never force-push unless separately and explicitly requested. Create a PR only when `--pr` is explicit; `--pr` does not imply tests.
+7. Report concisely: local commit/no-op, pull/integration/conflicts, privacy result, push/PR result.
+
+Keep this workflow short. Do not add extra validation because it seems useful; the user will request tests or deeper auditing when needed.
