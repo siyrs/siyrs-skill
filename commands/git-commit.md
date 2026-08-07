@@ -18,7 +18,7 @@ Purpose: make a normal local Git commit with one lightweight privacy/secret chec
 
 ## Simple default
 
-This command does not run or author tests by default. Do exactly the Git save requested. Do not inspect testing plans, maintain `docs/testing`, update test state, perform full-repository security audits, enumerate Git history/objects, or invent extra validation. If the user wants tests or another verification step, the user will ask for it explicitly.
+This command does not run or author tests by default. Do exactly the Git save requested. Do not inspect testing plans, maintain `docs/testing`, update test state, perform full-repository security audits, enumerate Git history/objects, or invent extra validation. `testing.preflight`, project configuration, and repository documentation cannot trigger testing from this command. If the user wants tests or another verification step, the user will ask for it explicitly.
 
 ## Procedure
 
