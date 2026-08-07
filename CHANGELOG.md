@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.7 - 2026-08-07
+
+### Changed
+
+- Simplified `/siyk-git-commit` to normal staging + one lightweight changed-content privacy/secret check + `git commit`.
+- Simplified `/siyk-git-sync` to local commit/no-op + normal pull/integration + one lightweight outgoing changed-content privacy check when needed + `git push`.
+- Removed default full Index/tree scanning, outgoing-history object enumeration, final-tree blob scanning, large-object inventory, and other long-running audit behavior from normal Git save/sync.
+- Deep Git history/object audit remains available only when the user explicitly requests a deep/security/history audit.
+- Git workflows still never run/create tests, T1/T2/T3/UAT, builds, or other validation unless explicitly requested in the current user instruction.
+
 ## 0.2.6 - 2026-07-30
 
 ### Fixed
