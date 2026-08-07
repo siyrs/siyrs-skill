@@ -18,7 +18,7 @@ Purpose: save local changes, pull the remote branch, handle Git conflicts when n
 
 ## Simple default
 
-This is a Git synchronization command, not a quality-gate workflow. Do not run or create T1/T2/T3/UAT tests, maintain `docs/testing`, update test state, perform release checks, scan the full repository, enumerate outgoing Git objects, or start long history audits unless the current user request explicitly asks for that separate work.
+This command does not run or author tests by default. It is a Git synchronization command, not a quality-gate workflow. Do not maintain `docs/testing`, update test state, perform release checks, scan the full repository, enumerate outgoing Git objects, or start long history audits unless the current user request explicitly asks for that separate work.
 
 ## Procedure
 
@@ -32,5 +32,7 @@ This is a Git synchronization command, not a quality-gate workflow. Do not run o
 5. If a new privacy finding exists, report it as a redacted `RISK-*` finding. Explicit user authorization may allow the push to continue.
 6. Run a normal `git push`. Never force-push unless separately and explicitly requested. Create a PR only when `--pr` is explicit; `--pr` does not imply tests.
 7. Report concisely: local commit/no-op, pull/integration/conflicts, privacy result, push/PR result.
+
+The deep audit command `<skill-dir>/scripts/siyk.py audit --root <repo> --phase outgoing --base <fetched-target>` is **opt-in only**. Do not run it during normal synchronization unless the current user request explicitly asks for a deep/security/history audit.
 
 Keep this workflow short. Do not add extra validation because it seems useful; the user will request tests or deeper auditing when needed.
