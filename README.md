@@ -1,29 +1,41 @@
 # siyrs-skill
 
-- 当前版本：`v0.2.6`
+- 当前版本：`v0.2.7`
 - 六个稳定 `/siyk-*` 工作流
 - Markdown-first 测试文档工作区
 - T1/T2/T3、UAT 与多端测试治理
-- Git 提交/同步与测试治理职责分离
-- Git Index/Outgoing History 确定性隐私审计
+- Git 保存/同步默认极简化
+- 默认仅检查本次变更中的密钥/隐私内容
 - Claude Code、Codex 跨平台入口
+
+## v0.2.7
+
+`/siyk-git-commit` 和 `/siyk-git-sync` 再次收敛职责：**用户要求保存/同步代码，就只完成 Git 保存/同步。**
+
+默认流程：
+
+```text
+/siyk-git-commit
+→ 查看当前改动
+→ 暂存
+→ 只检查本次新增内容中的密钥/隐私
+→ git commit
+
+/siyk-git-sync
+→ 复用本地 commit/no-op
+→ git pull / 正常远端集成
+→ 有冲突时处理冲突
+→ 必要时只检查最终待推送新增内容中的密钥/隐私
+→ git push
+```
+
+默认**不会**运行或创建测试、维护 `docs/testing`、更新测试状态、执行 release gate，也不会扫描整个仓库、最终 Tree、全部历史 Blob 或 reachable Git objects。深度 Git 历史/对象审计仍保留为显式能力，只有用户明确要求“深度安全审计/历史审计”时才使用。
+
+如果用户需要 T1/T2/T3、UAT、构建、Lint 或其他验证，用户会在当前请求里明确说明；Git 命令本身不再替用户增加这些决定。
 
 ## v0.2.6
 
-`/siyk-git-commit` 和 `/siyk-git-sync` 默认只完成 Git 工作：确认变更范围、暂存、密钥/隐私/敏感文件审计、正常提交、远端集成和正常推送。
-
-它们默认**不会**：
-
-- 创建或补充 T1 测试；
-- 执行 T1/T2/T3 或 UAT；
-- 读取或维护 `docs/testing`；
-- 更新测试状态或执行 T1 commit promotion；
-- 因 `--pr` 自动执行 T2；
-- 因项目配置中的旧 `testing.preflight` 值自动执行测试。
-
-只有当前用户请求明确写出“先跑 T1”“先执行测试再同步”“同步前跑 UAT”等要求时，才额外调用对应测试工作流。`--no-test` 继续兼容，但现在只是提示“测试本来就默认关闭”。
-
-Git 安全检查仍然是强制的：提交前审计 Git Index/candidate tree，推送前审计 outgoing history/final `HEAD`。检测到的风险可按现有 `RISK-*` 授权协议由用户明确放行。
+Git 测试职责已与测试治理分离；v0.2.7 在此基础上进一步移除默认的重型 Index/Outgoing History 对象审计，只保留轻量的当前变更隐私检查。
 
 ## v0.2.4
 

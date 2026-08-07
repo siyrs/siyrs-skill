@@ -1,13 +1,13 @@
 ---
 name: siyrs-skill
-description: Project-level engineering quality workflows for test authoring, regression, smoke, full testing, UAT/acceptance, frontend/backend/full-stack/Android verification, local Git commits, remote synchronization, deterministic configuration/plans, Git-object auditing, and scoped risk authorization. When users ask in natural language for 全量测试, UAT, 验收测试, 回归测试, frontend/backend testing, or Android testing, discover and read the project testing index—default docs/testing/README.md—before planning, even without a /siyk-* command.
+description: Project-level engineering quality workflows for test authoring, regression, smoke, full testing, UAT/acceptance, frontend/backend/full-stack/Android verification, simple local Git commits, simple remote synchronization, deterministic configuration/plans, optional deep Git auditing, and scoped risk authorization. When users ask in natural language for 全量测试, UAT, 验收测试, 回归测试, frontend/backend testing, or Android testing, discover and read the project testing index—default docs/testing/README.md—before planning, even without a /siyk-* command.
 ---
 # siyrs-skill
 
-Version: **0.2.6**
+Version: **0.2.7**
 Command prefix: **`siyk`**
 
-Use this Skill as a project-level engineering quality controller. Workflow policy and durable testing contracts are Markdown-first; deterministic scripts resolve paths/configuration/plans, validate documentation, collect Git facts, maintain state, and audit exact Git objects.
+Use this Skill as a project-level engineering quality controller. Workflow policy and durable testing contracts are Markdown-first; deterministic scripts resolve paths/configuration/plans, validate documentation, collect Git facts, maintain state, and provide optional deep audit helpers.
 
 ## Commands
 
@@ -42,22 +42,17 @@ Natural-language `全量测试`/`full testing` uses T3 semantics. A UAT-only req
 
 The same Markdown workspace supports mixed backend, frontend/full-stack, Android, CLI, data, infrastructure, and custom modules. Test source remains in native framework directories. Stable cases/shared rules and lightweight evidence live under the resolved documentation authority; raw artifacts stay in configured report locations.
 
-## Git and test separation
+## Simple Git model
 
-Git commands are intentionally small and do not enter the testing workflow by default.
+Git commands intentionally do only the Git operation the user asked for.
 
-- `/siyk-git-commit` selects intentional files, stages them, audits the exact Git Index/candidate tree for secrets, privacy risks, sensitive paths, and large objects, then creates one normal local commit.
-- `/siyk-git-sync` embeds that local commit/no-op, fetches and integrates the intended remote branch, verifies Git conflict/integrity state, audits outgoing history and final `HEAD`, then pushes normally.
-- Neither command creates tests, resolves T1/T2/T3 plans, reads or updates `docs/testing`, executes UAT, or updates test state merely because a project configuration or PR exists.
-- Tests are opt-in only when the current user request explicitly asks for a named tier, UAT, or a specific test command. Historical configuration and repository documentation are not implicit authorization to run tests.
-- Existing repository Git hooks still run normally. Report their result, but do not generate tests to satisfy a hook unless the user explicitly asks.
+- `/siyk-git-commit`: stage the requested/current changes, perform one lightweight privacy/secret check on changed paths and staged patch additions, then create a normal local commit.
+- `/siyk-git-sync`: reuse the local commit/no-op, pull/integrate the current remote branch, perform at most one lightweight privacy check on newly outgoing patch additions when needed, then push normally.
+- Neither command runs/creates tests, maintains `docs/testing`, updates test state, performs release checks, enumerates the entire repository tree, walks all Git objects, or starts long history audits by default.
+- Do not add validation merely because it seems useful. If the user wants T1/T2/T3/UAT, a build, or a deep security/history audit, the user will request it explicitly.
+- Existing repository Git hooks still run normally. Report their result, but do not invent additional workflows.
 
-Git workflows use exact Git-object audit:
-
-```text
-python <skill-dir>/scripts/siyk.py audit --root <repo> --phase index
-python <skill-dir>/scripts/siyk.py audit --root <repo> --phase outgoing --base <fetched-target>
-```
+The default privacy guard is defined in `references/git-content-scan.md`. The heavier `scripts/siyk.py audit ...` capability remains available only for an explicitly requested deep/security/history audit.
 
 ## Deterministic test contracts
 
@@ -77,4 +72,4 @@ Load the selected command Markdown and relevant references. Git commands primari
 
 ## Truth and safety
 
-Only actually executed success is passed. Preserve unrelated work and richer project documentation. Do not weaken tests. Planned UAT is not executed UAT. Never reveal full secrets. Risk authorization bypasses stopping, not audit. Force push, history rewrite, releases, deployments, branch deletion, and external production mutations require separate authorization.
+Only actually executed success is passed. Preserve unrelated work and richer project documentation. Do not weaken tests. Planned UAT is not executed UAT. Never reveal full secrets. Risk authorization bypasses stopping, not the privacy check. Force push, history rewrite, releases, deployments, branch deletion, and external production mutations require separate authorization.
