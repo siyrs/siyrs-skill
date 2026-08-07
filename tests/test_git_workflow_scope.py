@@ -49,11 +49,8 @@ testing:
         for forbidden in (
             "promote-t1",
             "docs validate",
-            "--phase outgoing",
-            "--phase index",
             "reachable large objects",
             "large-object inventory",
-            "final repository tree",
         ):
             self.assertNotIn(forbidden, combined)
 
@@ -61,6 +58,10 @@ testing:
         self.assertIn("quick privacy check", sync)
         self.assertIn("git diff --cached", commit)
         self.assertIn("git push", sync)
+        self.assertIn("opt-in only", commit)
+        self.assertIn("opt-in only", sync)
+        self.assertIn("do not run it during a normal save", commit)
+        self.assertIn("do not run it during normal synchronization", sync)
 
     def test_git_docs_do_not_make_validation_decisions_for_user(self):
         combined = "\n".join(
