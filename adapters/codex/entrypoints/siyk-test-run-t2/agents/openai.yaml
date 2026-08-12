@@ -1,6 +1,0 @@
-interface:
-  display_name: "/siyk-test-run-t2"
-  short_description: "执行固定、可机器选择的 T2 冒烟测试集"
-  default_prompt: "Run /siyk-test-run-t2 against the current repository."
-policy:
-  allow_implicit_invocation: false

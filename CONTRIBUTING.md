@@ -1,17 +1,10 @@
 # Contributing
 
-Keep workflow judgment in Markdown and deterministic parsing/auditing/state transitions in standard-library scripts.
+Keep this repository deliberately small.
 
-Before release run:
-
-```bash
-python -m unittest discover -s tests -v
-python scripts/validate_bundle.py --root .
-python -m compileall -q scripts tests
-bash -n adapters/claude-code/install.sh
-bash -n adapters/codex/install.sh
-python scripts/siyk.py config validate --root . --file assets/config.example.yaml --required
-python scripts/siyk.py scan --root . --all
-```
-
-Changes to command metadata, schemas, installers, CI, state lifecycle, or audit contracts require regression tests and release-manifest updates.
+- Keep `SKILL.md` concise, imperative, and under 500 lines; target substantially less.
+- Put optional detail in one-level `references/` files and link them directly from `SKILL.md`.
+- Add scripts only for repeated deterministic work; prefer repository-native tools for engineering tasks.
+- Do not reintroduce per-agent adapters, slash-command registries, state machines, configuration schemas, release manifests, or generated documentation trees for ordinary workflows.
+- Update `agents/openai.yaml` when the skill name, description, or intended default invocation changes.
+- Run `python scripts/validate.py .` and `python -m unittest discover -s tests -v` before merging.
