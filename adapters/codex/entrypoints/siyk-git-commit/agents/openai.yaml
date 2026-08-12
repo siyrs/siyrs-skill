@@ -1,6 +1,0 @@
-interface:
-  display_name: "/siyk-git-commit"
-  short_description: "运行 T1 预检并安全保存为本地 Git 提交"
-  default_prompt: "Run /siyk-git-commit against the current repository."
-policy:
-  allow_implicit_invocation: false

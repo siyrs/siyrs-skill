@@ -1,6 +1,0 @@
-interface:
-  display_name: "/siyk-git-sync"
-  short_description: "提交本地改动、集成远程分支并安全推送。"
-  default_prompt: "Run /siyk-git-sync against the current repository."
-policy:
-  allow_implicit_invocation: false

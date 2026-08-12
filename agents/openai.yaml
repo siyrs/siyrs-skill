@@ -1,0 +1,4 @@
+interface:
+  display_name: "SIYRS Engineering"
+  short_description: "Focused code changes, testing, and Git delivery"
+  default_prompt: "Use $siyrs-engineering to implement this repository change with a small safe diff, proportionate tests, and clear verification evidence."

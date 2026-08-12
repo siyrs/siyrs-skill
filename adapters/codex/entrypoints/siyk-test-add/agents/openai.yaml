@@ -1,6 +1,0 @@
-interface:
-  display_name: "/siyk-test-add"
-  short_description: "编写并验证新增或变更行为的测试用例"
-  default_prompt: "Run /siyk-test-add against the current repository."
-policy:
-  allow_implicit_invocation: false
