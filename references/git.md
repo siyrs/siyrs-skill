@@ -1,40 +1,40 @@
-# Git delivery guide
+# Git 交付指南
 
-Use this reference only when Git delivery is part of the main `siyrs-engineering` workflow.
+仅当主 `siyrs-skill` 工作流包含 Git 交付时读取本 reference。
 
-Dedicated explicit shortcuts live in separate skills:
+两个显式快捷 Skill 独立维护：
 
 - `skills/siyk-git-commit/`
 - `skills/siyk-git-sync/`
 
-Do not duplicate their detailed shortcut flow here.
+不要在这里重复它们的详细快捷流程。
 
-## Scope first
+## 先确认范围
 
-- Inspect `git status` and the relevant diff before staging or committing.
-- Preserve unrelated tracked and untracked work.
-- Stage explicit files or a known-cohesive worktree; do not blindly absorb unrelated changes.
-- Keep commits cohesive and messages terse but descriptive.
+- 暂存或提交前先查看 `git status` 和相关 diff。
+- 保留无关的已跟踪和未跟踪改动。
+- 暂存明确文件，或范围已经清楚且内聚的工作区；不要盲目把无关修改一起带入。
+- 保持 commit 内聚，提交信息简洁但能准确说明改动。
 
 ## Commit
 
-When normal engineering work includes a commit, create the requested local commit after checking scope. Existing Git hooks remain authoritative and may run their own checks.
+普通工程任务包含提交要求时，先确认范围，再创建用户要求的本地 commit。仓库已有 Git hooks 继续生效，并允许它们执行自己的检查。
 
-Do not silently add tests, documentation, releases, deployment, or deep audit merely because a commit is requested.
+不要仅因为用户要求 commit，就默认附加测试、文档维护、release、deploy 或深度审计。
 
-## Sync / push
+## 同步 / Push
 
-For normal remote synchronization:
+普通远端同步按以下顺序处理：
 
-1. identify current branch, upstream, target branch, and divergence;
-2. fetch/integrate remote changes when needed;
-3. prefer fast-forward; otherwise follow repository policy for rebase versus merge;
-4. resolve conflicts only when intent is clear;
-5. verify no unresolved conflicts remain;
-6. push normally.
+1. 确认当前分支、upstream、目标分支和 divergence；
+2. 必要时 fetch 并整合远端更新；
+3. 可以 fast-forward 时优先 fast-forward，否则遵循目标仓库已有 rebase / merge 策略；
+4. 只有冲突意图明确时才解决冲突；
+5. 确认不存在未解决冲突；
+6. 正常 push。
 
-If the user explicitly requests updating a protected default/main branch, use the repository's allowed PR/merge path rather than forcing it.
+如果用户明确要求更新受保护的默认分支或 `main`，使用仓库允许的 PR / merge 路径，不通过 force push 绕过保护。
 
-## Never by default
+## 默认禁止
 
-Do not force-push, discard work with reset/clean, rewrite published history, delete branches/tags, bypass hooks, release/deploy, mutate remote settings, or pull unrelated work into the commit.
+除非用户明确要求对应操作，否则不要 force push、用 reset/clean 丢弃工作区、改写已发布历史、删除 branch/tag、绕过 hooks、release/deploy、修改远端设置，或把无关改动带入本次 commit。
