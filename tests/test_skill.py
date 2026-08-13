@@ -14,31 +14,36 @@ spec.loader.exec_module(validator)
 
 
 class SkillStructureTests(unittest.TestCase):
-    def test_canonical_skill_validates(self) -> None:
+    def test_bundle_validates(self) -> None:
         self.assertEqual([], validator.validate(ROOT))
 
-    def test_skill_stays_compact(self) -> None:
+    def test_main_skill_stays_compact(self) -> None:
         lines = (ROOT / "SKILL.md").read_text(encoding="utf-8").splitlines()
-        self.assertLess(len(lines), 200)
+        self.assertLess(len(lines), 120)
 
-    def test_legacy_runtime_layers_are_gone(self) -> None:
+    def test_shortcuts_are_real_skills(self) -> None:
+        for name in ("siyk-git-commit", "siyk-git-sync"):
+            skill_dir = ROOT / "skills" / name
+            text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+            agent = (skill_dir / "agents" / "openai.yaml").read_text(encoding="utf-8")
+            self.assertIn(f"name: {name}", text)
+            self.assertIn(f'display_name: "{name}"', agent)
+            self.assertIn("allow_implicit_invocation: false", agent)
+
+    def test_shortcuts_stay_thin(self) -> None:
+        for name in ("siyk-git-commit", "siyk-git-sync"):
+            lines = (ROOT / "skills" / name / "SKILL.md").read_text(
+                encoding="utf-8"
+            ).splitlines()
+            self.assertLess(len(lines), 40)
         for path in ("adapters", "commands", "schemas", "release-manifest.json"):
             self.assertFalse((ROOT / path).exists(), path)
 
-    def test_git_shortcuts_are_thin_skill_contracts(self) -> None:
-        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
-        git = (ROOT / "references" / "git.md").read_text(encoding="utf-8")
-        for shortcut in ("siyk-git-commit", "siyk-git-sync"):
-            self.assertIn(shortcut, skill)
-            self.assertIn(shortcut, git)
-        self.assertFalse((ROOT / "commands").exists())
-        self.assertFalse((ROOT / "adapters").exists())
-
     def test_invalid_frontmatter_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            (root / "SKILL.md").write_text("# no frontmatter\n", encoding="utf-8")
-            errors = validator.validate(root)
+            skill_dir = Path(tmp)
+            (skill_dir / "SKILL.md").write_text("# no frontmatter\n", encoding="utf-8")
+            errors = validator.validate_skill(skill_dir)
             self.assertTrue(any("frontmatter" in error for error in errors))
 
 

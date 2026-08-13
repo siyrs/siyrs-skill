@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lightweight structural validation for the SIYRS Agent Skill."""
+"""Lightweight structural validation for the SIYRS skill bundle."""
 
 from __future__ import annotations
 
@@ -9,23 +9,18 @@ from pathlib import Path
 
 NAME_RE = re.compile(r"^[a-z0-9-]{1,64}$")
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
-QUOTED_FIELD_RE = re.compile(r'^\s{2}(display_name|short_description|default_prompt):\s+"([^"]+)"\s*$', re.MULTILINE)
-LEGACY_PATHS = (
-    "adapters",
-    "commands",
-    "schemas",
-    "release-manifest.json",
+QUOTED_FIELD_RE = re.compile(
+    r'^\s{2}(display_name|short_description|default_prompt):\s+"([^"]+)"\s*$',
+    re.MULTILINE,
 )
-
-
-def fail(message: str) -> None:
-    raise ValueError(message)
+LEGACY_PATHS = ("adapters", "commands", "schemas", "release-manifest.json")
+SHORTCUTS = ("siyk-git-commit", "siyk-git-sync")
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
-        fail("SKILL.md must start with YAML frontmatter")
+        raise ValueError("SKILL.md must start with YAML frontmatter")
     try:
         end = lines[1:].index("---") + 1
     except ValueError as exc:
@@ -36,61 +31,74 @@ def parse_frontmatter(text: str) -> dict[str, str]:
         if not line.strip() or line.lstrip().startswith("#"):
             continue
         if ":" not in line:
-            fail(f"unsupported frontmatter line: {line}")
+            raise ValueError(f"unsupported frontmatter line: {line}")
         key, value = line.split(":", 1)
         data[key.strip()] = value.strip().strip('"')
     return data
 
 
-def validate(root: Path) -> list[str]:
+def validate_skill(skill_dir: Path) -> list[str]:
     errors: list[str] = []
-    skill_path = root / "SKILL.md"
+    skill_path = skill_dir / "SKILL.md"
     if not skill_path.is_file():
-        return ["missing SKILL.md"]
+        return [f"missing {skill_path}"]
 
     text = skill_path.read_text(encoding="utf-8")
     try:
         meta = parse_frontmatter(text)
         if set(meta) != {"name", "description"}:
-            fail("frontmatter must contain only name and description")
+            raise ValueError("frontmatter must contain only name and description")
         if not NAME_RE.fullmatch(meta["name"]):
-            fail("name must be lowercase hyphen-case and <=64 characters")
+            raise ValueError("name must be lowercase hyphen-case and <=64 characters")
         if not meta["description"]:
-            fail("description must be non-empty")
+            raise ValueError("description must be non-empty")
     except (KeyError, ValueError) as exc:
-        errors.append(str(exc))
+        errors.append(f"{skill_path}: {exc}")
         meta = {}
 
     if len(text.splitlines()) > 500:
-        errors.append("SKILL.md must stay under 500 lines")
+        errors.append(f"{skill_path}: must stay under 500 lines")
 
     for target in LINK_RE.findall(text):
         if target.startswith(("http://", "https://", "#")):
             continue
-        if not (root / target).is_file():
-            errors.append(f"broken SKILL.md link: {target}")
+        if not (skill_dir / target).is_file():
+            errors.append(f"{skill_path}: broken link {target}")
 
-    agent_path = root / "agents" / "openai.yaml"
+    agent_path = skill_dir / "agents" / "openai.yaml"
     if not agent_path.is_file():
-        errors.append("missing agents/openai.yaml")
+        errors.append(f"{skill_dir}: missing agents/openai.yaml")
     else:
         agent_text = agent_path.read_text(encoding="utf-8")
         fields = dict(QUOTED_FIELD_RE.findall(agent_text))
         for field in ("display_name", "short_description", "default_prompt"):
             if field not in fields:
-                errors.append(f"agents/openai.yaml missing quoted interface.{field}")
+                errors.append(f"{agent_path}: missing quoted interface.{field}")
         short = fields.get("short_description", "")
         if short and not (25 <= len(short) <= 64):
-            errors.append("interface.short_description must be 25-64 characters")
+            errors.append(f"{agent_path}: short_description must be 25-64 characters")
         name = meta.get("name")
         if name and f"${name}" not in fields.get("default_prompt", ""):
-            errors.append("interface.default_prompt must explicitly mention $skill-name")
+            errors.append(f"{agent_path}: default_prompt must mention ${name}")
+        if name in SHORTCUTS and "allow_implicit_invocation: false" not in agent_text:
+            errors.append(f"{agent_path}: shortcut skills must disable implicit invocation")
 
-    refs = root / "references"
-    if refs.exists():
-        nested = [p for p in refs.rglob("*") if p.is_dir() and p != refs]
-        if nested:
-            errors.append("references must stay one level deep")
+    refs = skill_dir / "references"
+    if refs.exists() and any(p.is_dir() for p in refs.rglob("*")):
+        errors.append(f"{refs}: references must stay one level deep")
+
+    return errors
+
+
+def validate(root: Path) -> list[str]:
+    errors: list[str] = []
+    skill_dirs = [root]
+    shortcut_root = root / "skills"
+    for name in SHORTCUTS:
+        skill_dirs.append(shortcut_root / name)
+
+    for skill_dir in skill_dirs:
+        errors.extend(validate_skill(skill_dir))
 
     for legacy in LEGACY_PATHS:
         if (root / legacy).exists():
@@ -106,7 +114,7 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
-    print("Skill validation passed")
+    print("Skill bundle validation passed")
     return 0
 
 

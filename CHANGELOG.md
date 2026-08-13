@@ -1,13 +1,24 @@
 # Changelog
 
-## 0.3.1 - 2026-08-13
+## 0.3.2 - 2026-08-13
+
+### Fixed
+
+- Replaced the text-only `siyk-git-commit` and `siyk-git-sync` aliases with two real standalone Skill directories under `skills/`.
+- Gave each shortcut its own `SKILL.md` and `agents/openai.yaml` so supported desktop surfaces can expose enabled skills in the slash command list.
+- Disabled implicit invocation for both Git shortcut skills so they remain explicit high-frequency actions instead of competing with normal engineering prompts.
 
 ### Changed
 
-- Restored `siyk-git-commit` and `siyk-git-sync` as two lightweight text shortcuts inside the single `siyrs-engineering` Skill.
-- `siyk-git-commit` now does only intended-change inspection/staging plus one normal local commit.
-- `siyk-git-sync` now does only commit/no-op, normal remote integration, and push; protected default branches use the repository's allowed PR/merge path when explicitly targeted.
-- Kept the v0.3 architecture: no command registry, per-agent adapters, persistent state/config, schemas, testing gates, release workflow, or deep security/history audit was restored.
+- Removed shortcut implementation details from the main `siyrs-engineering` Skill; it now points to the dedicated shortcut skills and stays focused on the general engineering loop.
+- Updated validation to check the main Skill plus both shortcut Skills while continuing to reject legacy `adapters/`, `commands/`, schemas, and release-manifest runtime layers.
+- Clarified README invocation differences between desktop Skill slash entries and Codex CLI/IDE `$skill` or `/skills` invocation.
+
+## 0.3.1 - 2026-08-13
+
+- Restored `siyk-git-commit` and `siyk-git-sync` as lightweight Git intents inside the single `siyrs-engineering` Skill.
+- Kept commit limited to local save and sync limited to normal integration/push.
+- Kept command registries, adapters, routers, state/config layers, schemas, automatic tests, release/deploy, and deep audits out of the shortcut path.
 
 ## 0.3.0 - 2026-08-12
 

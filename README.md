@@ -1,102 +1,87 @@
 # siyrs-skill
 
-当前版本：**v0.3.1**
+当前版本：**v0.3.2**
 
-这是一个刻意保持简洁的工程 Skill：**一个薄 `SKILL.md`，按需加载测试/Git reference，一个轻量校验脚本，以及 OpenAI 的 `agents/openai.yaml` 元数据。**
-
-核心目标只有三个：**把改动做对、按风险测试、按请求交付 Git。**
+这是一个刻意保持简洁的工程 Skill bundle。主 Skill 负责工程改动、测试和一般 Git 交付；两个高频 Git 动作拆成真正独立的轻量 Skill，因此支持 Skill slash 列表的 Codex/ChatGPT 桌面端可以把它们作为快捷入口展示。
 
 ## 结构
 
 ```text
 siyrs-skill/
-├── SKILL.md
-├── agents/
-│   └── openai.yaml
+├── SKILL.md                         # siyrs-engineering
+├── agents/openai.yaml
 ├── references/
 │   ├── testing.md
 │   └── git.md
-├── scripts/
-│   └── validate.py
-├── tests/
-│   └── test_skill.py
+├── skills/
+│   ├── siyk-git-commit/
+│   │   ├── SKILL.md
+│   │   └── agents/openai.yaml
+│   └── siyk-git-sync/
+│       ├── SKILL.md
+│       └── agents/openai.yaml
+├── scripts/validate.py
+├── tests/test_skill.py
 └── README.md
 ```
 
-运行时先使用 `SKILL.md`。测试或 Git 场景出现时再读取对应 reference；校验脚本只用于维护 Skill 本身。
+没有 command registry、router、adapter、state machine、schema 或 manifest。两个快捷入口就是两个标准 Skill。
 
-## 设计原则
+## 三个 Skill
 
-- **一个 Skill，一个工程闭环**：Inspect → Change → Verify → Deliver → Report。
-- **按需加载**：测试细节在 `references/testing.md`，Git 规则在 `references/git.md`。
-- **测试保留、治理减负**：保留 T1/T2/T3 风险分层，不默认生成测试治理目录、状态文件、schema 或 manifest。
-- **Git 快捷但不造框架**：只保留 `siyk-git-commit` 和 `siyk-git-sync` 两个文本快捷入口，不恢复 command registry、router、adapter 或 state machine。
-- **项目原生优先**：优先使用仓库自己的构建、测试、Git 和文档方式。
+### `siyrs-engineering`
 
-## Git 快捷命令
-
-### `siyk-git-commit [message]`
-
-只做本地保存：
+负责正常工程闭环：
 
 ```text
-查看 git status / diff
-→ 只暂存本次目标改动
-→ 创建一个正常 git commit
-→ 报告 commit 和剩余工作区改动
+Inspect → Change → Verify → Deliver → Report
 ```
 
-不会自动 fetch / pull / push，不会自动跑测试、维护测试文档、更新状态、发布或部署。
+保留 T1/T2/T3 风险分层，测试细节按需读取 `references/testing.md`，一般 Git 交付按需读取 `references/git.md`。
 
-示例：
+### `siyk-git-commit`
+
+只做本地 Git 保存：
 
 ```text
-siyk-git-commit
-siyk-git-commit fix: correct login state
+git status / diff
+→ 只暂存目标改动
+→ git commit
+→ 报告 commit 与剩余工作区
 ```
 
-### `siyk-git-sync [branch]`
+不会自动 fetch、pull、push、跑测试、维护测试文档、release、deploy 或做深度审计。
 
-只做正常同步：
+### `siyk-git-sync`
+
+只做正常 Git 同步：
 
 ```text
-有未保存目标改动时先 commit，否则 no-op
-→ 查看当前分支 / upstream / divergence
-→ fetch + 正常 fast-forward / rebase / merge
-→ 必要时处理明确的冲突
+必要时先保存本地目标改动
+→ 查看 branch / upstream / divergence
+→ fetch
+→ 正常 fast-forward / rebase / merge
 → git push
 ```
 
-如果用户明确要求同步到受保护的 `main` / 默认分支，则使用仓库允许的 PR/merge 路径，不 force push。
+明确要求更新受保护的 `main` / 默认分支时，走仓库允许的 PR/merge 路径，不 force push。不会自动附加测试、release、deploy、状态管理或深度审计。
 
-示例：
+## 为什么要做成两个真正的 Skill
 
-```text
-siyk-git-sync
-siyk-git-sync main
+把 `siyk-git-commit` / `siyk-git-sync` 写在主 `SKILL.md` 里只能让模型“理解这两个字符串”，不会创建真正的 Skill 条目。
+
+现在两个目录都有自己的 `SKILL.md` 和 `agents/openai.yaml`，而且：
+
+```yaml
+policy:
+  allow_implicit_invocation: false
 ```
 
-这两个入口只负责 Git。测试、release、deploy、深度安全/历史审计等能力只有在同一条用户请求明确要求时才附加。
+所以它们不会抢普通自然语言任务，只在显式选择/调用时工作。
 
-## 工程改动
+## 安装
 
-用于实现功能、修复 Bug、重构、代码复核。Skill 会先检查仓库约束和相关代码，再做最小但完整的改动，避免为了“规范”额外造基础设施。
-
-## 测试与验收
-
-T1/T2/T3 是轻量风险语言：
-
-| 层级 | 目的 | 典型场景 |
-|---|---|---|
-| T1 | focused | 单元、静态、编译、Lint、窄范围回归 |
-| T2 | integrated | API+DB、前后端、浏览器、Android 设备/模拟器、权限/生命周期 |
-| T3 | full / acceptance | 明确要求全量测试、发布前验收，或高风险大范围改动 |
-
-`UAT-only` 不会被错误描述成完整 T3。只有真正执行过的检查才算通过。
-
-## 安装 / 使用
-
-Codex 用户可以把仓库放到个人 Skill 目录：
+Codex 用户仍然只需要 clone 一次：
 
 ```bash
 git clone https://github.com/siyrs/siyrs-skill.git ~/.agents/skills/siyrs-engineering
@@ -108,38 +93,76 @@ Windows PowerShell：
 git clone https://github.com/siyrs/siyrs-skill.git "$HOME/.agents/skills/siyrs-engineering"
 ```
 
-显式调用示例：
+Codex 的本地 Skill 扫描会发现这个目录下的 `SKILL.md`，也会发现 `skills/` 下两个独立的 `SKILL.md`。更新后如果列表没有立即刷新，重启 Codex。
+
+## 快捷调用
+
+在**支持 Enabled Skills 出现在 slash command list 的 ChatGPT/Codex 桌面端**，输入 `/` 后应能看到或过滤到：
 
 ```text
-$siyrs-engineering 帮我完成这个功能，补必要测试并验证。
-$siyrs-engineering 对这次修改做回归测试。
-$siyrs-engineering 做一次全量测试并给我真实证据。
-$siyrs-engineering siyk-git-commit
-$siyrs-engineering siyk-git-sync main
+/siyk-git-commit
+/siyk-git-sync
 ```
 
-直接输入 `siyk-git-commit` 或 `siyk-git-sync` 时，Skill 的触发描述也会识别这两个快捷意图。
+两个 Skill 的 `display_name` 就是这两个名字。
 
-## 从 v0.2.x 迁移
+在 **Codex CLI / IDE extension**，官方显式 Skill 调用仍然是：
 
-| v0.2.x | v0.3.1 |
-|---|---|
-| `/siyk-test-add` | 直接要求“为这次行为补必要测试” |
-| `/siyk-test-run-t1` | “做 focused/T1 回归” |
-| `/siyk-test-run-t2` | “做 integrated/T2 验证” |
-| `/siyk-test-run-t3` | “全量测试 / T3 / 验收” |
-| `/siyk-git-commit` | `siyk-git-commit [message]` |
-| `/siyk-git-sync` | `siyk-git-sync [branch]` |
+```text
+$siyk-git-commit
+$siyk-git-sync
+```
 
-只恢复两个 Git 快捷名字，不恢复旧版 6 个命令各自的 Skill 模板、路由和安装器。
+或者先输入：
 
-## 维护 Skill
+```text
+/skills
+```
 
-修改 Skill 后只需要：
+再选择对应 Skill。不要把 CLI 内置 slash command 和桌面端的 Skill slash 列表混为一套机制。
+
+## 示例
+
+```text
+/siyk-git-commit
+/siyk-git-commit fix: correct login state
+
+/siyk-git-sync
+/siyk-git-sync main
+```
+
+在 CLI / IDE 中对应：
+
+```text
+$siyk-git-commit
+$siyk-git-sync
+```
+
+主工程能力仍然使用：
+
+```text
+$siyrs-engineering 帮我完成这个功能并补必要测试。
+$siyrs-engineering 做一次 T2 集成验证。
+$siyrs-engineering 完成后同步到主分支。
+```
+
+## 设计原则
+
+- **主 Skill 保持薄**：通用工程流程只维护一份。
+- **快捷动作是真 Skill**：需要独立入口的高频动作才拆独立 Skill。
+- **显式快捷不抢触发**：两个 Git shortcut 禁止 implicit invocation。
+- **测试按风险扩展**：T1/T2/T3 是风险语言，不是命令框架。
+- **不恢复旧架构**：不重新引入 adapters、commands、router、state/config/schema。
+- **项目原生优先**：优先使用目标仓库自己的 Git、构建、测试和文档约定。
+
+## 维护
+
+修改后运行：
 
 ```bash
 python scripts/validate.py .
 python -m unittest discover -s tests -v
+python -m compileall -q scripts tests
 ```
 
-扩展时先问：这条规则是否每次触发都必须知道？不是就放 `references/`；如果未来某个工作流真的形成独立职责，再拆成独立 Skill，而不是把当前 Skill 重新做成命令平台。
+校验器会同时检查主 Skill 和两个 shortcut Skill，防止后续又退化成“只有字符串别名，没有真实 Skill”的状态。

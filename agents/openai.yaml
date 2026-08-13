@@ -1,6 +1,6 @@
 interface:
   display_name: "SIYRS Engineering"
-  short_description: "Focused changes, testing, and simple Git shortcuts"
-  default_prompt: "Use $siyrs-engineering to make this repository change, verify it proportionately, and use siyk-git-commit or siyk-git-sync when Git delivery is requested."
+  short_description: "Focused repository changes, testing, and Git delivery"
+  default_prompt: "Use $siyrs-engineering to make this repository change with a small cohesive diff, proportionate verification, and deliberate Git delivery."
 policy:
   allow_implicit_invocation: true

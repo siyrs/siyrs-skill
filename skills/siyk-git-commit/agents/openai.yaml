@@ -1,0 +1,6 @@
+interface:
+  display_name: "siyk-git-commit"
+  short_description: "Save intended local changes as one Git commit"
+  default_prompt: "Use $siyk-git-commit to save the intended current local changes as one normal Git commit."
+policy:
+  allow_implicit_invocation: false
