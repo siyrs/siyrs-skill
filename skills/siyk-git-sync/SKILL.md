@@ -1,18 +1,18 @@
 ---
 name: siyk-git-sync
-description: Explicit lightweight Git synchronization shortcut. Use only when this skill is directly invoked to save intended local changes when needed, integrate the intended remote branch with normal Git policy, and push. Do not add tests, release/deploy work, state management, or deep audits unless explicitly requested.
+description: 显式的轻量 Git 同步快捷 Skill。仅在用户直接调用本 Skill 时使用，用于在必要时先保存目标本地改动，再按照仓库正常 Git 策略整合目标远端分支并正常推送。默认不附加测试、发布、部署、状态管理、强制推送、历史改写或深度审计；只有用户明确要求时才执行这些额外工作。
 ---
 
-# SIYK Git Sync
+# SIYK Git 同步
 
-Do normal Git synchronization and stop.
+只完成正常 Git 同步，然后结束。
 
-1. Inspect `git status`, current branch, upstream, target branch, and divergence.
-2. If intended local changes still need saving, create one normal local commit first using the same thin scope rules as `siyk-git-commit`.
-3. Fetch remote changes when needed.
-4. Prefer fast-forward when possible; otherwise follow repository policy for rebase versus merge.
-5. Resolve conflicts only when intent is clear, and verify no unresolved conflicts remain.
-6. Push normally.
-7. If the user explicitly targets a protected default/main branch, use the repository's allowed PR/merge path instead of force-pushing.
+1. 查看 `git status`、当前分支、upstream、目标分支和双方 divergence。
+2. 如果本次目标本地改动尚未保存，先按照 `siyk-git-commit` 的轻量范围规则创建一个正常本地提交。
+3. 在需要时获取远端更新。
+4. 能 fast-forward 时优先 fast-forward；否则遵循目标仓库已有策略选择 rebase 或 merge。
+5. 只有冲突意图明确时才解决冲突，并确认不存在未解决冲突。
+6. 正常执行 push。
+7. 如果用户明确要求更新受保护的默认分支或 `main`，使用仓库允许的 PR / merge 路径，不进行 force push。
 
-Do not run or create tests, maintain testing state/docs, release, deploy, force-push, rewrite history, or start a deep audit unless the user explicitly asks for that separate work in the same request.
+默认不要运行或创建测试、维护测试状态或文档、发布、部署、强制推送、改写已发布历史或启动深度审计。只有用户在同一请求中明确要求对应工作时才继续。

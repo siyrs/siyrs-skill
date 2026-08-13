@@ -1,6 +1,6 @@
 interface:
   display_name: "siyk-git-sync"
-  short_description: "Integrate the intended branch and push normally"
-  default_prompt: "Use $siyk-git-sync to save intended local changes if needed, integrate the intended remote branch, and push normally."
+  short_description: "保存必要本地改动，正常整合目标远端分支并推送，不附加测试流程"
+  default_prompt: "使用 $siyk-git-sync 在必要时先保存本地目标改动，再正常整合目标远端分支并推送，不附加未要求的测试或发布流程。"
 policy:
   allow_implicit_invocation: false

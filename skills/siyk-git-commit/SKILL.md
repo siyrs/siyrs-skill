@@ -1,18 +1,18 @@
 ---
 name: siyk-git-commit
-description: Explicit lightweight Git commit shortcut. Use only when this skill is directly invoked to save the intended current local changes as one normal commit. Do not fetch, pull, push, run tests, create testing docs, release, deploy, or perform deep audits unless the same request explicitly adds that work.
+description: 显式的轻量 Git 提交快捷 Skill。仅在用户直接调用本 Skill 时使用，用于把当前明确需要保存的本地改动创建为一个正常 Git 提交。默认不执行 fetch、pull、push、测试、测试文档维护、发布、部署或深度审计；只有用户在同一请求中明确追加这些工作时才执行。
 ---
 
-# SIYK Git Commit
+# SIYK Git 提交
 
-Do one local Git save operation and stop.
+只完成一次本地 Git 保存，然后结束。
 
-1. Inspect `git status` and the relevant diff.
-2. Preserve unrelated tracked and untracked work.
-3. Stage only the intended changes.
-4. Create one normal commit using the supplied message, or generate a concise message when none is provided.
-5. Report the commit SHA/message and any remaining worktree changes.
+1. 查看 `git status` 和相关 diff，确认本次需要保存的改动范围。
+2. 保留无关的已跟踪和未跟踪文件，不把它们带入本次提交。
+3. 只暂存本次目标改动。
+4. 创建一个正常 Git 提交；用户提供提交信息时直接使用，否则生成简洁、准确的提交信息。
+5. 报告提交 SHA、提交信息，以及工作区中仍未提交的改动。
 
-Let existing Git hooks run normally and report hook failures truthfully.
+允许仓库已有的 Git hooks 正常运行；如果 hook 失败，如实报告失败原因。
 
-Do not fetch, pull, rebase, merge, push, open a PR, run tests, maintain testing state/docs, release, deploy, or start a deep audit unless the user explicitly asks for that separate work in the same request.
+默认到此结束。不要执行 fetch、pull、rebase、merge、push、创建 PR、运行测试、维护测试状态或文档、发布、部署、深度审计。只有用户在同一请求中明确要求对应工作时才继续。
