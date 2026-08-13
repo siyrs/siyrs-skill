@@ -17,6 +17,9 @@ LEGACY_PATHS = ("adapters", "commands", "schemas", "release-manifest.json")
 EXPLICIT_SKILLS = (
     "siyk-init",
     "siyk-test-add",
+    "siyk-test-run-t1",
+    "siyk-test-run-t2",
+    "siyk-test-run-t3",
     "siyk-git-commit",
     "siyk-git-sync",
 )

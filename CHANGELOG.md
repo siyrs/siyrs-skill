@@ -1,5 +1,18 @@
 # 更新日志
 
+## 0.5.0 - 2026-08-13
+
+### 测试执行
+
+- 恢复三个真正独立、显式调用的测试运行 Skill：`siyk-test-run-t1`、`siyk-test-run-t2`、`siyk-test-run-t3`。
+- T1 恢复为 diff-driven 变更回归，并保留 blast radius 扩展：共享权限、状态机、migration、公共逻辑等变化会扩大到真实受影响模块。
+- T2 恢复为项目长期维护的固定 Smoke 集，Markdown Case 可使用 `**P0 · T2 · E2E**` 等轻量标记；没有真实 Smoke 基线时不临时编造。
+- T3 恢复为完整相关回归 + UAT + release gate；完整执行后默认在 `docs/testing/reports/` 形成 Markdown-first 可信测试报告。
+- 明确 T1/T2/T3 与 Unit/Integration/E2E/UAT 是两个正交维度：档位决定“测多大范围”，测试层决定“怎么测”。用户限制到单一测试层时，只报告对应子集结果，不冒充完整档位通过。
+- 三个 test-run Skill 默认只执行、分析和报告，不新增测试、不自动修改业务代码；只有同一请求明确要求“失败就修复并重跑”或“补测试”时才进入修改闭环。
+- 新增轻量 `references/testing-tiers.md`，只保存分级执行合同，不恢复旧版 command router、state、matrix、evidence registry、release manifest 或 adapter 运行时治理层。
+- 三个新 Skill 全部继承共享 `references/principles.md` 的 Markdown-first 与“事实优先，不懂不猜”第一性原则。
+
 ## 0.4.1 - 2026-08-13
 
 ### 第一性原则
