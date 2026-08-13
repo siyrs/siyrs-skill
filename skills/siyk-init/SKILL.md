@@ -5,6 +5,8 @@ description: 显式的项目初始化与刷新快捷 Skill。用于创建或刷�
 
 # SIYK 项目初始化
 
+开始前读取并遵循 [SIYRS 第一性原则](../../references/principles.md)。
+
 只维护 `.siyrs/README.md` 项目地图，然后结束。
 
 1. 优先用 Git top-level 识别 project root；没有 Git 时使用当前明确项目根目录。

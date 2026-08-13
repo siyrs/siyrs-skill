@@ -5,6 +5,8 @@ description: 显式的测试补充快捷 Skill。默认针对本轮修改补真�
 
 # SIYK 测试补充
 
+开始前读取并遵循 [SIYRS 第一性原则](../../references/principles.md)。
+
 只处理本轮目标相关的测试补充，不默认扩大成全仓测试治理。
 
 ## 默认模式：补可执行测试

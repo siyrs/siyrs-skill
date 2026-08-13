@@ -40,6 +40,7 @@ class SkillStructureTests(unittest.TestCase):
         expectations = {
             ROOT / "SKILL.md": "聚焦完成软件仓库修改",
             ROOT / "agents" / "openai.yaml": "聚焦完成仓库修改",
+            ROOT / "references" / "principles.md": "# SIYRS 第一性原则",
             ROOT / "references" / "testing.md": "# 测试指南",
             ROOT / "references" / "project-map.md": "# `.siyrs` 项目地图指南",
             ROOT / "references" / "git.md": "# Git 交付指南",
@@ -49,6 +50,20 @@ class SkillStructureTests(unittest.TestCase):
         }
         for path, text in expectations.items():
             self.assertIn(text, path.read_text(encoding="utf-8"), str(path))
+
+    def test_global_first_principles_are_shared(self) -> None:
+        principles = (ROOT / "references" / "principles.md").read_text(encoding="utf-8")
+        main_skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("Markdown-first", principles)
+        self.assertIn("事实优先，不懂不猜", principles)
+        self.assertIn("直接询问用户", principles)
+        self.assertIn("禁止编造", principles)
+        self.assertIn("references/principles.md", main_skill)
+
+        for name in EXPLICIT_SKILLS:
+            text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("../../references/principles.md", text, name)
 
     def test_markdown_first_testing_contract_is_preserved(self) -> None:
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")

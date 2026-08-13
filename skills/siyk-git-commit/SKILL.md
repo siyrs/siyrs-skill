@@ -5,6 +5,8 @@ description: 显式的轻量 Git 提交快捷 Skill。仅在用户直接调用�
 
 # SIYK Git 提交
 
+开始前读取并遵循 [SIYRS 第一性原则](../../references/principles.md)。
+
 只完成一次本地 Git 保存，然后结束。
 
 1. 查看 `git status` 和相关 diff，确认本次需要保存的改动范围。
