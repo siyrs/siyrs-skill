@@ -74,11 +74,15 @@ class SkillStructureTests(unittest.TestCase):
         testing = (ROOT / "references" / "testing.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-        for text in (skill, testing, readme):
+        for text in (skill, testing):
             self.assertIn("docs/testing/README.md", text)
             self.assertIn("standards/", text)
             self.assertIn("cases/", text)
             self.assertIn("reports/", text)
+        self.assertIn("docs/testing/", readme)
+        self.assertIn("standards/", readme)
+        self.assertIn("cases/", readme)
+        self.assertIn("reports/", readme)
 
         self.assertIn("standards/priorities.md", testing)
         self.assertIn("standards/release-gate.md", testing)
@@ -100,8 +104,8 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("docs/testing/reports/<date>-<scope>.md", tiers)
         self.assertIn("UAT 通过", tiers)
         self.assertIn("不自动等于 T3 通过", tiers)
-        self.assertIn("不创建 state、matrix、evidence registry", tiers)
-        self.assertNotIn("command registry", tiers)
+        self.assertIn("默认不做", tiers)
+        self.assertIn("创建 state、matrix、evidence registry 或运行时测试治理系统", tiers)
         self.assertNotIn("route_command.py", tiers)
 
     def test_test_run_skills_are_distinct(self) -> None:
