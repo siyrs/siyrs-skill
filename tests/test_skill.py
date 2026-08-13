@@ -83,8 +83,9 @@ class SkillStructureTests(unittest.TestCase):
     def test_child_skills_are_auto_discovered_without_registry(self) -> None:
         validator_source = VALIDATOR_PATH.read_text(encoding="utf-8")
         tests_source = Path(__file__).read_text(encoding="utf-8")
-        self.assertNotIn("EXPLICIT_SKILLS", validator_source)
-        self.assertNotIn("EXPLICIT_SKILLS", tests_source)
+        old_registry_name = "EXPLICIT_" + "SKILLS"
+        self.assertNotIn(old_registry_name, validator_source)
+        self.assertNotIn(old_registry_name, tests_source)
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
