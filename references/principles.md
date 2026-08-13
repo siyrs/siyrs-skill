@@ -33,12 +33,15 @@
 
 ## 规范来源
 
-SIYRS 将运行时规范与说明文档分开：
+SIYRS 将运行时规范与项目维护文档分开：
 
-- `references/*.md` 是共享规则的**权威规范来源**。跨 Skill 复用的行为合同、测试规则、Git 规则和项目地图规则应维护在这里。
+- `references/*.md` 是共享规则的**权威运行时规范来源**。跨 Skill 复用的行为合同、测试规则、Git 规则和项目地图规则应维护在这里。
 - 根 `SKILL.md` 和 `skills/*/SKILL.md` 是**行为入口**：说明何时执行、需要读取哪些规范、本 Skill 的独特职责和停止边界；不要复制整份共享规则。
-- `README.md` 是**安装、概览和示例说明**，不是运行时规范。Skill 执行不能依赖 README 中独有的信息；README 与 reference 冲突时，以 reference 为准。
-- `CONTRIBUTING.md` 只约束本仓库如何维护，不承载具体功能的运行时业务规则。
+- 根 `README.md` 是**安装、概览和示例说明**，不是运行时规范。Skill 执行不能依赖 README 中独有的信息。
+- `docs/*.md` 保存**架构、维护、计划和版本历史**，用于解释项目如何开发和演化；不能成为 Skill 执行时的唯一规则来源。
+- `docs/CONTRIBUTING.md` 只约束本仓库如何维护，不承载具体功能的运行时业务规则。
+
+README/docs 与 reference 冲突时，运行时行为以 reference 和对应 `SKILL.md` 为准。
 
 修改共享规则时优先修改对应 reference，再按需要同步入口或说明；不要通过复制相同规则到多个文件来获得“完整感”。
 
