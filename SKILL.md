@@ -1,6 +1,6 @@
 ---
 name: siyrs-engineering
-description: Execute focused software-repository changes with proportionate testing and deliberate Git delivery. Use when asked to implement, fix, refactor, review, add or run tests, perform regression/smoke/full/UAT/Android/web/backend verification, create a commit, or sync/push completed work. Also applies to Chinese requests such as 修改代码、补测试、回归测试、全量测试、验收、提交代码、同步主分支.
+description: Execute focused software-repository changes with proportionate testing and deliberate Git delivery. Use when asked to implement, fix, refactor, review, add or run tests, perform regression/smoke/full/UAT/Android/web/backend verification, create a commit, or sync/push completed work. Also use when the user enters siyk-git-commit or siyk-git-sync as lightweight Git shortcuts. Also applies to Chinese requests such as 修改代码、补测试、回归测试、全量测试、验收、提交代码、同步主分支.
 ---
 
 # SIYRS Engineering
@@ -27,13 +27,41 @@ Run a small, evidence-driven engineering loop. Prefer the repository's native to
    - Treat only executed checks as evidence. Never infer a pass from code inspection alone.
 
 4. **Deliver**
-   - Read [references/git.md](references/git.md) when the user asks to commit, sync, push, open/merge a PR, or update a branch.
+   - Read [references/git.md](references/git.md) when the user asks to commit, sync, push, open/merge a PR, update a branch, or uses a Git shortcut below.
    - Preserve unrelated work and avoid destructive Git operations.
    - Perform the requested delivery in the same workflow when authorization is already explicit.
 
 5. **Report**
    - Summarize what changed, what ran, what passed or failed, and any material residual risk.
    - Keep the report short unless the user asks for a full audit.
+
+## Lightweight Git shortcuts
+
+Treat these exact leading tokens as direct Git intent. They are shortcuts inside this one Skill, not a separate command framework.
+
+### `siyk-git-commit [message]`
+
+Do only the local save operation:
+
+1. inspect `git status` and the relevant diff;
+2. stage only the intended changes;
+3. create one normal commit using the supplied message or a concise generated message;
+4. report the commit and any remaining worktree changes.
+
+Do not fetch, pull, push, create tests, run tests, maintain testing docs, update state, release, deploy, or start a deep audit unless the same user request explicitly asks for that separate work.
+
+### `siyk-git-sync [branch]`
+
+Do only normal Git synchronization:
+
+1. commit intended local changes first when needed, using the commit shortcut semantics;
+2. inspect the current branch, upstream, and divergence;
+3. fetch and integrate the intended remote branch with the repository's normal fast-forward/rebase/merge policy;
+4. resolve conflicts only when intent is clear;
+5. push normally;
+6. when the user explicitly targets a protected default branch, use the allowed PR/merge path instead of force-pushing.
+
+Do not add test, documentation, release, deployment, state-management, or deep-audit work unless explicitly requested in the same instruction.
 
 ## Testing model
 

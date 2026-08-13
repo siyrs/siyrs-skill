@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1 - 2026-08-13
+
+### Changed
+
+- Restored `siyk-git-commit` and `siyk-git-sync` as two lightweight text shortcuts inside the single `siyrs-engineering` Skill.
+- `siyk-git-commit` now does only intended-change inspection/staging plus one normal local commit.
+- `siyk-git-sync` now does only commit/no-op, normal remote integration, and push; protected default branches use the repository's allowed PR/merge path when explicitly targeted.
+- Kept the v0.3 architecture: no command registry, per-agent adapters, persistent state/config, schemas, testing gates, release workflow, or deep security/history audit was restored.
+
 ## 0.3.0 - 2026-08-12
 
 ### Changed

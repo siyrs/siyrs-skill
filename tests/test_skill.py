@@ -25,6 +25,15 @@ class SkillStructureTests(unittest.TestCase):
         for path in ("adapters", "commands", "schemas", "release-manifest.json"):
             self.assertFalse((ROOT / path).exists(), path)
 
+    def test_git_shortcuts_are_thin_skill_contracts(self) -> None:
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        git = (ROOT / "references" / "git.md").read_text(encoding="utf-8")
+        for shortcut in ("siyk-git-commit", "siyk-git-sync"):
+            self.assertIn(shortcut, skill)
+            self.assertIn(shortcut, git)
+        self.assertFalse((ROOT / "commands").exists())
+        self.assertFalse((ROOT / "adapters").exists())
+
     def test_invalid_frontmatter_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

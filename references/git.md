@@ -2,6 +2,15 @@
 
 Use this reference only when Git delivery is part of the request.
 
+## Shortcut contract
+
+The Skill keeps exactly two lightweight Git shortcuts:
+
+- `siyk-git-commit [message]`: save intended local changes in one normal commit.
+- `siyk-git-sync [branch]`: commit/no-op, integrate the intended remote branch, then push normally.
+
+They are deliberately thin. Do not attach testing, testing-document maintenance, persistent state, release gates, security/history audits, release, or deployment work unless the user explicitly asks for that separate work in the same request.
+
 ## Scope first
 
 - Inspect `git status` and the relevant diff before staging or committing.
@@ -9,31 +18,27 @@ Use this reference only when Git delivery is part of the request.
 - Stage explicit files or a known-cohesive worktree; do not blindly absorb unrelated changes.
 - Keep commits cohesive and messages terse but descriptive.
 
-## Lightweight sensitive-content check
+## `siyk-git-commit`
 
-Before commit/push, inspect changed additions and sensitive-looking filenames. Look for credentials, private keys, tokens, passwords, connection strings, personal data, environment files, signing material, and generated secret stores.
+1. Inspect the current worktree and relevant diff.
+2. Stage only the intended changes.
+3. Create one normal local commit.
+4. Report the commit SHA/message and any remaining worktree changes.
 
-Do not print full secret values while reporting a finding. Do not expand a normal commit into a repository-history audit unless the user explicitly requests a deep/security/history audit.
+Stop there. Do not fetch, pull, rebase, merge, push, open a PR, or run unrelated checks unless the current user request explicitly adds them.
 
-## Commit
+Existing Git hooks may run normally. Report their result truthfully; do not create extra workflows around them.
 
-A commit request means create the requested local commit after checking scope and changed content. Do not silently add unrelated tests, documentation, releases, or deployment steps merely because a commit is being created.
+## `siyk-git-sync`
 
-Existing Git hooks remain authoritative and may run their own checks. Report their result truthfully.
-
-## Sync / push
-
-For remote synchronization:
-
-1. identify current branch, upstream, and divergence;
-2. fetch/integrate remote changes when needed;
-3. prefer fast-forward; otherwise follow repository policy for rebase vs merge;
-4. resolve conflicts only when intent is clear;
-5. verify no unresolved conflicts remain;
-6. push normally.
-
-When the user explicitly asks to update the default/main branch, complete that delivery when repository permissions allow it. If protection requires a PR, create the branch/PR and merge through the allowed path rather than forcing the branch.
+1. Reuse `siyk-git-commit` semantics when intended local changes still need saving; otherwise continue as a no-op commit step.
+2. Identify the current branch, upstream, target branch, and divergence.
+3. Fetch/integrate remote changes when needed.
+4. Prefer fast-forward when possible; otherwise follow repository policy for rebase vs merge.
+5. Resolve conflicts only when intent is clear and verify none remain.
+6. Push normally.
+7. If the user explicitly asks to update a protected default/main branch, use the repository's allowed PR/merge path rather than forcing it.
 
 ## Never by default
 
-Do not force-push, discard work with reset/clean, rewrite published history, delete branches/tags, bypass hooks, release/deploy, or mutate remote settings unless the user explicitly requests that distinct operation and it is appropriate to perform.
+Do not force-push, discard work with reset/clean, rewrite published history, delete branches/tags, bypass hooks, release/deploy, mutate remote settings, or pull unrelated work into the commit.
