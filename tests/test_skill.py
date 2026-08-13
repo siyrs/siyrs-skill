@@ -46,25 +46,53 @@ class SkillStructureTests(unittest.TestCase):
             ROOT / "references" / "testing-tiers.md": "# 测试分级执行合同",
             ROOT / "references" / "project-map.md": "# `.siyrs` 项目地图指南",
             ROOT / "references" / "git.md": "# Git 交付指南",
-            ROOT / "CONTRIBUTING.md": "# 贡献指南",
-            ROOT / "CHANGELOG.md": "# 更新日志",
+            ROOT / "docs" / "README.md": "# SIYRS 文档",
+            ROOT / "docs" / "architecture.md": "# SIYRS 架构说明",
+            ROOT / "docs" / "plan.md": "# SIYRS 演化计划",
+            ROOT / "docs" / "CONTRIBUTING.md": "# 贡献指南",
+            ROOT / "docs" / "CHANGELOG.md": "# 更新日志",
             ROOT / "README.md": "Markdown-first",
         }
         for path, text in expectations.items():
             self.assertIn(text, path.read_text(encoding="utf-8"), str(path))
 
-    def test_references_are_normative_and_readme_is_explanatory(self) -> None:
+    def test_references_are_normative_and_docs_are_explanatory(self) -> None:
         principles = (ROOT / "references" / "principles.md").read_text(encoding="utf-8")
         main_skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        contributing = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+        docs_index = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+        contributing = (ROOT / "docs" / "CONTRIBUTING.md").read_text(encoding="utf-8")
 
-        self.assertIn("权威规范来源", principles)
-        self.assertIn("README.md` 是**安装、概览和示例说明**", principles)
+        self.assertIn("权威运行时规范来源", principles)
+        self.assertIn("docs/*.md", principles)
         self.assertIn("README 只用于安装、概览和示例", main_skill)
         self.assertIn("README 是说明书", readme)
-        self.assertIn("不作为 Skill 执行时的规范来源", readme)
-        self.assertIn("README.md` 面向安装、概览和示例", contributing)
+        self.assertIn("项目维护文档", readme)
+        self.assertIn("不承载 Skill 运行时唯一规则", docs_index)
+        self.assertIn("docs/*.md", contributing)
+
+    def test_docs_layout_is_shallow_and_plan_is_generic(self) -> None:
+        docs = ROOT / "docs"
+        for name in (
+            "README.md",
+            "architecture.md",
+            "plan.md",
+            "CONTRIBUTING.md",
+            "CHANGELOG.md",
+        ):
+            self.assertTrue((docs / name).is_file(), name)
+
+        self.assertFalse((ROOT / "CONTRIBUTING.md").exists())
+        self.assertFalse((ROOT / "CHANGELOG.md").exists())
+
+        architecture = (docs / "architecture.md").read_text(encoding="utf-8")
+        plan = (docs / "plan.md").read_text(encoding="utf-8")
+        self.assertIn("Convention over Registration", architecture)
+        self.assertIn("references/*.md", architecture)
+        self.assertIn("真实项目实践", plan)
+        self.assertIn("v1.0", plan)
+        self.assertIn("当前阶段不为尚未定型的历史混合格式建立长期兼容负担", plan)
+        self.assertNotIn("PMP", plan)
 
     def test_global_first_principles_are_shared(self) -> None:
         principles = (ROOT / "references" / "principles.md").read_text(encoding="utf-8")
