@@ -19,7 +19,7 @@ class SkillStructureTests(unittest.TestCase):
 
     def test_main_skill_stays_compact(self) -> None:
         lines = (ROOT / "SKILL.md").read_text(encoding="utf-8").splitlines()
-        self.assertLess(len(lines), 120)
+        self.assertLess(len(lines), 140)
 
     def test_main_skill_keeps_public_name(self) -> None:
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -41,6 +41,20 @@ class SkillStructureTests(unittest.TestCase):
         }
         for path, text in expectations.items():
             self.assertIn(text, path.read_text(encoding="utf-8"), str(path))
+
+    def test_testing_workspace_contract_is_preserved(self) -> None:
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        testing = (ROOT / "references" / "testing.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        for text in (skill, testing, readme):
+            self.assertIn("docs/testing/README.md", text)
+
+        self.assertIn("根 README 必须能发现测试入口", testing)
+        self.assertIn("[测试文档](docs/testing/README.md)", testing)
+        self.assertIn("文件名大小写不敏感", testing)
+        self.assertIn("默认不要创建 `cases/`、`evidence/`、`matrix/`", testing)
+        self.assertNotIn("默认**不要**创建 `docs/testing/`", testing)
 
     def test_shortcuts_are_real_skills(self) -> None:
         for name in ("siyk-git-commit", "siyk-git-sync"):

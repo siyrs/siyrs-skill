@@ -1,5 +1,16 @@
 # 更新日志
 
+## 0.3.5 - 2026-08-13
+
+### 变更
+
+- 恢复轻量测试工作区合同：首次发生真实测试或验收工作时，默认确保 `<project-root>/docs/testing/README.md` 存在。
+- 要求项目根 README 能发现测试入口：已有 README 时增加 `docs/testing/README.md` 链接；不存在时创建最小 `README.md` 并包含测试索引。
+- 已有测试文档不强制迁移，由 `docs/testing/README.md` 作为统一索引继续链接和复用。
+- 保留 T1/T2/T3 风险分层、真实执行证据和按风险扩展原则，不恢复旧版 `cases/`、`evidence/`、`matrix/`、状态文件或深层治理树。
+- 普通重复执行和一次性 pass / fail 不默认写回测试文档；只有稳定测试契约变化才更新工作区。
+- README、主 Skill、测试 reference、贡献指南和回归测试同步更新该合同。
+
 ## 0.3.4 - 2026-08-13
 
 ### 变更
