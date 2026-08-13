@@ -64,7 +64,7 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("standards/priorities.md", testing)
         self.assertIn("standards/release-gate.md", testing)
         self.assertIn("测试代码跟着代码走", testing)
-        self.assertIn("按业务模块保存测试用例", testing)
+        self.assertIn("默认按业务模块而不是按 unit/integration/e2e 类型拆文件", testing)
         self.assertIn("Markdown-first 用例格式", testing)
         self.assertIn("pmp-vue/e2e/", testing)
         self.assertIn("不为了统一文档而搬迁", testing)
