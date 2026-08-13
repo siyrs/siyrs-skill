@@ -68,7 +68,7 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("Markdown-first 用例格式", testing)
         self.assertIn("pmp-vue/e2e/", testing)
         self.assertIn("不为了统一文档而搬迁", testing)
-        self.assertIn("不强制六列表格", testing)
+        self.assertIn("不需要强制每条用例都使用", testing)
 
     def test_project_map_contract_is_preserved(self) -> None:
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
