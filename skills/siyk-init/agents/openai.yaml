@@ -1,0 +1,6 @@
+interface:
+  display_name: "siyk-init"
+  short_description: "初始化或刷新 .siyrs 项目地图，减少重复全仓扫描并保持真实来源优先"
+  default_prompt: "使用 $siyk-init 创建或刷新当前项目的 .siyrs/README.md 项目地图，只记录可确认的结构、入口和索引，不保存 secret 值。"
+policy:
+  allow_implicit_invocation: false

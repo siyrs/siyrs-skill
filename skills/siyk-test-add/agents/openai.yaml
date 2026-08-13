@@ -1,0 +1,6 @@
+interface:
+  display_name: "siyk-test-add"
+  short_description: "为本轮修改补真实可执行测试，或显式沉淀 Markdown-first 测试用例"
+  default_prompt: "使用 $siyk-test-add 为本轮修改补充合适的可执行测试并运行必要验证；只有显式写“测试用例”时才把稳定场景沉淀到 docs/testing/cases/。"
+policy:
+  allow_implicit_invocation: false

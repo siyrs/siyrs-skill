@@ -11,7 +11,8 @@ description: 聚焦完成软件仓库修改，按风险选择合适的测试，�
 
 1. **检查**
    - 读取对本次修改文件生效的仓库说明和约束。
-   - 查看 Git 状态、相关代码、测试，以及完成判断所需的最小 diff / 上下文。
+   - 如果 `<project-root>/.siyrs/README.md` 存在，先把它作为项目地图读取，用于快速定位模块、测试、文档和常用命令；真实代码、构建配置和项目文档始终优先于该索引。
+   - 查看 Git 状态、相关代码、测试，以及完成判断所需的最小 diff / 上下文，不因为存在 `.siyrs` 就跳过对本轮相关真实文件的确认。
    - 明确用户目标、受影响范围和有意义的风险。
    - 当用户已经明确授权实现或 Git 交付，且目标清楚时，不重复请求确认。
 
@@ -19,68 +20,90 @@ description: 聚焦完成软件仓库修改，按风险选择合适的测试，�
    - 用最小但完整、内聚的改动满足用户要求。
    - 遵循仓库现有架构、命名、依赖和测试约定。
    - 优先直接使用仓库原生命令，不额外引入 wrapper、registry、生成式命令层、状态机或新的配置系统。
-   - 除本 Skill 明确要求的测试工作区合同，或仓库确实需要的文档外，不要为了流程额外创建 manifest、inventory、schema 或治理文档树。
+   - 除本 Skill 明确要求的测试资产和项目地图合同，或仓库确实需要的文档外，不要为了流程额外创建 manifest、inventory、schema 或治理文档树。
 
 3. **验证**
    - 当任务涉及测试、验收、回归或验证时，读取 [references/testing.md](references/testing.md)。
    - 先运行最窄但有意义的检查；只有风险、失败结果或用户要求需要时才扩大范围。
-   - 只有真正执行过的检查才算证据，不能仅凭代码审查推断“已通过”。
-   - 测试相关工作同时遵循下面的“测试工作区合同”。
+   - 只有真正执行过的检查才算证据，不能仅凭代码审查或历史测试报告推断“本次已通过”。
 
 4. **交付**
    - 当用户要求 commit、sync、push、创建/合并 PR 或更新分支时，读取 [references/git.md](references/git.md)。
    - 保留无关工作区改动，避免破坏性 Git 操作。
    - 用户已明确授权交付时，在同一个工作流中完成允许的 Git 交付。
 
-5. **报告**
+5. **沉淀与报告**
+   - 如果稳定的模块路径、技术栈、构建方式、测试入口、运行方式或重要文档入口发生变化，并且 `.siyrs/README.md` 已存在，按 [references/project-map.md](references/project-map.md) 更新项目地图。
+   - 测试知识按下面的测试资产合同沉淀；一次性执行结果只在值得长期保留时形成测试报告。
    - 简洁说明改了什么、运行了什么、哪些通过或失败，以及仍存在的实质风险。
-   - 除非用户明确要求完整审计，否则不要把结果报告写得过度冗长。
 
 ## 测试模型
 
-将 T1/T2/T3 作为风险分层语言，而不是三个独立的命令实现：
+T1/T2/T3 是验证深度，不是三个独立命令实现：
 
 - **T1 — 聚焦验证：** 修改单元、静态检查、lint、编译或窄范围回归。
 - **T2 — 集成验证：** 跨模块、服务、浏览器/设备、持久化、权限或代表性 smoke 路径。
-- **T3 — 全量/验收：** 在明确要求全量测试、发布门禁，或高风险大范围修改时，执行项目定义的完整相关测试以及必要 UAT / 发布检查。
+- **T3 — 全量/验收：** 明确要求全量测试、发布门禁，或高风险大范围修改时，执行项目定义的完整相关测试以及必要 UAT / 发布检查。
 
-当可观察行为发生变化或发现真实覆盖缺口时，补充或更新测试。T1/T2/T3 仍然描述验证深度，不绑定固定脚本或固定目录层级。
+可执行测试遵循“**测试代码跟着代码走**”：继续使用目标模块现有的 `e2e/`、`src/test/`、`tests/` 等原生位置，不为了文档统一而迁移测试代码。
 
-## 测试工作区合同
+## Markdown-first 测试资产
 
-测试沉淀使用一个固定、可发现的入口，而不是生成整套治理树：
+测试知识统一进入 `<project-root>/docs/testing/`，并由 `docs/testing/README.md` 索引：
 
-- 当任务首次需要**新增、运行、维护测试或执行验收**时，检查 `<project-root>/docs/testing/README.md`。
-- 如果已经存在，先读取它，并在稳定测试契约发生变化时更新。
-- 如果不存在，先了解项目真实的测试入口、命令、环境和模块，再创建 `docs/testing/README.md`；不要生成只有占位符的空模板。
-- 在项目根目录查找现有 README（文件名大小写不敏感）。存在时，在合适的“文档 / 测试 / 开发”位置增加指向 `docs/testing/README.md` 的相对链接；不存在时创建 `README.md`，至少包含项目标题和测试文档链接。
-- 如果项目已有测试说明散落在其他位置，不强制迁移或删除；让 `docs/testing/README.md` 作为统一索引链接到它们。
-- `docs/testing/` 默认保持轻量和平铺。只有稳定、可复用且主入口放不下的内容才新增独立文档，并从 `docs/testing/README.md` 直接索引。
-- 不默认创建 `cases/`、`evidence/`、`matrix/`、状态文件或每次执行日志。普通重复执行如果没有改变稳定测试契约，不需要修改测试文档。
+```text
+docs/testing/
+├── README.md
+├── standards/
+│   ├── priorities.md
+│   └── release-gate.md
+├── cases/
+│   └── <module>.md
+└── reports/
+    └── <meaningful-report>.md
+```
 
-详细规则见 [references/testing.md](references/testing.md)。
+- `standards/` 保存 P0/P1/P2/P3 和发布门禁等长期规则。
+- `cases/` 按业务模块保存测试用例。新用例优先使用“Case ID + 优先级 + 类型 + 可选自动化路径 + 自然语言场景”，不强制六列表格；已有格式不做无意义批量迁移。
+- `reports/` 只保存 T3、正式发布/UAT、重要专项回归或用户明确要求的长期报告，不为每次测试执行生成文档。
+- 根 README 必须能发现 `docs/testing/README.md`；已有其他测试文档不强制迁移，由统一入口继续索引。
+- 当前任务是否通过仍以本次真实执行结果为准。
 
-## 可沉淀的测试知识
+详细合同见 [references/testing.md](references/testing.md)。
 
-优先把稳定测试入口、环境准备、长期有效的 selector、验收规则、测试数据契约和发布标准沉淀到 `docs/testing/README.md` 或它直接索引的少量文档中。执行结果本身仍以当次真实命令和证据为准，不把文档中的历史状态当成本次通过依据。
+## `.siyrs` 项目地图
 
-## 独立 Git 快捷 Skill
+`.siyrs/README.md` 是 AI / Agent 的快速项目地图，不是新的真相数据库：
 
-高频 Git 快捷行为由 `skills/` 下独立的 `siyk-git-commit` 和 `siyk-git-sync` Skill 负责。不要在主 Skill 内重新搭建 command registry、router、adapter 或 state machine。
+- 由独立 `siyk-init` Skill 显式初始化或刷新；主 Skill 不因普通任务自动创建它。
+- 记录项目模块、技术栈、关键配置、测试代码位置、文档入口、常用命令、运行/CI 入口和索引基准 commit SHA。
+- 不复制源码、测试用例正文或 release gate，不保存 secret 值，不创建 state/cache/registry。
+- 项目地图只负责“告诉 Agent 去哪里”；真实文件负责“现在是什么”。
+
+详细规则见 [references/project-map.md](references/project-map.md)。
+
+## 独立快捷 Skill
+
+以下高频行为由 `skills/` 下真正独立、显式调用的 Skill 负责：
+
+- `siyk-init`：创建或刷新 `.siyrs/README.md` 项目地图。
+- `siyk-test-add`：默认补可执行测试；显式“测试用例”模式把本轮修改沉淀到 `docs/testing/cases/`。
+- `siyk-git-commit`：只做轻量本地提交。
+- `siyk-git-sync`：只做正常远端整合与推送。
+
+不要在主 Skill 内重新搭建 command registry、router、adapter 或 state machine。
 
 ## 扩展规则
 
-保持这个 Skill 足够薄：
-
-- 详细且可复用的规则放到 `references/` 下，并从 `SKILL.md` 直接链接。
+- 详细且可复用的规则放到一层深度的 `references/`，并从 `SKILL.md` 直接链接。
 - 只有重复、确定性且脚本化更安全或更省成本的工作才新增 script。
-- 只有确实会被复制或转换成用户输出的内容才新增 asset。
-- 如果一个新工作流具备独立触发条件和独立职责，就拆成单独 Skill，而不是继续扩张主 Skill 的命令体系。
-- `references/` 保持一层深度，同一规则不要在多个文件重复维护。
+- 新工作流具备独立触发条件和职责时，拆成独立 Skill，而不是扩张主 Skill 的命令体系。
+- 同一规则不要在多个文件复制维护。
 
 修改本仓库后运行：
 
 ```bash
 python scripts/validate.py .
 python -m unittest discover -s tests -v
+python -m compileall -q scripts tests
 ```

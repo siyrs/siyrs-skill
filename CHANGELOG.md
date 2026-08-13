@@ -1,5 +1,27 @@
 # 更新日志
 
+## 0.4.0 - 2026-08-13
+
+### 新增
+
+- 新增真正独立的显式 `siyk-init` Skill：创建或刷新 `<project-root>/.siyrs/README.md`，把模块、技术栈、测试入口、重要文档、常用命令、运行/CI 入口和索引基准 commit SHA 沉淀成轻量 AI 项目地图。
+- 新增真正独立的显式 `siyk-test-add` Skill：默认针对本轮修改补可执行测试；支持 `e2e`、`集成测试` 重点模式；只有显式“测试用例”模式才把本轮稳定场景沉淀到 `docs/testing/cases/`。
+- 新增 `references/project-map.md`，明确 `.siyrs` 只做导航、不替代真实文件、不保存 secret、不创建 state/cache/registry。
+
+### 测试资产
+
+- 将测试工作区升级为 Markdown-first 企业级轻量资产结构：`README.md + standards/ + cases/ + reports/`。
+- `standards/priorities.md` 保存 P0/P1/P2/P3 测试优先级，`standards/release-gate.md` 保存长期发布门禁；不把单次执行结果写进标准文件。
+- `cases/` 默认按业务模块保存测试用例，新 Case 使用“稳定 Case ID + 优先级 + 测试类型 + 可选自动化路径 + 自然语言行为/预期”，不再强制六列表格。
+- `reports/` 只保存 T3、正式发布/UAT、重大专项回归或用户明确要求的长期报告；普通 T1/T2 重跑和临时日志留在当前输出/CI/artifact。
+- 明确“测试代码跟着代码走”：已有 `pmp-vue/e2e/`、`src/test/`、`tests/` 等可执行测试位置不为了文档标准迁移。
+- 已有历史 Case 表格和测试文档不做无意义批量迁移，由 `docs/testing/README.md` 统一索引并逐步演进。
+
+### 变更
+
+- 主 `siyrs-skill` 在项目已有 `.siyrs/README.md` 时先用它快速定位，再确认本轮相关真实文件；稳定模块/测试/文档入口变化时更新已有项目地图。
+- 校验器和回归测试扩展到四个独立显式 Skill，并约束 `.siyrs`、Markdown-first Case、测试资产目录和原生测试代码位置等新合同。
+
 ## 0.3.5 - 2026-08-13
 
 ### 变更

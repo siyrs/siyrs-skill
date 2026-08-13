@@ -1,8 +1,8 @@
 # siyrs-skill
 
-当前版本：**v0.3.5**
+当前版本：**v0.4.0**
 
-这是一个刻意保持简洁的工程 Skill 套件。主 Skill `siyrs-skill` 负责工程改动、测试和一般 Git 交付；两个高频 Git 动作拆成真正独立的轻量 Skill，方便在支持 Skill 快捷入口的界面中直接调用。
+这是一个 Markdown-first 的轻量工程 Skill 套件：主 `siyrs-skill` 负责工程闭环，四个高频动作拆成真正独立的显式 Skill。
 
 ## 结构
 
@@ -12,8 +12,15 @@ siyrs-skill/
 ├── agents/openai.yaml
 ├── references/
 │   ├── testing.md
+│   ├── project-map.md
 │   └── git.md
 ├── skills/
+│   ├── siyk-init/
+│   │   ├── SKILL.md
+│   │   └── agents/openai.yaml
+│   ├── siyk-test-add/
+│   │   ├── SKILL.md
+│   │   └── agents/openai.yaml
 │   ├── siyk-git-commit/
 │   │   ├── SKILL.md
 │   │   └── agents/openai.yaml
@@ -25,88 +32,182 @@ siyrs-skill/
 └── README.md
 ```
 
-没有命令注册表（command registry）、路由器（router）、按 Agent 复制的 adapter、状态机、配置 schema 或 release manifest。两个 Git 快捷入口就是两个标准 Skill。
+没有 command registry、router、按 Agent 复制的 adapter、state machine、配置 schema 或 release manifest。
 
-## 三个 Skill
+## 五个 Skill
 
 ### `siyrs-skill`
 
-负责正常工程闭环：
+正常工程闭环：
 
 ```text
-检查 → 修改 → 验证 → 交付 → 报告
+检查 → 修改 → 验证 → 交付 → 沉淀/报告
 ```
 
-保留 T1/T2/T3 风险分层。测试细节按需读取 `references/testing.md`，一般 Git 交付按需读取 `references/git.md`。
+如果项目已有 `.siyrs/README.md`，先用它快速定位，再检查本轮相关真实文件。测试继续使用 T1/T2/T3 风险分层。
+
+### `siyk-init`
+
+创建或刷新：
+
+```text
+<project-root>/.siyrs/README.md
+```
+
+它是给 AI / Agent 的**项目地图**：记录模块、技术栈、关键配置、测试代码位置、文档入口、常用命令、运行/CI 入口，以及索引基准 commit SHA。
+
+核心边界：
+
+- 真实代码/配置/文档始终优先；
+- 只做结构级扫描，不默认遍历所有源码；
+- 不保存密码、token、API key、私钥等 secret 值；
+- 不创建 `state.json`、registry、cache 或 manifest；
+- 重复调用 `/siyk-init` 就是刷新同一个项目地图。
+
+### `siyk-test-add`
+
+默认：**给本轮修改补真实可执行测试**。
+
+```text
+/siyk-test-add
+```
+
+它会检查现有测试布局和已有覆盖，在原生位置补 unit/component/integration/E2E，并运行新增测试和最窄必要验证。已有 `pmp-vue/e2e/`、`src/test/` 等目录不会为了统一标准迁移。
+
+可选重点：
+
+```text
+/siyk-test-add e2e
+/siyk-test-add 集成测试
+```
+
+显式测试用例模式：
+
+```text
+/siyk-test-add 测试用例
+/siyk-test-add 测试用例 project.md
+```
+
+此时默认不新增测试代码，而是把**本轮修改**提炼成长期测试 Case，保存到 `docs/testing/cases/<module>.md`，并维护 `docs/testing/README.md` 索引。
 
 ### `siyk-git-commit`
 
-只做本地 Git 保存：
-
-```text
-git status / diff
-→ 只暂存目标改动
-→ git commit
-→ 报告 commit 与剩余工作区
-```
-
-不会自动 fetch、pull、push、跑测试、维护测试文档、release、deploy 或做深度审计。
+只做本地 Git 保存，不自动 fetch/pull/push/测试/release/deploy。
 
 ### `siyk-git-sync`
 
-只做正常 Git 同步：
+只做正常远端整合与 push；受保护默认分支使用仓库允许的 PR/merge 路径，不 force push。
 
-```text
-必要时先保存本地目标改动
-→ 查看 branch / upstream / divergence
-→ fetch
-→ 正常 fast-forward / rebase / merge
-→ git push
-```
+## AI 时代的 Markdown-first 测试资产
 
-明确要求更新受保护的 `main` / 默认分支时，走仓库允许的 PR / merge 路径，不 force push。不会自动附加测试、release、deploy、状态管理或深度审计。
+测试代码和测试知识分开：
 
-## 测试合同
+> **可执行测试跟着代码走；测试知识集中到 `docs/testing/`。**
 
-测试仍然使用 T1 / T2 / T3 风险分层，但 v0.3.5 恢复了一个**固定、轻量、可发现的测试工作区**。
-
-当项目第一次发生真实的测试或验收工作时，主 Skill 会确保：
+例如：
 
 ```text
 <project-root>/
-├── README.md                  # 如果已有 readme.md / Readme.md，则复用现有文件
-└── docs/
-    └── testing/
-        └── README.md          # 统一测试入口
+├── README.md
+├── .siyrs/
+│   └── README.md                   # AI 项目地图
+├── docs/
+│   └── testing/
+│       ├── README.md               # 测试总入口
+│       ├── standards/
+│       │   ├── priorities.md       # P0/P1/P2/P3
+│       │   └── release-gate.md     # 发布门禁
+│       ├── cases/
+│       │   ├── auth.md
+│       │   ├── project.md
+│       │   └── cross-module.md
+│       └── reports/
+│           └── 2026-08-13-v1.0-release.md
+├── web/
+│   └── e2e/                        # 真正可执行的前端 E2E
+└── backend/
+    └── src/test/                   # 真正可执行的后端测试
 ```
 
-规则是：
+Git 不保存空目录，因此 `cases/` 和 `reports/` 在第一次有真实内容时再出现。
 
-1. 已有 `docs/testing/README.md`：先读取并按稳定契约变化更新。
-2. 没有：先识别项目真实测试代码、命令、环境和模块，再创建有实际内容的 `docs/testing/README.md`。
-3. 项目根已有 README：在合适的文档 / 开发 / 测试区域增加 `[测试文档](docs/testing/README.md)`；没有根 README 时创建一个最小 `README.md` 并包含测试入口。
-4. 如果测试说明已经散落在 `tests/README.md`、`docs/qa.md` 或模块文档中，不强制迁移；由 `docs/testing/README.md` 统一索引。
-5. 默认不创建 `cases/`、`evidence/`、`matrix/`、run history 或状态文件。只有稳定、长期复用的内容才在 `docs/testing/` 下增加少量平铺文档。
-6. 一次性的测试执行结果仍然通过本次真实命令和输出证明，不把测试文档当作“当前已通过”的证据。
+### `standards/`
 
-这比 v0.2.x 的测试治理轻很多，但比 v0.3.0-v0.3.4 的“没有就不建测试文档”更适合长期维护。
+`priorities.md` 保存测试优先级：
 
-## 为什么两个 Git 快捷动作要做成真正的 Skill
+- P0：核心阻断路径，失败原则上阻断发布；
+- P1：核心业务能力，失败需要修复或明确风险接受；
+- P2：重要但非核心路径、边界、兼容性；
+- P3：低风险、低频补充。
 
-只把 `siyk-git-commit` / `siyk-git-sync` 写在主 `SKILL.md` 里，只能让模型理解这两个字符串，不会创建独立 Skill 条目。
+`release-gate.md` 保存 build、P0/P1、T1/T2/T3、核心 E2E、migration、UAT、升级/回滚等长期发布标准，不保存某次发布结果。
 
-现在两个目录都有自己的 `SKILL.md` 和 `agents/openai.yaml`，并且：
+### `cases/`：模块化 + 自然语言
 
-```yaml
-policy:
-  allow_implicit_invocation: false
+测试用例默认按业务模块保存，而不是按 unit/integration/e2e 拆目录。
+
+AI 已经可以稳定理解自然语言，因此新 Case 不再强制六列表格。推荐：
+
+```markdown
+### TC-AUTH-001 登录成功
+
+**P0 · E2E**  
+自动化：`web/e2e/auth-login.spec.ts`
+
+用户输入有效账号、密码和验证码后登录。系统应进入工作台并正确保存认证状态；刷新页面后仍保持登录。
 ```
 
-因此它们不会抢普通自然语言任务，只在显式选择或调用时工作。
+至少保留：
+
+- Case ID；
+- P0/P1/P2/P3；
+- 测试类型；
+- 存在时的自动化代码路径；
+- 自然语言行为与预期。
+
+复杂场景需要时再增加前置条件、步骤或多条预期。已有历史表格不做无意义批量迁移。
+
+### `reports/`：阶段性证据
+
+只在这些情况下默认值得长期保存：
+
+- T3 / 全量测试；
+- 正式发布验收；
+- UAT；
+- 重大版本/缺陷专项回归；
+- 用户明确要求测试报告。
+
+普通 T1/T2 重跑、临时日志和一次性 pass/fail 留在当前结果、CI 或测试 artifact 中，不为每次运行生成 Markdown 报告。
+
+## `.siyrs` 项目地图
+
+`.siyrs/README.md` 只回答“Agent 应该去哪里看”。例如：
+
+```markdown
+# SIYRS 项目索引
+
+> 本文件用于快速理解项目结构和定位资料。真实文件始终优先。
+
+索引基准 commit：`abc123...`
+
+## 模块
+- 前端：`web/`
+- 后端：`backend/`
+
+## 测试代码
+- 前端 E2E：`web/e2e/`
+- 后端：`backend/src/test/`
+
+## 测试资产
+- `docs/testing/README.md`
+
+## 常用命令
+...
+```
+
+不要把测试 Case、release gate、源码或执行历史复制进 `.siyrs`。
 
 ## 安装
-
-Codex 用户只需要 clone 一次：
 
 ```bash
 git clone https://github.com/siyrs/siyrs-skill.git ~/.agents/skills/siyrs-skill
@@ -118,73 +219,41 @@ Windows PowerShell：
 git clone https://github.com/siyrs/siyrs-skill.git "$HOME/.agents/skills/siyrs-skill"
 ```
 
-Codex 的本地 Skill 扫描会发现根目录 `SKILL.md`，也会发现 `skills/` 下两个独立 `SKILL.md`。更新后如果 Skill 列表没有立即刷新，重启 Codex。
+更新后如果 Skill 列表没有立即刷新，重启 Codex。
 
 ## 快捷调用
 
-在**支持把已启用 Skill 显示到 `/` 快捷列表中的 ChatGPT / Codex 桌面端**，输入 `/` 后应能看到或过滤到：
+支持 Skill `/` 快捷入口的桌面端可看到：
 
 ```text
+/siyk-init
+/siyk-test-add
 /siyk-git-commit
 /siyk-git-sync
 ```
 
-两个 Skill 的 `display_name` 就是对应快捷名称。
-
-在 **Codex CLI / IDE 扩展**中，显式 Skill 调用使用：
+在 Codex CLI / IDE 中显式调用：
 
 ```text
+$siyk-init
+$siyk-test-add
 $siyk-git-commit
 $siyk-git-sync
 ```
 
-或者先输入：
-
-```text
-/skills
-```
-
-再选择对应 Skill。不要把 CLI 内置 slash command 和桌面端的 Skill 快捷列表混为一套机制。
-
-## 示例
-
-桌面端支持 Skill `/` 快捷入口时：
-
-```text
-/siyk-git-commit
-/siyk-git-commit fix: correct login state
-
-/siyk-git-sync
-/siyk-git-sync main
-```
-
-在 CLI / IDE 中对应：
-
-```text
-$siyk-git-commit
-$siyk-git-sync
-```
-
-主工程能力使用：
-
-```text
-$siyrs-skill 帮我完成这个功能并补必要测试。
-$siyrs-skill 做一次 T2 集成验证。
-$siyrs-skill 完成后同步到主分支。
-```
+或者使用 `/skills` 选择对应 Skill。
 
 ## 设计原则
 
-- **主 Skill 保持薄**：通用工程流程只维护一份。
-- **名称统一**：主 Skill 使用 `siyrs-skill`，与仓库名和安装目录一致。
-- **测试入口固定**：真实测试工作默认维护 `docs/testing/README.md`，并从项目根 README 建立索引。
-- **测试目录保持轻量**：固定入口不等于恢复 case/evidence/matrix 治理树。
-- **快捷动作是真 Skill**：只有确实需要独立入口的高频动作才拆独立 Skill。
-- **显式快捷不抢触发**：两个 Git 快捷 Skill 设置 `allow_implicit_invocation: false`。
-- **测试按风险扩展**：T1/T2/T3 是风险语言，不是命令框架。
-- **不恢复旧架构**：不重新引入 adapters、commands、router、state/config/schema 等复杂层。
-- **项目原生优先**：优先使用目标仓库自己的 Git、构建、测试和文档约定。
-- **中文优先**：面向维护者和使用者的说明尽量使用中文；Skill 名、代码标识符、命令、协议字段和必要技术术语保留英文。
+- **Markdown-first**：AI 可理解的工程知识优先沉淀为简洁 Markdown，而不是 schema/state 系统。
+- **项目地图不代替真实文件**：`.siyrs` 用于导航和减少重复扫描。
+- **测试代码跟着代码走**：不为了文档标准迁移既有 E2E/unit/integration。
+- **测试知识集中**：`docs/testing/` 统一承载 standards/cases/reports。
+- **Case 自然语言优先**：保留真正需要引用的少量结构化元数据。
+- **报告按价值生成**：不把每次测试执行都变成文档。
+- **快捷动作是真 Skill**：四个高频动作都是独立 Skill，并关闭隐式调用。
+- **主 Skill 保持薄**：不恢复 command registry、adapter、router、state/config/schema。
+- **中文优先**：说明尽量中文，Skill 名、命令、协议字段和必要技术术语保留英文。
 
 ## 维护
 
@@ -195,5 +264,3 @@ python scripts/validate.py .
 python -m unittest discover -s tests -v
 python -m compileall -q scripts tests
 ```
-
-校验器会同时检查主 Skill 和两个快捷 Skill，并通过回归测试约束主 Skill 名称、中文说明、真实快捷 Skill 结构以及测试工作区合同。
