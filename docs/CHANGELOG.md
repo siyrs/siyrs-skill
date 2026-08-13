@@ -1,5 +1,17 @@
 # 更新日志
 
+## 0.5.2 - 2026-08-13
+
+### 文档结构
+
+- 新增浅层 `docs/` 文档区，统一保存维护者文档、架构说明、演化计划和版本历史。
+- 新增 `docs/README.md` 作为文档索引，明确 `docs/` 不替代 `references/` 的运行时规范职责。
+- 新增 `docs/architecture.md`，记录主 Skill / 子 Skill / references / docs 的架构分层、自动发现和防膨胀约束。
+- 新增 `docs/plan.md`，记录 0.x 阶段通过真实项目实践收敛标准、满足稳定条件后进入 v1.0 候选的通用演化路线；不绑定任何具体业务项目。
+- 将根目录 `CONTRIBUTING.md` 与 `CHANGELOG.md` 下沉到 `docs/`，根目录继续只保留需要直接暴露的安装/运行入口。
+- README 改为链接 `docs/` 文档入口；`references/*.md` 继续保持原位并作为运行时权威规范。
+- 本版本不改变现有 Skill 行为、T1/T2/T3、测试资产、`.siyrs` 或 Git 合同。
+
 ## 0.5.1 - 2026-08-13
 
 ### 架构收尾
