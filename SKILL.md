@@ -1,6 +1,6 @@
 ---
 name: siyrs-skill
-description: 聚焦完成软件仓库修改，按风险选择合适的测试，并按用户要求完成 Git 交付。适用于实现功能、修复问题、重构、代码审查、补充或运行测试、执行回归/冒烟/全量/UAT/Android/Web/后端验证，以及提交、同步、推送或合并代码等场景。
+description: 聚焦完成软件仓库修改，按风险选择合适的测试，并按用户要求完成 Git 交付。适用于实现功能、修复问题、重构、代码审查、补充或运行测试、执行 T1/T2/T3、回归/冒烟/全量/UAT/Android/Web/后端验证，以及提交、同步、推送或合并代码等场景。
 ---
 
 # SIYRS Skill
@@ -32,8 +32,9 @@ description: 聚焦完成软件仓库修改，按风险选择合适的测试，�
    - 除本 Skill 明确要求的测试资产和项目地图合同，或仓库确实需要的文档外，不要为了流程额外创建 manifest、inventory、schema 或治理文档树。
 
 3. **验证**
-   - 当任务涉及测试、验收、回归或验证时，读取 [references/testing.md](references/testing.md)。
-   - 先运行最窄但有意义的检查；只有风险、失败结果或用户要求需要时才扩大范围。
+   - 当任务涉及测试、验收、回归或验证时，读取 [测试指南](references/testing.md) 和 [T1/T2/T3 分级执行合同](references/testing-tiers.md)。
+   - T1/T2/T3 是“测多大范围”，Unit/Component/Integration/E2E/UAT 是“怎么测”，不要混淆。
+   - 先运行最窄但有意义的检查；只有风险、失败结果、档位合同或用户要求需要时才扩大范围。
    - 只有真正执行过的检查才算证据，不能仅凭代码审查或历史测试报告推断“本次已通过”。
 
 4. **交付**
@@ -43,18 +44,20 @@ description: 聚焦完成软件仓库修改，按风险选择合适的测试，�
 
 5. **沉淀与报告**
    - 如果稳定的模块路径、技术栈、构建方式、测试入口、运行方式或重要文档入口发生变化，并且 `.siyrs/README.md` 已存在，按 [references/project-map.md](references/project-map.md) 更新项目地图。
-   - 测试知识按下面的测试资产合同沉淀；一次性执行结果只在值得长期保留时形成测试报告。
+   - 测试知识按下面的测试资产合同沉淀；T1/T2 默认不生成持久报告，完整 T3 默认沉淀可信测试报告。
    - 简洁说明改了什么、运行了什么、哪些通过或失败，以及仍存在的实质风险。
 
 ## 测试模型
 
-T1/T2/T3 是验证深度，不是三个独立命令实现：
+T1/T2/T3 是测试范围档位，并由三个独立执行 Skill 暴露：
 
-- **T1 — 聚焦验证：** 修改单元、静态检查、lint、编译或窄范围回归。
-- **T2 — 集成验证：** 跨模块、服务、浏览器/设备、持久化、权限或代表性 smoke 路径。
-- **T3 — 全量/验收：** 明确要求全量测试、发布门禁，或高风险大范围修改时，执行项目定义的完整相关测试以及必要 UAT / 发布检查。
+- **T1 — 变更回归：** 根据本轮 diff 与 blast radius 动态选择受影响测试。
+- **T2 — 标准 Smoke：** 运行项目长期维护的固定 main path + permission/boundary 子集。
+- **T3 — 全量 / 发布验收：** 按完整相关测试资产和 release gate 执行 Unit/Integration/E2E/UAT 等必要层，并默认形成长期测试报告。
 
 可执行测试遵循“**测试代码跟着代码走**”：继续使用目标模块现有的 `e2e/`、`src/test/`、`tests/` 等原生位置，不为了文档统一而迁移测试代码。
+
+详细执行规则见 [references/testing-tiers.md](references/testing-tiers.md)。
 
 ## Markdown-first 测试资产
 
@@ -73,8 +76,8 @@ docs/testing/
 ```
 
 - `standards/` 保存 P0/P1/P2/P3 和发布门禁等长期规则。
-- `cases/` 按业务模块保存测试用例。新用例优先使用“Case ID + 优先级 + 类型 + 可选自动化路径 + 自然语言场景”，不强制六列表格；已有格式不做无意义批量迁移。
-- `reports/` 只保存 T3、正式发布/UAT、重要专项回归或用户明确要求的长期报告，不为每次测试执行生成文档。
+- `cases/` 按业务模块保存测试用例。新用例优先使用“Case ID + 优先级 + 可选 T2 + 类型 + 可选自动化路径 + 自然语言场景”，不强制六列表格；已有格式不做无意义批量迁移。
+- `reports/` 只保存完整 T3、正式发布/UAT、重要专项回归或用户明确要求的长期报告，不为普通 T1/T2 执行生成文档。
 - 根 README 必须能发现 `docs/testing/README.md`；已有其他测试文档不强制迁移，由统一入口继续索引。
 - 当前任务是否通过仍以本次真实执行结果为准。
 
@@ -97,8 +100,13 @@ docs/testing/
 
 - `siyk-init`：创建或刷新 `.siyrs/README.md` 项目地图。
 - `siyk-test-add`：默认补可执行测试；显式“测试用例”模式把本轮修改沉淀到 `docs/testing/cases/`。
+- `siyk-test-run-t1`：运行本轮 diff + blast radius 的 T1 变更回归。
+- `siyk-test-run-t2`：运行项目固定 T2 Smoke 集。
+- `siyk-test-run-t3`：运行完整 T3 / UAT / release gate，并默认沉淀测试报告。
 - `siyk-git-commit`：只做轻量本地提交。
 - `siyk-git-sync`：只做正常远端整合与推送。
+
+三个 test-run Skill 默认只执行、分析和报告，不新增测试、不修改业务代码；只有同一请求明确要求修复或补测试时才进入修改闭环。
 
 不要在主 Skill 内重新搭建 command registry、router、adapter 或 state machine。
 
