@@ -12,15 +12,13 @@ validator = importlib.util.module_from_spec(spec)
 assert spec.loader is not None
 spec.loader.exec_module(validator)
 
-EXPLICIT_SKILLS = (
-    "siyk-init",
-    "siyk-test-add",
-    "siyk-test-run-t1",
-    "siyk-test-run-t2",
-    "siyk-test-run-t3",
-    "siyk-git-commit",
-    "siyk-git-sync",
-)
+
+def explicit_skill_dirs() -> list[Path]:
+    return [
+        path
+        for path, explicit_child in validator.discover_skill_dirs(ROOT)
+        if explicit_child
+    ]
 
 
 class SkillStructureTests(unittest.TestCase):
@@ -29,7 +27,7 @@ class SkillStructureTests(unittest.TestCase):
 
     def test_main_skill_stays_compact(self) -> None:
         lines = (ROOT / "SKILL.md").read_text(encoding="utf-8").splitlines()
-        self.assertLess(len(lines), 190)
+        self.assertLess(len(lines), 130)
 
     def test_main_skill_keeps_public_name(self) -> None:
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -55,6 +53,19 @@ class SkillStructureTests(unittest.TestCase):
         for path, text in expectations.items():
             self.assertIn(text, path.read_text(encoding="utf-8"), str(path))
 
+    def test_references_are_normative_and_readme_is_explanatory(self) -> None:
+        principles = (ROOT / "references" / "principles.md").read_text(encoding="utf-8")
+        main_skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        contributing = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+
+        self.assertIn("权威规范来源", principles)
+        self.assertIn("README.md` 是**安装、概览和示例说明**", principles)
+        self.assertIn("README 只用于安装、概览和示例", main_skill)
+        self.assertIn("README 是说明书", readme)
+        self.assertIn("不作为 Skill 执行时的规范来源", readme)
+        self.assertIn("README.md` 面向安装、概览和示例", contributing)
+
     def test_global_first_principles_are_shared(self) -> None:
         principles = (ROOT / "references" / "principles.md").read_text(encoding="utf-8")
         main_skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -65,24 +76,33 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("禁止编造", principles)
         self.assertIn("references/principles.md", main_skill)
 
-        for name in EXPLICIT_SKILLS:
-            text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
-            self.assertIn("../../references/principles.md", text, name)
+        for skill_dir in explicit_skill_dirs():
+            text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("../../references/principles.md", text, skill_dir.name)
+
+    def test_child_skills_are_auto_discovered_without_registry(self) -> None:
+        validator_source = VALIDATOR_PATH.read_text(encoding="utf-8")
+        tests_source = Path(__file__).read_text(encoding="utf-8")
+        old_registry_name = "EXPLICIT_" + "SKILLS"
+        self.assertNotIn(old_registry_name, validator_source)
+        self.assertNotIn(old_registry_name, tests_source)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            example = root / "skills" / "siyk-example"
+            example.mkdir(parents=True)
+            discovered = validator.discover_skill_dirs(root)
+            self.assertIn((example, True), discovered)
 
     def test_markdown_first_testing_contract_is_preserved(self) -> None:
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
         testing = (ROOT / "references" / "testing.md").read_text(encoding="utf-8")
-        readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         for text in (skill, testing):
             self.assertIn("docs/testing/README.md", text)
             self.assertIn("standards/", text)
             self.assertIn("cases/", text)
             self.assertIn("reports/", text)
-        self.assertIn("docs/testing/", readme)
-        self.assertIn("standards/", readme)
-        self.assertIn("cases/", readme)
-        self.assertIn("reports/", readme)
 
         self.assertIn("standards/priorities.md", testing)
         self.assertIn("standards/release-gate.md", testing)
@@ -138,15 +158,14 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("registry.json", project_map)
         self.assertIn("cache/", project_map)
 
-    def test_explicit_skills_are_real_skills(self) -> None:
-        for name in EXPLICIT_SKILLS:
-            skill_dir = ROOT / "skills" / name
+    def test_discovered_child_skills_are_real_explicit_skills(self) -> None:
+        for skill_dir in explicit_skill_dirs():
             text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
             agent = (skill_dir / "agents" / "openai.yaml").read_text(encoding="utf-8")
-            self.assertIn(f"name: {name}", text)
-            self.assertIn(f'display_name: "{name}"', agent)
+            self.assertIn(f"name: {skill_dir.name}", text)
+            self.assertIn(f'display_name: "{skill_dir.name}"', agent)
             self.assertIn("allow_implicit_invocation: false", agent)
-            self.assertIn(f"${name}", agent)
+            self.assertIn(f"${skill_dir.name}", agent)
 
     def test_test_add_modes_and_scope(self) -> None:
         text = (ROOT / "skills" / "siyk-test-add" / "SKILL.md").read_text(encoding="utf-8")
@@ -169,10 +188,10 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("cache/", text)
         self.assertIn("不迁移 E2E", text)
 
-    def test_explicit_skills_stay_thin(self) -> None:
-        for name in EXPLICIT_SKILLS:
-            lines = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8").splitlines()
-            self.assertLess(len(lines), 90, name)
+    def test_discovered_child_skills_stay_thin(self) -> None:
+        for skill_dir in explicit_skill_dirs():
+            lines = (skill_dir / "SKILL.md").read_text(encoding="utf-8").splitlines()
+            self.assertLess(len(lines), 90, skill_dir.name)
         for path in ("adapters", "commands", "schemas", "release-manifest.json"):
             self.assertFalse((ROOT / path).exists(), path)
 
