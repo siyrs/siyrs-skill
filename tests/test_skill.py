@@ -38,6 +38,19 @@ class SkillStructureTests(unittest.TestCase):
             self.assertIn(f'display_name: "{name}"', agent)
             self.assertIn("allow_implicit_invocation: false", agent)
 
+    def test_shortcut_user_facing_copy_is_chinese(self) -> None:
+        expectations = {
+            "siyk-git-commit": ("显式的轻量 Git 提交快捷 Skill", "将当前目标改动安全保存"),
+            "siyk-git-sync": ("显式的轻量 Git 同步快捷 Skill", "保存必要本地改动"),
+        }
+        for name, (description_text, short_text) in expectations.items():
+            skill_dir = ROOT / "skills" / name
+            skill = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+            agent = (skill_dir / "agents" / "openai.yaml").read_text(encoding="utf-8")
+            self.assertIn(description_text, skill)
+            self.assertIn(short_text, agent)
+            self.assertIn("使用 $", agent)
+
     def test_shortcuts_stay_thin(self) -> None:
         for name in ("siyk-git-commit", "siyk-git-sync"):
             lines = (ROOT / "skills" / name / "SKILL.md").read_text(
