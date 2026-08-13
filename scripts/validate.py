@@ -14,15 +14,6 @@ QUOTED_FIELD_RE = re.compile(
     re.MULTILINE,
 )
 LEGACY_PATHS = ("adapters", "commands", "schemas", "release-manifest.json")
-EXPLICIT_SKILLS = (
-    "siyk-init",
-    "siyk-test-add",
-    "siyk-test-run-t1",
-    "siyk-test-run-t2",
-    "siyk-test-run-t3",
-    "siyk-git-commit",
-    "siyk-git-sync",
-)
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -45,7 +36,20 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     return data
 
 
-def validate_skill(skill_dir: Path) -> list[str]:
+def discover_skill_dirs(root: Path) -> list[tuple[Path, bool]]:
+    """发现根 Skill 与 skills/ 下全部一级子 Skill。"""
+    discovered: list[tuple[Path, bool]] = [(root, False)]
+    skill_root = root / "skills"
+    if not skill_root.is_dir():
+        return discovered
+
+    for child in sorted(skill_root.iterdir(), key=lambda path: path.name):
+        if child.is_dir():
+            discovered.append((child, True))
+    return discovered
+
+
+def validate_skill(skill_dir: Path, *, explicit_child: bool = False) -> list[str]:
     errors: list[str] = []
     skill_path = skill_dir / "SKILL.md"
     if not skill_path.is_file():
@@ -60,6 +64,8 @@ def validate_skill(skill_dir: Path) -> list[str]:
             raise ValueError("name 必须使用小写连字符格式，且不超过 64 个字符")
         if not meta["description"]:
             raise ValueError("description 不能为空")
+        if explicit_child and meta["name"] != skill_dir.name:
+            raise ValueError("子 Skill 的 name 必须与目录名一致")
     except (KeyError, ValueError) as exc:
         errors.append(f"{skill_path}: {exc}")
         meta = {}
@@ -88,8 +94,8 @@ def validate_skill(skill_dir: Path) -> list[str]:
         name = meta.get("name")
         if name and f"${name}" not in fields.get("default_prompt", ""):
             errors.append(f"{agent_path}: default_prompt 必须明确包含 ${name}")
-        if name in EXPLICIT_SKILLS and "allow_implicit_invocation: false" not in agent_text:
-            errors.append(f"{agent_path}: 显式快捷 Skill 必须关闭隐式调用")
+        if explicit_child and "allow_implicit_invocation: false" not in agent_text:
+            errors.append(f"{agent_path}: skills/ 下子 Skill 必须关闭隐式调用")
 
     refs = skill_dir / "references"
     if refs.exists() and any(p.is_dir() for p in refs.rglob("*")):
@@ -100,13 +106,9 @@ def validate_skill(skill_dir: Path) -> list[str]:
 
 def validate(root: Path) -> list[str]:
     errors: list[str] = []
-    skill_dirs = [root]
-    skill_root = root / "skills"
-    for name in EXPLICIT_SKILLS:
-        skill_dirs.append(skill_root / name)
 
-    for skill_dir in skill_dirs:
-        errors.extend(validate_skill(skill_dir))
+    for skill_dir, explicit_child in discover_skill_dirs(root):
+        errors.extend(validate_skill(skill_dir, explicit_child=explicit_child))
 
     for legacy in LEGACY_PATHS:
         if (root / legacy).exists():
