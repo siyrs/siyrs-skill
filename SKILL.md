@@ -1,9 +1,9 @@
 ---
-name: siyrs-engineering
+name: siyrs-skill
 description: Execute focused software-repository changes with proportionate testing and deliberate Git delivery. Use when asked to implement, fix, refactor, review, add or run tests, perform regression/smoke/full/UAT/Android/web/backend verification, create a commit, or sync/push completed work. Also applies to Chinese requests such as 修改代码、补测试、回归测试、全量测试、验收、提交代码、同步主分支.
 ---
 
-# SIYRS Engineering
+# SIYRS Skill
 
 Run a small, evidence-driven engineering loop. Prefer the repository's native tools and conventions over framework code owned by this skill.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3 - 2026-08-13
+
+### Changed
+
+- Renamed the main Skill from `siyrs-engineering` back to `siyrs-skill` so the public Skill name matches the repository and install directory.
+- Updated `agents/openai.yaml`, README installation/invocation examples, and validation coverage for `$siyrs-skill`.
+- Kept `siyk-git-commit` and `siyk-git-sync` unchanged as dedicated explicit shortcut Skills.
+
 ## 0.3.2 - 2026-08-13
 
 ### Fixed
