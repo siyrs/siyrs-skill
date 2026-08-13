@@ -1,14 +1,14 @@
 # siyrs-skill
 
-当前版本：**v0.3.2**
+当前版本：**v0.3.3**
 
-这是一个刻意保持简洁的工程 Skill bundle。主 Skill 负责工程改动、测试和一般 Git 交付；两个高频 Git 动作拆成真正独立的轻量 Skill，因此支持 Skill slash 列表的 Codex/ChatGPT 桌面端可以把它们作为快捷入口展示。
+这是一个刻意保持简洁的工程 Skill bundle。主 Skill `siyrs-skill` 负责工程改动、测试和一般 Git 交付；两个高频 Git 动作拆成真正独立的轻量 Skill，因此支持 Skill slash 列表的 Codex/ChatGPT 桌面端可以把它们作为快捷入口展示。
 
 ## 结构
 
 ```text
 siyrs-skill/
-├── SKILL.md                         # siyrs-engineering
+├── SKILL.md                         # siyrs-skill
 ├── agents/openai.yaml
 ├── references/
 │   ├── testing.md
@@ -29,7 +29,7 @@ siyrs-skill/
 
 ## 三个 Skill
 
-### `siyrs-engineering`
+### `siyrs-skill`
 
 负责正常工程闭环：
 
@@ -84,13 +84,13 @@ policy:
 Codex 用户仍然只需要 clone 一次：
 
 ```bash
-git clone https://github.com/siyrs/siyrs-skill.git ~/.agents/skills/siyrs-engineering
+git clone https://github.com/siyrs/siyrs-skill.git ~/.agents/skills/siyrs-skill
 ```
 
 Windows PowerShell：
 
 ```powershell
-git clone https://github.com/siyrs/siyrs-skill.git "$HOME/.agents/skills/siyrs-engineering"
+git clone https://github.com/siyrs/siyrs-skill.git "$HOME/.agents/skills/siyrs-skill"
 ```
 
 Codex 的本地 Skill 扫描会发现这个目录下的 `SKILL.md`，也会发现 `skills/` 下两个独立的 `SKILL.md`。更新后如果列表没有立即刷新，重启 Codex。
@@ -138,17 +138,18 @@ $siyk-git-commit
 $siyk-git-sync
 ```
 
-主工程能力仍然使用：
+主工程能力使用：
 
 ```text
-$siyrs-engineering 帮我完成这个功能并补必要测试。
-$siyrs-engineering 做一次 T2 集成验证。
-$siyrs-engineering 完成后同步到主分支。
+$siyrs-skill 帮我完成这个功能并补必要测试。
+$siyrs-skill 做一次 T2 集成验证。
+$siyrs-skill 完成后同步到主分支。
 ```
 
 ## 设计原则
 
 - **主 Skill 保持薄**：通用工程流程只维护一份。
+- **名称统一**：主 Skill 使用 `siyrs-skill`，与仓库名和安装目录一致。
 - **快捷动作是真 Skill**：需要独立入口的高频动作才拆独立 Skill。
 - **显式快捷不抢触发**：两个 Git shortcut 禁止 implicit invocation。
 - **测试按风险扩展**：T1/T2/T3 是风险语言，不是命令框架。

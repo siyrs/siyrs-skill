@@ -21,6 +21,14 @@ class SkillStructureTests(unittest.TestCase):
         lines = (ROOT / "SKILL.md").read_text(encoding="utf-8").splitlines()
         self.assertLess(len(lines), 120)
 
+    def test_main_skill_keeps_public_name(self) -> None:
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        agent = (ROOT / "agents" / "openai.yaml").read_text(encoding="utf-8")
+        self.assertIn("name: siyrs-skill", skill)
+        self.assertIn('display_name: "SIYRS Skill"', agent)
+        self.assertIn("$siyrs-skill", agent)
+        self.assertNotIn("$siyrs-engineering", agent)
+
     def test_shortcuts_are_real_skills(self) -> None:
         for name in ("siyk-git-commit", "siyk-git-sync"):
             skill_dir = ROOT / "skills" / name
