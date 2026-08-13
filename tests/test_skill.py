@@ -15,6 +15,9 @@ spec.loader.exec_module(validator)
 EXPLICIT_SKILLS = (
     "siyk-init",
     "siyk-test-add",
+    "siyk-test-run-t1",
+    "siyk-test-run-t2",
+    "siyk-test-run-t3",
     "siyk-git-commit",
     "siyk-git-sync",
 )
@@ -26,7 +29,7 @@ class SkillStructureTests(unittest.TestCase):
 
     def test_main_skill_stays_compact(self) -> None:
         lines = (ROOT / "SKILL.md").read_text(encoding="utf-8").splitlines()
-        self.assertLess(len(lines), 160)
+        self.assertLess(len(lines), 190)
 
     def test_main_skill_keeps_public_name(self) -> None:
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -42,6 +45,7 @@ class SkillStructureTests(unittest.TestCase):
             ROOT / "agents" / "openai.yaml": "聚焦完成仓库修改",
             ROOT / "references" / "principles.md": "# SIYRS 第一性原则",
             ROOT / "references" / "testing.md": "# 测试指南",
+            ROOT / "references" / "testing-tiers.md": "# 测试分级执行合同",
             ROOT / "references" / "project-map.md": "# `.siyrs` 项目地图指南",
             ROOT / "references" / "git.md": "# Git 交付指南",
             ROOT / "CONTRIBUTING.md": "# 贡献指南",
@@ -81,9 +85,40 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("测试代码跟着代码走", testing)
         self.assertIn("默认按业务模块而不是按 unit/integration/e2e 类型拆文件", testing)
         self.assertIn("Markdown-first 用例格式", testing)
+        self.assertIn("P0 · T2 · E2E", testing)
         self.assertIn("pmp-vue/e2e/", testing)
         self.assertIn("不为了统一文档而搬迁", testing)
-        self.assertIn("不需要强制每条用例都使用", testing)
+
+    def test_test_tier_contract_is_orthogonal_and_lightweight(self) -> None:
+        tiers = (ROOT / "references" / "testing-tiers.md").read_text(encoding="utf-8")
+        self.assertIn("两个正交维度", tiers)
+        self.assertIn("T1 — 变更回归", tiers)
+        self.assertIn("blast radius", tiers)
+        self.assertIn("T2 — 标准 Smoke", tiers)
+        self.assertIn("P0 · T2 · E2E", tiers)
+        self.assertIn("T3 — 全量 / 发布验收", tiers)
+        self.assertIn("docs/testing/reports/<date>-<scope>.md", tiers)
+        self.assertIn("UAT 通过", tiers)
+        self.assertIn("不自动等于 T3 通过", tiers)
+        for forbidden in ("state.json", "matrix.json", "evidence registry"):
+            self.assertNotIn(forbidden, tiers)
+
+    def test_test_run_skills_are_distinct(self) -> None:
+        t1 = (ROOT / "skills" / "siyk-test-run-t1" / "SKILL.md").read_text(encoding="utf-8")
+        t2 = (ROOT / "skills" / "siyk-test-run-t2" / "SKILL.md").read_text(encoding="utf-8")
+        t3 = (ROOT / "skills" / "siyk-test-run-t3" / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("blast radius", t1)
+        self.assertIn("不生成 `docs/testing/reports/`", t1)
+        self.assertIn("固定 Smoke", t2)
+        self.assertIn("显式 `T2` 标记", t2)
+        self.assertIn("不生成 `docs/testing/reports/`", t2)
+        self.assertIn("release gate", t3)
+        self.assertIn("UAT", t3)
+        self.assertIn("docs/testing/reports/<date>-<scope>.md", t3)
+        for text in (t1, t2, t3):
+            self.assertIn("默认不新增测试", text)
+            self.assertIn("不修改业务代码", text)
 
     def test_project_map_contract_is_preserved(self) -> None:
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -109,9 +144,7 @@ class SkillStructureTests(unittest.TestCase):
             self.assertIn(f"${name}", agent)
 
     def test_test_add_modes_and_scope(self) -> None:
-        text = (ROOT / "skills" / "siyk-test-add" / "SKILL.md").read_text(
-            encoding="utf-8"
-        )
+        text = (ROOT / "skills" / "siyk-test-add" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("默认模式：补可执行测试", text)
         self.assertIn("/siyk-test-add e2e", text)
         self.assertIn("/siyk-test-add 集成测试", text)
@@ -122,9 +155,7 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("默认不新增可执行测试代码", text)
 
     def test_init_is_markdown_project_map_only(self) -> None:
-        text = (ROOT / "skills" / "siyk-init" / "SKILL.md").read_text(
-            encoding="utf-8"
-        )
+        text = (ROOT / "skills" / "siyk-init" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn(".siyrs/README.md", text)
         self.assertIn("commit SHA", text)
         self.assertIn("secret", text)
@@ -135,9 +166,7 @@ class SkillStructureTests(unittest.TestCase):
 
     def test_explicit_skills_stay_thin(self) -> None:
         for name in EXPLICIT_SKILLS:
-            lines = (ROOT / "skills" / name / "SKILL.md").read_text(
-                encoding="utf-8"
-            ).splitlines()
+            lines = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8").splitlines()
             self.assertLess(len(lines), 90, name)
         for path in ("adapters", "commands", "schemas", "release-manifest.json"):
             self.assertFalse((ROOT / path).exists(), path)
