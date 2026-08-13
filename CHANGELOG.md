@@ -1,5 +1,18 @@
 # 更新日志
 
+## 0.5.1 - 2026-08-13
+
+### 架构收尾
+
+- 移除 validator 与回归测试中的 `EXPLICIT_SKILLS` 中央名单，改为自动遍历 `skills/` 下全部一级子目录；新增普通子 Skill 不再需要修改中央注册表。
+- 子 Skill 的目录名与 `SKILL.md` `name` 现在由校验器自动保持一致，所有 `skills/` 子 Skill 统一要求 `allow_implicit_invocation: false`。
+- 明确 `references/*.md` 是共享运行时规范的权威来源；根/子 `SKILL.md` 是行为入口；README 只负责安装、概览和示例，CONTRIBUTING 只负责仓库维护规则。
+- 收缩根 `SKILL.md`，不再枚举完整子 Skill 清单；新增子 Skill 无需为了“注册”修改根 Skill。
+- 大幅精简 README，移除对第一性原则、T1/T2/T3、测试资产等规范的重复定义，改为链接权威 references。
+- 精简 CONTRIBUTING，只保留规范层级、自动发现、子 Skill 最小结构、轻量约束与验证方式。
+- 回归测试改为基于自动发现验证所有子 Skill，并增加“没有中央 Skill registry”和“reference 为规范、README 为说明”的架构保护。
+- 本版本不增加新功能，不改变现有 T1/T2/T3、测试资产、`.siyrs` 或 Git 子 Skill 的行为合同，也不引入文档 Ownership/写权限限制。
+
 ## 0.5.0 - 2026-08-13
 
 ### 测试执行
