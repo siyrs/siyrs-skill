@@ -1,6 +1,6 @@
 # siyrs-skill
 
-当前版本：**v0.4.0**
+当前版本：**v0.4.1**
 
 这是一个 Markdown-first 的轻量工程 Skill 套件：主 `siyrs-skill` 负责工程闭环，四个高频动作拆成真正独立的显式 Skill。
 
@@ -11,6 +11,7 @@ siyrs-skill/
 ├── SKILL.md                         # siyrs-skill
 ├── agents/openai.yaml
 ├── references/
+│   ├── principles.md               # 全局第一性原则
 │   ├── testing.md
 │   ├── project-map.md
 │   └── git.md
@@ -33,6 +34,15 @@ siyrs-skill/
 ```
 
 没有 command registry、router、按 Agent 复制的 adapter、state machine、配置 schema 或 release manifest。
+
+## 全局第一性原则
+
+主 Skill 和所有 `siyk-*` 子 Skill 共同遵循 `references/principles.md`：
+
+1. **Markdown-first**：工程知识、规则、索引、项目地图、测试资产、报告和设计说明默认优先用 Markdown。只有行为确实需要可执行、确定性、重复自动化或机器校验时才新增 script/code；目标仓库已有源码和原生配置继续保持原格式。
+2. **事实优先，不懂不猜**：先读取上下文、`.siyrs`、真实代码/配置/测试并使用工具查证。仍存在会影响正确性的关键歧义时直接询问用户；只有低风险、可逆的小细节才允许采用明确说明的最小假设。绝不编造路径、命令、API、依赖、配置、需求、权限或测试结果。
+
+这两条原则是所有能力的上层约束，不属于某一个具体功能点。
 
 ## 五个 Skill
 
@@ -245,7 +255,8 @@ $siyk-git-sync
 
 ## 设计原则
 
-- **Markdown-first**：AI 可理解的工程知识优先沉淀为简洁 Markdown，而不是 schema/state 系统。
+- **Markdown-first**：AI 可理解的工程知识优先沉淀为简洁 Markdown，而不是 schema/state 系统；只有明确需要可执行、确定性或自动化时才写 script/code。
+- **事实优先，不懂不猜**：先查证；关键歧义仍存在时询问用户；不把未经验证的推断写成事实。
 - **项目地图不代替真实文件**：`.siyrs` 用于导航和减少重复扫描。
 - **测试代码跟着代码走**：不为了文档标准迁移既有 E2E/unit/integration。
 - **测试知识集中**：`docs/testing/` 统一承载 standards/cases/reports。
