@@ -1,0 +1,87 @@
+name: Release on tag
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set release variables
+        id: vars
+        run: |
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "package_name=siyrs-skill-${GITHUB_REF_NAME}.zip" >> "$GITHUB_OUTPUT"
+          echo "package_prefix=siyrs-skill-${GITHUB_REF_NAME}/" >> "$GITHUB_OUTPUT"
+
+      - name: Build release package
+        run: |
+          mkdir -p dist
+          git archive --format=zip --prefix="${{ steps.vars.outputs.package_prefix }}" --output "dist/${{ steps.vars.outputs.package_name }}" HEAD
+
+      - name: Generate release notes from changelog
+        run: |
+          TAG="${{ steps.vars.outputs.tag }}"
+          VERSION="${TAG#v}"
+          CHANGELOG_FILE="docs/CHANGELOG.md"
+
+          if [ ! -f "$CHANGELOG_FILE" ]; then
+            CHANGELOG_FILE="CHANGELOG.md"
+          fi
+
+          if [ -f "$CHANGELOG_FILE" ]; then
+            awk -v version="$VERSION" '
+              BEGIN { in_section = 0 }
+              {
+                if ($0 ~ /^##[[:space:]]+/) {
+                  header = $0
+                  sub(/^##[[:space:]]+/, "", header)
+                  split(header, parts, " - ")
+
+                  if (parts[1] == version) {
+                    in_section = 1
+                    next
+                  } else if (in_section) {
+                    exit
+                  }
+                }
+
+                if (in_section) {
+                  print
+                }
+              }
+            ' "$CHANGELOG_FILE" > release-notes.md
+          fi
+
+          if [ ! -s release-notes.md ]; then
+            PREV_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)
+            if [ -n "$PREV_TAG" ]; then
+              RANGE="${PREV_TAG}..${TAG}"
+            else
+              RANGE="${TAG}"
+            fi
+
+            {
+              echo "## 更新内容"
+              echo ""
+              echo "### 自动生成的提交摘要"
+              git log --pretty=format:"- %h %s" "$RANGE"
+            } > release-notes.md
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: "siyrs-skill ${{ steps.vars.outputs.tag }}"
+          body_path: release-notes.md
+          files: dist/${{ steps.vars.outputs.package_name }}
