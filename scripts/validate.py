@@ -14,7 +14,12 @@ QUOTED_FIELD_RE = re.compile(
     re.MULTILINE,
 )
 LEGACY_PATHS = ("adapters", "commands", "schemas", "release-manifest.json")
-SHORTCUTS = ("siyk-git-commit", "siyk-git-sync")
+EXPLICIT_SKILLS = (
+    "siyk-init",
+    "siyk-test-add",
+    "siyk-git-commit",
+    "siyk-git-sync",
+)
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -80,8 +85,8 @@ def validate_skill(skill_dir: Path) -> list[str]:
         name = meta.get("name")
         if name and f"${name}" not in fields.get("default_prompt", ""):
             errors.append(f"{agent_path}: default_prompt 必须明确包含 ${name}")
-        if name in SHORTCUTS and "allow_implicit_invocation: false" not in agent_text:
-            errors.append(f"{agent_path}: 快捷 Skill 必须关闭隐式调用")
+        if name in EXPLICIT_SKILLS and "allow_implicit_invocation: false" not in agent_text:
+            errors.append(f"{agent_path}: 显式快捷 Skill 必须关闭隐式调用")
 
     refs = skill_dir / "references"
     if refs.exists() and any(p.is_dir() for p in refs.rglob("*")):
@@ -93,9 +98,9 @@ def validate_skill(skill_dir: Path) -> list[str]:
 def validate(root: Path) -> list[str]:
     errors: list[str] = []
     skill_dirs = [root]
-    shortcut_root = root / "skills"
-    for name in SHORTCUTS:
-        skill_dirs.append(shortcut_root / name)
+    skill_root = root / "skills"
+    for name in EXPLICIT_SKILLS:
+        skill_dirs.append(skill_root / name)
 
     for skill_dir in skill_dirs:
         errors.extend(validate_skill(skill_dir))
