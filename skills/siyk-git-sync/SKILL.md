@@ -5,6 +5,8 @@ description: 显式的轻量 Git 同步快捷 Skill。仅在用户直接调用�
 
 # SIYK Git 同步
 
+开始前读取并遵循 [SIYRS 第一性原则](../../references/principles.md)。
+
 只完成正常 Git 同步，然后结束。
 
 1. 查看 `git status`、当前分支、upstream、目标分支和双方 divergence。
