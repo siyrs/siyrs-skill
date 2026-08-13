@@ -29,6 +29,19 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("$siyrs-skill", agent)
         self.assertNotIn("$siyrs-engineering", agent)
 
+    def test_primary_user_facing_copy_is_chinese(self) -> None:
+        expectations = {
+            ROOT / "SKILL.md": "聚焦完成软件仓库修改",
+            ROOT / "agents" / "openai.yaml": "聚焦完成仓库修改",
+            ROOT / "references" / "testing.md": "# 测试指南",
+            ROOT / "references" / "git.md": "# Git 交付指南",
+            ROOT / "CONTRIBUTING.md": "# 贡献指南",
+            ROOT / "CHANGELOG.md": "# 更新日志",
+            ROOT / "README.md": "中文优先",
+        }
+        for path, text in expectations.items():
+            self.assertIn(text, path.read_text(encoding="utf-8"), str(path))
+
     def test_shortcuts_are_real_skills(self) -> None:
         for name in ("siyk-git-commit", "siyk-git-sync"):
             skill_dir = ROOT / "skills" / name

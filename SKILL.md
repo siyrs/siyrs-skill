@@ -1,69 +1,69 @@
 ---
 name: siyrs-skill
-description: Execute focused software-repository changes with proportionate testing and deliberate Git delivery. Use when asked to implement, fix, refactor, review, add or run tests, perform regression/smoke/full/UAT/Android/web/backend verification, create a commit, or sync/push completed work. Also applies to Chinese requests such as 修改代码、补测试、回归测试、全量测试、验收、提交代码、同步主分支.
+description: 聚焦完成软件仓库修改，按风险选择合适的测试，并按用户要求完成 Git 交付。适用于实现功能、修复问题、重构、代码审查、补充或运行测试、执行回归/冒烟/全量/UAT/Android/Web/后端验证，以及提交、同步、推送或合并代码等场景。
 ---
 
 # SIYRS Skill
 
-Run a small, evidence-driven engineering loop. Prefer the repository's native tools and conventions over framework code owned by this skill.
+执行一个简洁、以证据为基础的工程闭环。优先使用目标仓库原生工具和约定，不为 Skill 自身额外搭建框架。
 
-## Core loop
+## 核心流程
 
-1. **Inspect**
-   - Read repository instructions that govern the touched files.
-   - Inspect status, relevant code, tests, and the smallest useful diff/context.
-   - Identify the requested outcome, affected surface, and meaningful risks.
-   - Continue without extra confirmation when the request already authorizes implementation or Git delivery and the target is clear.
+1. **检查**
+   - 读取对本次修改文件生效的仓库说明和约束。
+   - 查看 Git 状态、相关代码、测试，以及完成判断所需的最小 diff / 上下文。
+   - 明确用户目标、受影响范围和有意义的风险。
+   - 当用户已经明确授权实现或 Git 交付，且目标清楚时，不重复请求确认。
 
-2. **Change**
-   - Make the smallest cohesive change that fully satisfies the request.
-   - Follow existing architecture, naming, dependency, and test conventions.
-   - Prefer direct native commands over wrappers, registries, generated command layers, state machines, or new configuration systems.
-   - Do not create process documentation, manifests, inventories, or schemas unless the repository genuinely needs them.
+2. **修改**
+   - 用最小但完整、内聚的改动满足用户要求。
+   - 遵循仓库现有架构、命名、依赖和测试约定。
+   - 优先直接使用仓库原生命令，不额外引入 wrapper、registry、生成式命令层、状态机或新的配置系统。
+   - 除非仓库确实需要，否则不要为了流程而创建文档体系、manifest、inventory 或 schema。
 
-3. **Verify**
-   - Read [references/testing.md](references/testing.md) when tests, acceptance, regression, or verification matter.
-   - Run the narrowest meaningful checks first, then expand only when risk or results justify it.
-   - Treat only executed checks as evidence. Never infer a pass from code inspection alone.
+3. **验证**
+   - 当任务涉及测试、验收、回归或验证时，读取 [references/testing.md](references/testing.md)。
+   - 先运行最窄但有意义的检查；只有风险、失败结果或用户要求需要时才扩大范围。
+   - 只有真正执行过的检查才算证据，不能仅凭代码审查推断“已通过”。
 
-4. **Deliver**
-   - Read [references/git.md](references/git.md) when the user asks to commit, sync, push, open/merge a PR, or update a branch.
-   - Preserve unrelated work and avoid destructive Git operations.
-   - Perform the requested delivery in the same workflow when authorization is already explicit.
+4. **交付**
+   - 当用户要求 commit、sync、push、创建/合并 PR 或更新分支时，读取 [references/git.md](references/git.md)。
+   - 保留无关工作区改动，避免破坏性 Git 操作。
+   - 用户已明确授权交付时，在同一个工作流中完成允许的 Git 交付。
 
-5. **Report**
-   - Summarize what changed, what ran, what passed or failed, and any material residual risk.
-   - Keep the report short unless the user asks for a full audit.
+5. **报告**
+   - 简洁说明改了什么、运行了什么、哪些通过或失败，以及仍存在的实质风险。
+   - 除非用户明确要求完整审计，否则不要把结果报告写得过度冗长。
 
-## Testing model
+## 测试模型
 
-Keep T1/T2/T3 as a risk vocabulary, not as separate command implementations:
+将 T1/T2/T3 作为风险分层语言，而不是三个独立的命令实现：
 
-- **T1 — focused:** changed-unit, static, lint, compile, or narrowly selected regression checks.
-- **T2 — integrated:** cross-module, service, browser/device, persistence, permissions, or representative smoke paths.
-- **T3 — full:** project-defined complete relevant suite plus required UAT/release checks for explicit full-test/release-gate requests or high-risk broad changes.
+- **T1 — 聚焦验证：** 修改单元、静态检查、lint、编译或窄范围回归。
+- **T2 — 集成验证：** 跨模块、服务、浏览器/设备、持久化、权限或代表性 smoke 路径。
+- **T3 — 全量/验收：** 在明确要求全量测试、发布门禁，或高风险大范围修改时，执行项目定义的完整相关测试以及必要 UAT / 发布检查。
 
-Add or update tests when behavior changes or a real coverage gap is found. Do not manufacture a testing-document hierarchy merely to record that tests ran.
+当可观察行为发生变化或发现真实覆盖缺口时，补充或更新测试。不要仅为了记录“跑过测试”而制造一套测试文档层级。
 
-## Durable test knowledge
+## 可沉淀的测试知识
 
-Use existing project testing documentation when it exists. Create durable testing docs only when they will be reused: stable acceptance rules, non-obvious setup, persistent test data contracts, selectors, or release criteria. Prefer one existing testing entry point over a generated tree of governance files.
+仓库已有测试文档时优先复用。只有内容会被长期复用时才创建持久测试文档，例如稳定验收规则、非显而易见的环境准备、固定测试数据契约、selector 或发布标准。优先维护一个已有测试入口，不生成新的治理文档树。
 
-## Dedicated Git shortcuts
+## 独立 Git 快捷 Skill
 
-Keep shortcut behavior in the separate `siyk-git-commit` and `siyk-git-sync` skills under `skills/`. Do not rebuild a command registry, router, adapter, or state machine inside this skill.
+高频 Git 快捷行为由 `skills/` 下独立的 `siyk-git-commit` 和 `siyk-git-sync` Skill 负责。不要在主 Skill 内重新搭建 command registry、router、adapter 或 state machine。
 
-## Extension rules
+## 扩展规则
 
-Keep this skill thin:
+保持这个 Skill 足够薄：
 
-- Put detailed, reusable guidance in a directly linked file under `references/`.
-- Add a script only for repeated deterministic work that is safer or cheaper than re-deriving it.
-- Add an asset only when it is copied or transformed into user output.
-- If a new workflow has a distinct trigger and can stand alone, create a separate skill instead of adding another command subsystem here.
-- Keep references one level deep and avoid duplicating the same rule in multiple files.
+- 详细且可复用的规则放到 `references/` 下，并从 `SKILL.md` 直接链接。
+- 只有重复、确定性且脚本化更安全或更省成本的工作才新增 script。
+- 只有确实会被复制或转换成用户输出的内容才新增 asset。
+- 如果一个新工作流具备独立触发条件和独立职责，就拆成单独 Skill，而不是继续扩张主 Skill 的命令体系。
+- `references/` 保持一层深度，同一规则不要在多个文件重复维护。
 
-After changing this repository, run:
+修改本仓库后运行：
 
 ```bash
 python scripts/validate.py .

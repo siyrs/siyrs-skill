@@ -1,81 +1,81 @@
-# Testing guide
+# 测试指南
 
-Use the lowest tier that gives credible evidence for the changed behavior. Expand when the change crosses boundaries, a focused check fails unexpectedly, or the user explicitly requests broader verification.
+选择能够为本次行为变化提供可信证据的最低测试层级。只有当修改跨越真实边界、聚焦检查出现异常失败，或者用户明确要求更广泛验证时，才扩大测试范围。
 
-## T1 — focused
+## T1 — 聚焦验证
 
-Use T1 for most ordinary changes.
+大多数普通修改从 T1 开始。
 
-Typical evidence:
+典型证据：
 
-- targeted unit or component tests;
-- type checking, compilation, lint, formatting, or static analysis relevant to changed files;
-- a narrow regression selector for the modified module;
-- parser/config validation for documentation or configuration-only changes.
+- 针对性的单元测试或组件测试；
+- 与修改文件相关的类型检查、编译、lint、格式检查或静态分析；
+- 针对被修改模块的窄范围回归 selector；
+- 对纯文档或纯配置修改执行 parser / config 校验。
 
-T1 should answer: **did the changed unit and its immediate contract remain correct?**
+T1 应回答：**被修改的单元以及它的直接契约是否仍然正确？**
 
-## T2 — integrated
+## T2 — 集成验证
 
-Use T2 when the change crosses a meaningful boundary or focused checks cannot demonstrate the requested behavior.
+当修改跨越有意义的系统边界，或者 T1 无法证明用户要求的真实行为时，使用 T2。
 
-Typical evidence:
+典型证据：
 
-- API + persistence or message/job behavior;
-- frontend + backend integration;
-- browser smoke or accessibility checks;
-- Android emulator/device flow, instrumentation, permissions, lifecycle, or upgrade behavior;
-- authentication/authorization boundaries;
-- migration, container, service, or infrastructure integration.
+- API + 持久化，或消息 / job 行为；
+- 前端 + 后端集成；
+- 浏览器 smoke 或可访问性检查；
+- Android 模拟器 / 真机流程、instrumentation、权限、生命周期或升级行为；
+- 认证 / 授权边界；
+- migration、容器、服务或基础设施集成。
 
-T2 should answer: **does the affected path work across its real integration boundary?**
+T2 应回答：**受影响路径跨越真实集成边界后是否仍然正常工作？**
 
-## T3 — full / acceptance
+## T3 — 全量 / 验收
 
-Use T3 when the user asks for full testing, 全量测试, release/acceptance validation, or when a broad/high-risk change makes a complete relevant regression appropriate.
+当用户明确要求全量测试、发布前验收、release gate，或者大范围高风险修改适合做完整相关回归时，使用 T3。
 
-T3 should include the repository-defined full relevant suite and any required UAT/release checks. If the repository has no formal release suite, state the practical scope that was actually run instead of inventing completeness.
+T3 应包含仓库定义的完整相关测试集，以及项目要求的 UAT / 发布检查。如果仓库没有正式的 release suite，应如实说明本次实际执行范围，不要虚构“完整覆盖”。
 
-UAT-only validates acceptance scenarios; it does not automatically prove that every T3 regression layer passed.
+只执行 UAT 只能证明验收场景通过，不能自动代表所有 T3 回归层都已通过。
 
-## Selecting checks
+## 如何选择检查
 
-| Change | Start with | Expand when |
+| 修改类型 | 起步检查 | 何时扩大 |
 |---|---|---|
-| docs/config | parse/lint/targeted validation | behavior or deployment semantics change |
-| pure logic | focused unit tests | shared contract or data shape changes |
-| service/API | unit + targeted integration | persistence/auth/messages/jobs change |
-| frontend | component/type/build checks | user flow, routing, API, or browser behavior changes |
-| Android | unit/build checks | device UI, lifecycle, permission, owner/kiosk, install/upgrade behavior changes |
-| database/migration | migration validation | existing data or multiple services are affected |
-| CI/build/deploy config | syntax/config check | release path or runtime image changes |
+| 文档 / 配置 | parse / lint / 定向校验 | 行为或部署语义发生变化 |
+| 纯逻辑 | 聚焦单元测试 | 共享契约或数据结构变化 |
+| 服务 / API | 单元 + 定向集成 | 持久化、权限、消息、job 变化 |
+| 前端 | 组件 / 类型 / build | 用户流程、路由、API 或浏览器行为变化 |
+| Android | 单元 / build | 真机 UI、生命周期、权限、owner/kiosk、安装/升级变化 |
+| 数据库 / migration | migration 校验 | 影响既有数据或多个服务 |
+| CI / build / deploy 配置 | 语法 / 配置检查 | 发布路径或运行时镜像变化 |
 
-Prefer repository-native selectors and commands. Do not introduce a new testing framework when an existing one can express the needed check.
+优先使用目标仓库已有 selector 和命令。现有测试框架能够表达所需检查时，不要再引入新的测试框架。
 
-## Test authoring
+## 测试编写
 
-Add or update tests when:
+以下情况应新增或更新测试：
 
-- observable behavior changed;
-- a bug fix needs a regression case;
-- an uncovered boundary materially caused or could hide the defect;
-- the user explicitly asks for new tests.
+- 可观察行为发生变化；
+- Bug 修复需要一个回归用例；
+- 未覆盖边界真实导致了问题，或可能掩盖同类问题；
+- 用户明确要求新增测试。
 
-Do not add ceremonial tests that only restate implementation details.
+不要添加只重复实现细节、没有验证价值的形式化测试。
 
-## Evidence
+## 验证证据
 
-Report at least:
+至少报告：
 
-- command or tool used;
-- scope/selector;
-- pass/fail result;
-- important environment detail when it changes interpretation;
-- skipped or blocked checks and why;
-- artifact path only when the artifact is useful (for example screenshot, video, log, coverage report).
+- 实际使用的命令或工具；
+- 测试范围 / selector；
+- pass / fail 结果；
+- 会影响结果解释的重要环境信息；
+- 被跳过或阻塞的检查及原因；
+- 只有确实有用时才提供 artifact 路径，例如截图、视频、日志或覆盖率报告。
 
-Never report planned, inferred, or previously cached execution as a current pass unless it was actually validated for the current change.
+计划中的检查、根据代码推断的结果、以前缓存的执行结果，都不能冒充本次修改已经通过的验证，除非针对当前修改重新确认过。
 
-## Durable documentation
+## 可沉淀的测试文档
 
-If a repository already has a testing index or acceptance document, read and update it when the change modifies a stable contract. If no such document exists, do **not** create `docs/testing/` by default. Add one concise testing entry point only when repeated future work will benefit from durable selectors, setup, acceptance rules, or release criteria.
+如果仓库已经有测试索引或验收文档，并且本次修改改变了稳定契约，应读取并更新它。如果仓库没有此类文档，默认**不要**创建 `docs/testing/`。只有后续重复工作确实会从稳定 selector、环境准备、验收规则或发布标准中获益时，才增加一个简洁的测试入口文档。
