@@ -100,8 +100,9 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("docs/testing/reports/<date>-<scope>.md", tiers)
         self.assertIn("UAT 通过", tiers)
         self.assertIn("不自动等于 T3 通过", tiers)
-        for forbidden in ("state.json", "matrix.json", "evidence registry"):
-            self.assertNotIn(forbidden, tiers)
+        self.assertIn("不创建 state、matrix、evidence registry", tiers)
+        self.assertNotIn("command registry", tiers)
+        self.assertNotIn("route_command.py", tiers)
 
     def test_test_run_skills_are_distinct(self) -> None:
         t1 = (ROOT / "skills" / "siyk-test-run-t1" / "SKILL.md").read_text(encoding="utf-8")
