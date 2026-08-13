@@ -1,6 +1,6 @@
 # siyrs-skill
 
-当前版本：**v0.3.4**
+当前版本：**v0.3.5**
 
 这是一个刻意保持简洁的工程 Skill 套件。主 Skill `siyrs-skill` 负责工程改动、测试和一般 Git 交付；两个高频 Git 动作拆成真正独立的轻量 Skill，方便在支持 Skill 快捷入口的界面中直接调用。
 
@@ -65,6 +65,31 @@ git status / diff
 ```
 
 明确要求更新受保护的 `main` / 默认分支时，走仓库允许的 PR / merge 路径，不 force push。不会自动附加测试、release、deploy、状态管理或深度审计。
+
+## 测试合同
+
+测试仍然使用 T1 / T2 / T3 风险分层，但 v0.3.5 恢复了一个**固定、轻量、可发现的测试工作区**。
+
+当项目第一次发生真实的测试或验收工作时，主 Skill 会确保：
+
+```text
+<project-root>/
+├── README.md                  # 如果已有 readme.md / Readme.md，则复用现有文件
+└── docs/
+    └── testing/
+        └── README.md          # 统一测试入口
+```
+
+规则是：
+
+1. 已有 `docs/testing/README.md`：先读取并按稳定契约变化更新。
+2. 没有：先识别项目真实测试代码、命令、环境和模块，再创建有实际内容的 `docs/testing/README.md`。
+3. 项目根已有 README：在合适的文档 / 开发 / 测试区域增加 `[测试文档](docs/testing/README.md)`；没有根 README 时创建一个最小 `README.md` 并包含测试入口。
+4. 如果测试说明已经散落在 `tests/README.md`、`docs/qa.md` 或模块文档中，不强制迁移；由 `docs/testing/README.md` 统一索引。
+5. 默认不创建 `cases/`、`evidence/`、`matrix/`、run history 或状态文件。只有稳定、长期复用的内容才在 `docs/testing/` 下增加少量平铺文档。
+6. 一次性的测试执行结果仍然通过本次真实命令和输出证明，不把测试文档当作“当前已通过”的证据。
+
+这比 v0.2.x 的测试治理轻很多，但比 v0.3.0-v0.3.4 的“没有就不建测试文档”更适合长期维护。
 
 ## 为什么两个 Git 快捷动作要做成真正的 Skill
 
@@ -152,6 +177,8 @@ $siyrs-skill 完成后同步到主分支。
 
 - **主 Skill 保持薄**：通用工程流程只维护一份。
 - **名称统一**：主 Skill 使用 `siyrs-skill`，与仓库名和安装目录一致。
+- **测试入口固定**：真实测试工作默认维护 `docs/testing/README.md`，并从项目根 README 建立索引。
+- **测试目录保持轻量**：固定入口不等于恢复 case/evidence/matrix 治理树。
 - **快捷动作是真 Skill**：只有确实需要独立入口的高频动作才拆独立 Skill。
 - **显式快捷不抢触发**：两个 Git 快捷 Skill 设置 `allow_implicit_invocation: false`。
 - **测试按风险扩展**：T1/T2/T3 是风险语言，不是命令框架。
@@ -169,4 +196,4 @@ python -m unittest discover -s tests -v
 python -m compileall -q scripts tests
 ```
 
-校验器会同时检查主 Skill 和两个快捷 Skill，防止后续退化成“只有字符串别名，没有真实 Skill”，并通过回归测试约束主要用户可见说明继续保持中文。
+校验器会同时检查主 Skill 和两个快捷 Skill，并通过回归测试约束主 Skill 名称、中文说明、真实快捷 Skill 结构以及测试工作区合同。
