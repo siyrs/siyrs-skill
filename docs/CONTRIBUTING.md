@@ -8,7 +8,7 @@
 - 根 `SKILL.md` 与 `skills/*/SKILL.md` 是行为入口，只保留触发条件、独特职责、必要引用和停止边界。
 - 根 `README.md` 面向安装、概览和示例，不承载运行时唯一规则。
 - `docs/*.md` 保存架构说明、开发维护约束、计划和历史，不替代 references。
-- 本文件只约束 Siyrs 仓库如何开发和维护，不复制具体功能合同。
+- 本文件只约束 Siyrs Skill 仓库如何开发和维护，不复制具体功能合同。
 
 ## 新增子 Skill
 
@@ -67,7 +67,7 @@ docs/
 - Markdown-first；只有重复、确定性且脚本化更安全或更省成本的工作才增加 script。
 - 不要重新引入 command registry、router、按 Agent 复制的 adapter、state machine、配置 schema、release manifest、test state、matrix runtime、evidence registry 或 cache。
 - `.siyrs/README.md` 继续只是目标项目地图，不是真相数据库。
-- 可执行测试继续留在目标项目原生目录，不为了 Siyrs 目录规范迁移测试代码。
+- 可执行测试继续留在目标项目原生目录，不为了 Siyrs Skill 目录规范迁移测试代码。
 - Skill 名称、description 或默认调用方式变化时，同步更新该 Skill 自己的 `agents/openai.yaml`。
 - 面向维护者和使用者的说明优先中文；Skill 名、命令、代码标识符、协议字段和必要技术术语保留英文。
 
