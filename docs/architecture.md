@@ -1,4 +1,4 @@
-# Siyrs 架构说明
+# Siyrs Skill 架构说明
 
 本文解释当前 Skill bundle 为什么这样组织，以及以后扩展时应保持哪些结构特征。具体运行时行为仍以 `references/*.md` 和各 `SKILL.md` 为准。
 
@@ -72,7 +72,7 @@ skills/siyk-example/
 2. 是否正在把共享规则复制进 README、docs 或多个 Skill？如果是，应收敛到 reference。
 3. 是否为了描述状态而新增 JSON/YAML/schema，而 Markdown 已经足够？如果是，优先保持 Markdown。
 4. 是否新增了中央注册表或路由层？如果是，应优先依赖目录约定和 Agent Skill 原生发现能力。
-5. 是否把某个真实项目的特殊约束写成了 Siyrs 全局架构？如果是，应保持通用化或留在目标项目自身。
+5. 是否把某个真实项目的特殊约束写成了 Siyrs Skill 全局架构？如果是，应保持通用化或留在目标项目自身。
 
 ## 当前稳定边界
 
