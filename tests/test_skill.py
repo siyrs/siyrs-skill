@@ -33,22 +33,43 @@ class SkillStructureTests(unittest.TestCase):
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
         agent = (ROOT / "agents" / "openai.yaml").read_text(encoding="utf-8")
         self.assertIn("name: siyrs-skill", skill)
-        self.assertIn('display_name: "SIYRS Skill"', agent)
+        self.assertIn('display_name: "Siyrs Skill"', agent)
         self.assertIn("$siyrs-skill", agent)
         self.assertNotIn("$siyrs-engineering", agent)
+
+    def test_human_facing_brand_uses_siyrs_case(self) -> None:
+        legacy_brand = "SI" + "YRS"
+        current_brand_files = (
+            ROOT / "SKILL.md",
+            ROOT / "agents" / "openai.yaml",
+            ROOT / "references" / "principles.md",
+            ROOT / "docs" / "README.md",
+            ROOT / "docs" / "architecture.md",
+            ROOT / "docs" / "plan.md",
+            ROOT / "docs" / "CONTRIBUTING.md",
+        )
+        for path in current_brand_files:
+            text = path.read_text(encoding="utf-8")
+            self.assertNotIn(legacy_brand, text, str(path))
+
+        self.assertIn("# Siyrs Skill", (ROOT / "SKILL.md").read_text(encoding="utf-8"))
+        self.assertIn(
+            "# Siyrs 第一性原则",
+            (ROOT / "references" / "principles.md").read_text(encoding="utf-8"),
+        )
 
     def test_primary_user_facing_copy_is_chinese(self) -> None:
         expectations = {
             ROOT / "SKILL.md": "聚焦完成软件仓库修改",
             ROOT / "agents" / "openai.yaml": "聚焦完成仓库修改",
-            ROOT / "references" / "principles.md": "# SIYRS 第一性原则",
+            ROOT / "references" / "principles.md": "# Siyrs 第一性原则",
             ROOT / "references" / "testing.md": "# 测试指南",
             ROOT / "references" / "testing-tiers.md": "# 测试分级执行合同",
             ROOT / "references" / "project-map.md": "# `.siyrs` 项目地图指南",
             ROOT / "references" / "git.md": "# Git 交付指南",
-            ROOT / "docs" / "README.md": "# SIYRS 文档",
-            ROOT / "docs" / "architecture.md": "# SIYRS 架构说明",
-            ROOT / "docs" / "plan.md": "# SIYRS 演化计划",
+            ROOT / "docs" / "README.md": "# Siyrs 文档",
+            ROOT / "docs" / "architecture.md": "# Siyrs 架构说明",
+            ROOT / "docs" / "plan.md": "# Siyrs 演化计划",
             ROOT / "docs" / "CONTRIBUTING.md": "# 贡献指南",
             ROOT / "docs" / "CHANGELOG.md": "# 更新日志",
             ROOT / "README.md": "Markdown-first",
