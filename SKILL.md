@@ -9,7 +9,7 @@ description: 聚焦完成软件仓库修改，按风险选择合适的测试，�
 
 ## 第一性原则
 
-开始任何任务前遵循 [Siyrs 第一性原则](references/principles.md)。其中 `references/*.md` 是共享运行时规范的权威来源；README 只用于安装、概览和示例，不参与运行时判断。
+开始任何任务前遵循 [Siyrs Skill 第一性原则](references/principles.md)。其中 `references/*.md` 是共享运行时规范的权威来源；README 只用于安装、概览和示例，不参与运行时判断。
 
 核心原则：
 
