@@ -1,6 +1,6 @@
-# siyrs-skill
+# Siyrs Skill
 
-当前版本：**v0.5.2**
+当前版本：**v0.5.3**
 
 这是一个 Markdown-first 的轻量工程 Skill 套件。主 `siyrs-skill` 负责通用工程闭环，`skills/` 下的子 Skill 提供独立、显式的高频工作流。
 
@@ -103,7 +103,7 @@ skills/siyk-example/
     └── openai.yaml
 ```
 
-新增普通子 Skill 不需要修改 validator、中央列表或根 Skill来“注册”。具体开发约束见 [贡献指南](docs/CONTRIBUTING.md)。
+新增普通子 Skill 不需要修改 validator、中央列表或根 Skill 来“注册”。具体开发约束见 [贡献指南](docs/CONTRIBUTING.md)。
 
 ## 维护
 

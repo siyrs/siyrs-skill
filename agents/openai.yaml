@@ -1,5 +1,5 @@
 interface:
-  display_name: "SIYRS Skill"
+  display_name: "Siyrs Skill"
   short_description: "聚焦完成仓库修改、分级测试与 Git 交付，并保持实现简洁可维护"
   default_prompt: "使用 $siyrs-skill 完成这次仓库修改，以最小且完整的改动实现目标，按风险验证，并按用户要求完成 Git 交付。"
 policy:

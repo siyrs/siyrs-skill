@@ -3,13 +3,13 @@ name: siyrs-skill
 description: 聚焦完成软件仓库修改，按风险选择合适的测试，并按用户要求完成 Git 交付。适用于实现功能、修复问题、重构、代码审查、补充或运行测试、执行 T1/T2/T3、回归/冒烟/全量/UAT/Android/Web/后端验证，以及提交、同步、推送或合并代码等场景。
 ---
 
-# SIYRS Skill
+# Siyrs Skill
 
 执行一个简洁、以证据为基础的工程闭环。优先使用目标仓库原生工具和约定，不为 Skill 自身额外搭建框架。
 
 ## 第一性原则
 
-开始任何任务前遵循 [SIYRS 第一性原则](references/principles.md)。其中 `references/*.md` 是共享运行时规范的权威来源；README 只用于安装、概览和示例，不参与运行时判断。
+开始任何任务前遵循 [Siyrs 第一性原则](references/principles.md)。其中 `references/*.md` 是共享运行时规范的权威来源；README 只用于安装、概览和示例，不参与运行时判断。
 
 核心原则：
 
