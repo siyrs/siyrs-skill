@@ -37,9 +37,10 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("$siyrs-skill", agent)
         self.assertNotIn("$siyrs-engineering", agent)
 
-    def test_human_facing_brand_uses_siyrs_case(self) -> None:
-        legacy_brand = "SI" + "YRS"
+    def test_human_facing_brand_uses_full_skill_name(self) -> None:
+        legacy_upper_brand = "SI" + "YRS"
         current_brand_files = (
+            ROOT / "README.md",
             ROOT / "SKILL.md",
             ROOT / "agents" / "openai.yaml",
             ROOT / "references" / "principles.md",
@@ -50,11 +51,12 @@ class SkillStructureTests(unittest.TestCase):
         )
         for path in current_brand_files:
             text = path.read_text(encoding="utf-8")
-            self.assertNotIn(legacy_brand, text, str(path))
+            self.assertNotIn(legacy_upper_brand, text, str(path))
+            self.assertNotIn("Siyrs", text.replace("Siyrs Skill", ""), str(path))
 
         self.assertIn("# Siyrs Skill", (ROOT / "SKILL.md").read_text(encoding="utf-8"))
         self.assertIn(
-            "# Siyrs 第一性原则",
+            "# Siyrs Skill 第一性原则",
             (ROOT / "references" / "principles.md").read_text(encoding="utf-8"),
         )
 
@@ -62,14 +64,14 @@ class SkillStructureTests(unittest.TestCase):
         expectations = {
             ROOT / "SKILL.md": "聚焦完成软件仓库修改",
             ROOT / "agents" / "openai.yaml": "聚焦完成仓库修改",
-            ROOT / "references" / "principles.md": "# Siyrs 第一性原则",
+            ROOT / "references" / "principles.md": "# Siyrs Skill 第一性原则",
             ROOT / "references" / "testing.md": "# 测试指南",
             ROOT / "references" / "testing-tiers.md": "# 测试分级执行合同",
             ROOT / "references" / "project-map.md": "# `.siyrs` 项目地图指南",
             ROOT / "references" / "git.md": "# Git 交付指南",
-            ROOT / "docs" / "README.md": "# Siyrs 文档",
-            ROOT / "docs" / "architecture.md": "# Siyrs 架构说明",
-            ROOT / "docs" / "plan.md": "# Siyrs 演化计划",
+            ROOT / "docs" / "README.md": "# Siyrs Skill 文档",
+            ROOT / "docs" / "architecture.md": "# Siyrs Skill 架构说明",
+            ROOT / "docs" / "plan.md": "# Siyrs Skill 演化计划",
             ROOT / "docs" / "CONTRIBUTING.md": "# 贡献指南",
             ROOT / "docs" / "CHANGELOG.md": "# 更新日志",
             ROOT / "README.md": "Markdown-first",
