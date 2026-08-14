@@ -1,4 +1,4 @@
-# Siyrs 文档
+# Siyrs Skill 文档
 
 `docs/` 保存项目维护、架构说明和演化计划，不承载 Skill 运行时唯一规则。
 
@@ -11,7 +11,7 @@
 
 ## 与运行时规范的关系
 
-Siyrs 明确区分两类 Markdown：
+Siyrs Skill 明确区分两类 Markdown：
 
 - `references/*.md`：共享运行时规范的权威来源，Skill 执行时按需读取。
 - `docs/*.md`：面向维护者和开发者的架构、计划、历史与说明。
