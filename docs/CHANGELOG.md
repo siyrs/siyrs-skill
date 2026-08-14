@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.5.3 - 2026-08-14
+
+### 命名统一
+
+- 主 `agents/openai.yaml` 的人类可见 `display_name` 统一为 `Siyrs Skill`。
+- 当前生效的主 Skill、第一性原则、README 与维护文档统一使用 `Siyrs` / `Siyrs Skill` 作为人类可见品牌名。
+- 机器标识继续保持 `siyrs-skill` 与 `siyk-*`，不改变调用方式、仓库路径或 Skill name。
+- 回归测试增加品牌大小写保护，防止当前生效文档重新出现旧的全大写品牌写法；历史 CHANGELOG 记录保持原样。
+- 本版本不改变任何 Skill 行为或运行时合同。
+
 ## 0.5.2 - 2026-08-13
 
 ### 文档结构
