@@ -1,6 +1,6 @@
 # Siyrs Skill
 
-当前版本：**v0.5.3**
+当前版本：**v0.5.4**
 
 这是一个 Markdown-first 的轻量工程 Skill 套件。主 `siyrs-skill` 负责通用工程闭环，`skills/` 下的子 Skill 提供独立、显式的高频工作流。
 
