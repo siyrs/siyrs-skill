@@ -31,7 +31,7 @@ description: 聚焦完成软件仓库修改，按风险选择合适的测试，�
 
 3. **验证**
    - 测试、回归或验收任务读取 [测试指南](references/testing.md)；涉及 T1/T2/T3 时同时读取 [分级执行合同](references/testing-tiers.md)。
-   - T1/T2/T3 决定“测多大范围”，Unit/Component/Integration/API/E2E/UAT 决定“怎么测”。
+   - 测试设计时，T1/T2/T3 决定测试资产需要沉淀多深；测试执行时决定本次验证范围。Unit/Component/Integration/API/E2E/UAT 决定“怎么测”。
    - 只有真正执行过的检查才算证据；不能用历史报告或代码推断冒充本次通过。
 
 4. **交付**
