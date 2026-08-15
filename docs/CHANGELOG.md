@@ -1,5 +1,17 @@
 # 更新日志
 
+## 0.6.1 - 2026-08-15
+
+### 收敛与去重
+
+- 不新增子 Skill、reference、命令、脚本或运行时层；本版本只收敛 v0.6.0 已有能力，减少重复规则和合同漂移。
+- `siyk-test-add-t3` 进一步瘦身为 Scope / 委托 / 沉淀 / 停止边界入口，完整 T3 设计知识继续只维护在 `references/testing-t3-design.md`；`siyk-test-add` 的 T3 分支同样直接委托共享合同。
+- `siyk-init` 改为直接引用 `references/project-map.md`，不再复制项目地图扫描、Secret、state/cache/registry 等完整规则；`siyk-git-commit` 与 `siyk-git-sync` 同样直接复用 `references/git.md`，并移除 sync 对 commit 子 Skill 语义的依赖。
+- `siyk-test-run-t3` 收敛为 Scope-aware 的“T3 发布级验证”：默认围绕当前目标/改动/受影响模块或用户指定 Scope，只有用户明确要求全项目时才产生全项目 T3 / 发布结论。
+- `references/testing-t3-design.md` 新增 **Business Invariants / Test Oracle**：T3 先识别真实业务不变量，并要求关键预期来自用户需求、项目规范、稳定 Case/测试和可查证领域证据；模型直觉、行业常识或偶然实现不能充当默认 Oracle。
+- 回归测试改为验证“入口正确委托权威 reference + reference 自己承载完整语义”，不再强迫薄入口重复 Impact/Critic 等共享文案；品牌检查也改为自动覆盖全部当前子 Skill、agents、references 和活跃 docs。
+- 清理老子 Skill、项目地图示例和 validator 中残留的旧 `SIYRS` 人类可见品牌写法，统一为 `Siyrs Skill`。
+
 ## 0.6.0 - 2026-08-15
 
 ### T3 深度业务测试设计
