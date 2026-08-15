@@ -1,47 +1,60 @@
 ---
 name: siyk-test-add
-description: 显式的测试补充快捷 Skill。默认针对本轮修改补真实可执行的 unit/component/integration/E2E 测试并运行最窄必要验证；显式使用“测试用例”模式时，不默认新增测试代码，而是把本轮稳定测试场景以 Markdown-first 方式沉淀到 `docs/testing/cases/` 并维护索引。
+description: 显式的智能测试补充 Skill。围绕当前目标和真实改动自动判断需要 T1/T2/T3 哪种测试深度，沉淀合适的可执行测试与 Markdown-first 测试资产；UAT、验收或测试用例等高层意图默认进入 T3 深度设计。
 ---
 
-# SIYK 测试补充
+# SIYK 智能测试补充
 
-开始前读取并遵循 [SIYRS 第一性原则](../../references/principles.md)。
+开始前读取并遵循 [Siyrs Skill 第一性原则](../../references/principles.md)、[测试指南](../../references/testing.md) 和 [测试分级执行合同](../../references/testing-tiers.md)。
 
-只处理本轮目标相关的测试补充，不默认扩大成全仓测试治理。
+默认只处理当前用户目标、当前相关 diff、受影响模块和必要 blast radius，不扫描整个仓库清理历史测试债。
 
-## 默认模式：补可执行测试
+## 先判断需要的测试深度
 
-调用 `/siyk-test-add` 时：
+不要用关键词脚本或固定文件数量分类；结合真实行为变化、业务风险和影响面判断。
 
-1. 以当前用户目标、本轮相关 diff 和已完成修改为默认 scope，不扫描整个仓库寻找历史测试债。
-2. 如果 `.siyrs/README.md` 存在，先用它定位测试入口，再打开真实配置和测试代码确认现状。
-3. 读取 `docs/testing/README.md` 和相关模块 Case（存在时），检查已有测试框架、目录和覆盖；优先扩展现有测试，避免重复造近似用例。
-4. 测试代码留在项目原生位置，例如既有 `pmp-vue/e2e/`、`e2e/`、`src/test/`、`tests/`；不要仅为了统一目录迁移。
-5. 为本轮行为补有价值的 unit/component/integration/E2E。存在真实用户或系统边界时优先补 integration/E2E；纯逻辑或内部重构不机械制造 E2E。
-6. 运行新增测试和最窄必要关联验证，如实报告 pass/fail、阻塞和环境限制。
-7. 只有稳定测试入口、命令或测试契约变化时才更新长期测试文档；默认模式不自动生成 Case 文档或测试报告。
+优先级：
 
-显式 `/siyk-test-add e2e` 时重点补 E2E；显式 `/siyk-test-add 集成测试` 时重点补 integration。无法形成有意义测试时说明原因，不写形式化空测试。
+1. 用户明确指定 T1/T2/T3 时遵循指定档位。
+2. 用户明确指定 Unit / Integration / E2E 等测试层时尊重该层；更具体的低层要求优先于泛化描述。
+3. 用户明确要求 `UAT`、业务验收、验收用例或`测试用例`，且没有更具体的低层/低档位限制时，默认按 **T3 深度测试设计**处理。
+4. 没有指定时，根据当前修改自动判断：
+   - **T1**：局部行为、Bug 回归、纯逻辑或低影响修改，重点补最窄有效自动化；
+   - **T2**：核心 main path、重要 permission/boundary 或项目固定 Smoke 基线发生稳定变化，补足对应自动化，并在确实属于长期 Smoke 时维护 `T2` Case/selector；
+   - **T3**：角色、权限、状态流转、数据可见性、核心业务旅程、跨模块联动、重要副作用或失败代价较高的变化，进入深度业务测试设计。
 
-## `测试用例` 模式：Markdown-first 沉淀
+关键事实无法确认时先查项目；仍会实质影响档位判断时询问用户，不把猜测当测试需求。
 
-调用 `/siyk-test-add 测试用例 [目标文件]` 时：
+## T1 / T2：按价值补测试
 
-1. 默认不新增可执行测试代码，除非同一请求另外明确要求。
-2. 只从本轮目标、相关 diff、现有自动化和已有测试知识提炼长期有效的场景。
-3. 未指定目标文件时，按业务模块选择或创建 `docs/testing/cases/<module>.md`；指定 `project.md` 时写入 `docs/testing/cases/project.md`；完整相对路径必须仍位于 `docs/testing/` 内。
-4. 发现已有等价 Case 时更新或补充它，不重复创建近似 Case。
-5. 新 Case 采用 Markdown-first：保留稳定 Case ID、P0/P1/P2/P3、测试类型、可选自动化路径，其余用自然语言完整表达行为和预期；只有复杂场景才展开前置条件/步骤/多条预期。
-6. 延续文件已有 Case ID 和格式习惯，不批量重写历史表格，也不建立中央 Case registry。
-7. 能关联已有自动化代码时写真实相对路径；没有自动化时不要伪造。
-8. 新增模块文件或缺失索引时同步更新 `docs/testing/README.md`；确保项目根 README 能发现测试入口。
-9. 不把本轮 pass/fail、临时日志或历史执行证据写进 Case 文件。重要 T3/发布/UAT/专项回归报告应单独进入 `docs/testing/reports/`。
+1. 如果 `.siyrs/README.md` 存在，先用它定位，再读取真实测试配置、`docs/testing/README.md` 和相关 Case。
+2. 优先扩展项目已有测试框架和既有覆盖，避免重复造近似测试。
+3. 测试代码继续放在项目原生目录，例如既有 `e2e/`、`src/test/`、`tests/`；不为了 Siyrs Skill 迁移目录。
+4. T1 重点证明当前变化；T2 只有真实稳定 Smoke 行为发生变化时才新增/更新 `T2` Case，不为了档位形式化制造 Smoke。
+5. 运行新增测试和最窄必要关联验证，如实报告 pass/fail、阻塞和环境限制。
+
+显式 `/siyk-test-add e2e`、`/siyk-test-add 集成测试`、`/siyk-test-add 单元测试` 时重点补对应测试层。
+
+## T3：使用深度业务设计合同
+
+当判断为 T3，或用户明确要求 T3 / UAT / 业务验收 / 测试用例时，读取并完整遵循 [T3 深度业务测试设计](../../references/testing-t3-design.md)。
+
+核心要求：
+
+- 默认 Scope 是当前目标、修改和受影响模块；用户指定范围时以指定 Scope 为准；
+- 可以从项目全局建立业务认知，但**全局理解不等于全局测试**；
+- 从真实角色、业务对象、状态、权限、数据传播和隔离设计 Case，而不是从页面按钮设计；
+- 同时验证 Impact Propagation（应该改变）和 Impact Isolation（不应该改变）；
+- 优先先沉淀高质量 Markdown Case，再按真实价值决定是否新增自动化；
+- 复杂 Scope 支持用多个子代理视角协作，但子代理不是硬依赖，也不持久化 agent state/matrix。
+
+`/siyk-test-add 测试用例 [目标文件]` 仍可指定 Case 文件；未指定时按业务模块选择 `docs/testing/cases/<module>.md`。发现等价 Case 时增强已有内容，不重复创建。
 
 ## 测试资产边界
 
-- `docs/testing/standards/` 保存 P0-P3 与 release gate。
-- `docs/testing/cases/` 回答“应该测什么”。
-- 模块原生测试目录回答“机器怎么执行”。
-- `docs/testing/reports/` 保存值得长期保留的阶段性执行结论。
+- `docs/testing/standards/`：长期优先级与 release gate；
+- `docs/testing/cases/`：回答“应该测什么”；
+- 项目原生测试目录：回答“机器怎么执行”；
+- `docs/testing/reports/`：保存有长期价值的执行结论，不与 Case 混写。
 
-默认不 commit、不 push、不 release、不 deploy，也不借补测试之名大规模重构生产代码。为可测试性确有必要时，只做最小、明确的生产代码调整。
+默认不 commit、不 push、不 release、不 deploy，也不借补测试之名大规模重构业务代码。为可测试性确有必要时，只做最小、明确的生产代码调整。
