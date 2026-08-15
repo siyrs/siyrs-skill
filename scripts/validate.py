@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SIYRS Skill 套件的轻量结构校验器。"""
+"""Siyrs Skill 套件的轻量结构校验器。"""
 
 from __future__ import annotations
 
