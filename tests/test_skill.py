@@ -44,6 +44,7 @@ class SkillStructureTests(unittest.TestCase):
             ROOT / "SKILL.md",
             ROOT / "agents" / "openai.yaml",
             ROOT / "references" / "principles.md",
+            ROOT / "references" / "testing-t3-design.md",
             ROOT / "docs" / "README.md",
             ROOT / "docs" / "architecture.md",
             ROOT / "docs" / "plan.md",
@@ -67,6 +68,7 @@ class SkillStructureTests(unittest.TestCase):
             ROOT / "references" / "principles.md": "# Siyrs Skill 第一性原则",
             ROOT / "references" / "testing.md": "# 测试指南",
             ROOT / "references" / "testing-tiers.md": "# 测试分级执行合同",
+            ROOT / "references" / "testing-t3-design.md": "# T3 深度业务测试设计",
             ROOT / "references" / "project-map.md": "# `.siyrs` 项目地图指南",
             ROOT / "references" / "git.md": "# Git 交付指南",
             ROOT / "docs" / "README.md": "# Siyrs Skill 文档",
@@ -161,25 +163,68 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("默认按业务模块而不是按 unit/integration/e2e 类型拆文件", testing)
         self.assertIn("Markdown-first 用例格式", testing)
         self.assertIn("P0 · T2 · E2E", testing)
-        self.assertIn("pmp-vue/e2e/", testing)
+        self.assertIn("web/e2e/", testing)
         self.assertIn("不为了统一文档而搬迁", testing)
+        self.assertIn("不要为测试设计建立额外 JSON/YAML state、matrix、registry", testing)
 
-    def test_test_tier_contract_is_orthogonal_and_lightweight(self) -> None:
+    def test_test_tier_contract_has_authoring_and_execution_views(self) -> None:
         tiers = (ROOT / "references" / "testing-tiers.md").read_text(encoding="utf-8")
-        self.assertIn("两个正交维度", tiers)
+        self.assertIn("设计与执行是两个视角", tiers)
         self.assertIn("T1 — 变更回归", tiers)
         self.assertIn("blast radius", tiers)
         self.assertIn("T2 — 标准 Smoke", tiers)
         self.assertIn("P0 · T2 · E2E", tiers)
-        self.assertIn("T3 — 全量 / 发布验收", tiers)
+        self.assertIn("T3 — 深度业务验收 / 发布级验证", tiers)
+        self.assertIn("testing-t3-design.md", tiers)
         self.assertIn("docs/testing/reports/<date>-<scope>.md", tiers)
         self.assertIn("UAT 通过", tiers)
         self.assertIn("不自动等于 T3 通过", tiers)
-        self.assertIn("默认不做", tiers)
         self.assertIn("创建 state、matrix、evidence registry 或运行时测试治理系统", tiers)
         self.assertNotIn("route_command.py", tiers)
 
-    def test_test_run_skills_are_distinct(self) -> None:
+    def test_t3_design_contract_is_deep_and_markdown_first(self) -> None:
+        text = (ROOT / "references" / "testing-t3-design.md").read_text(encoding="utf-8")
+        self.assertIn("全局理解，但不自动全局测试", text)
+        self.assertIn("Impact Propagation", text)
+        self.assertIn("Impact Isolation", text)
+        self.assertIn("从业务事件设计，而不是从按钮设计", text)
+        self.assertIn("多角色与连续业务旅程", text)
+        self.assertIn("Test Critic", text)
+        self.assertIn("子代理是推理策略，不是运行依赖", text)
+        self.assertIn("docs/testing/cases/<module>.md", text)
+        self.assertIn("T3` 是设计深度", text)
+        self.assertIn("Case + Manual / UAT", text)
+        self.assertIn("不要为 T3 设计新增 command router、state、schema、matrix runtime", text)
+
+    def test_test_add_auto_selects_tier_and_routes_t3(self) -> None:
+        text = (ROOT / "skills" / "siyk-test-add" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("先判断需要的测试深度", text)
+        self.assertIn("不要用关键词脚本", text)
+        self.assertIn("T1", text)
+        self.assertIn("T2", text)
+        self.assertIn("T3", text)
+        self.assertIn("UAT", text)
+        self.assertIn("测试用例", text)
+        self.assertIn("testing-t3-design.md", text)
+        self.assertIn("全局理解不等于全局测试", text)
+        self.assertIn("Impact Propagation", text)
+        self.assertIn("Impact Isolation", text)
+        self.assertIn("docs/testing/cases/<module>.md", text)
+
+    def test_t3_add_skill_is_explicit_deep_authoring_entry(self) -> None:
+        text = (ROOT / "skills" / "siyk-test-add-t3" / "SKILL.md").read_text(encoding="utf-8")
+        agent = (ROOT / "skills" / "siyk-test-add-t3" / "agents" / "openai.yaml").read_text(encoding="utf-8")
+        self.assertIn("不负责执行完整 T3 发布验收", text)
+        self.assertIn("确定测试 Scope", text)
+        self.assertIn("全局理解不等于全局测试", text)
+        self.assertIn("多视角分析", text)
+        self.assertIn("Critic", text)
+        self.assertIn("Markdown-first 沉淀", text)
+        self.assertIn("按价值决定自动化", text)
+        self.assertIn("allow_implicit_invocation: false", agent)
+        self.assertIn("$siyk-test-add-t3", agent)
+
+    def test_test_run_skills_are_distinct_and_do_not_author_t3_cases(self) -> None:
         t1 = (ROOT / "skills" / "siyk-test-run-t1" / "SKILL.md").read_text(encoding="utf-8")
         t2 = (ROOT / "skills" / "siyk-test-run-t2" / "SKILL.md").read_text(encoding="utf-8")
         t3 = (ROOT / "skills" / "siyk-test-run-t3" / "SKILL.md").read_text(encoding="utf-8")
@@ -192,6 +237,7 @@ class SkillStructureTests(unittest.TestCase):
         self.assertIn("release gate", t3)
         self.assertIn("UAT", t3)
         self.assertIn("docs/testing/reports/<date>-<scope>.md", t3)
+        self.assertNotIn("testing-t3-design.md", t3)
         for text in (t1, t2, t3):
             self.assertIn("默认不新增测试", text)
             self.assertIn("不修改业务代码", text)
@@ -217,17 +263,6 @@ class SkillStructureTests(unittest.TestCase):
             self.assertIn(f'display_name: "{skill_dir.name}"', agent)
             self.assertIn("allow_implicit_invocation: false", agent)
             self.assertIn(f"${skill_dir.name}", agent)
-
-    def test_test_add_modes_and_scope(self) -> None:
-        text = (ROOT / "skills" / "siyk-test-add" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("默认模式：补可执行测试", text)
-        self.assertIn("/siyk-test-add e2e", text)
-        self.assertIn("/siyk-test-add 集成测试", text)
-        self.assertIn("`测试用例` 模式", text)
-        self.assertIn("docs/testing/cases/<module>.md", text)
-        self.assertIn("本轮相关 diff", text)
-        self.assertIn("不要仅为了统一目录迁移", text)
-        self.assertIn("默认不新增可执行测试代码", text)
 
     def test_init_is_markdown_project_map_only(self) -> None:
         text = (ROOT / "skills" / "siyk-init" / "SKILL.md").read_text(encoding="utf-8")

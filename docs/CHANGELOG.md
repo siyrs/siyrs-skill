@@ -1,5 +1,24 @@
 # 更新日志
 
+## 0.6.0 - 2026-08-15
+
+### T3 深度业务测试设计
+
+- 新增独立显式子 Skill `siyk-test-add-t3`，专门围绕当前修改或用户指定 Scope 设计并沉淀 T3 级别的深度业务测试资产。
+- 新增共享权威规范 `references/testing-t3-design.md`：T3 先建立足够的全局业务认知，但不自动扩大成全局测试；围绕真实角色、业务对象、状态、权限、数据可见性和上下游关系设计 Case。
+- T3 正式引入 **Impact Propagation** 与 **Impact Isolation**：任何重要业务操作同时验证“应该改变什么”和“不应该改变什么”，重点覆盖相关角色/数据传播与无关角色/数据隔离。
+- T3 Case 从真实业务事件和多角色连续旅程出发，不把“点击按钮后提示成功”当作完整业务验收；同时关注跨页面/跨模块一致性、真实副作用、失败恢复等项目确实存在的风险。
+- 复杂 Scope 在执行环境支持时可使用 Business、Role/Permission、Impact、Isolation、Critic 等多个子代理视角协作；子代理只是推理策略，不是运行依赖，也不持久化 state/matrix/agent registry。
+- T3 坚持 Markdown-first：优先把长期测试知识沉淀到 `docs/testing/cases/`，再根据真实价值决定 Case 是关联已有自动化、新增自动化还是保持 Manual/UAT；不要求为了 T3 给每条 Case 增加机器字段。
+
+### 智能 `siyk-test-add`
+
+- `siyk-test-add` 从固定“补可执行测试 / 测试用例模式”升级为根据当前目标、真实 diff、业务风险和影响面自动判断 T1/T2/T3 测试深度。
+- T1 聚焦局部变化和最窄有效回归；T2 只在真实稳定 Smoke baseline 变化时维护 `T2` Case/selector；角色、权限、状态流转、数据可见性、核心业务旅程、跨模块联动和重要副作用等高风险变化自动进入 T3 深度设计。
+- 用户明确要求 UAT、业务验收、验收用例或测试用例，且没有更具体低层/低档位限制时，默认进入共享 T3 设计合同；显式 `siyk-test-add-t3` 则始终进入 T3 专家模式。
+- T1/T2/T3 现在明确区分“测试设计/沉淀”和“测试执行”两个视角：`test-add*` 负责设计和增加测试资产，`test-run-*` 继续只负责执行、分析和报告。
+- 全部新能力仍由自然语言 Markdown 合同驱动，没有新增关键词 parser、command router、state、schema、matrix runtime、evidence registry 或其他测试治理脚本。
+
 ## 0.5.4 - 2026-08-14
 
 ### 品牌命名
