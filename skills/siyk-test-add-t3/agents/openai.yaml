@@ -1,0 +1,6 @@
+interface:
+  display_name: "siyk-test-add-t3"
+  short_description: "深度理解业务范围并沉淀多角色、权限、状态与影响隔离的 T3 测试用例"
+  default_prompt: "使用 $siyk-test-add-t3 先建立足够的项目业务认知，再围绕当前或指定 Scope 设计并沉淀 Markdown-first 的高价值 T3 测试用例，并按真实价值决定自动化。"
+policy:
+  allow_implicit_invocation: false
