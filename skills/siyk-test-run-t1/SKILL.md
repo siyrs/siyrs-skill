@@ -5,7 +5,7 @@ description: 显式的 T1 变更回归执行 Skill。根据本轮真实 diff 与
 
 # SIYK T1 变更回归
 
-开始前读取并遵循 [SIYRS 第一性原则](../../references/principles.md)、[测试指南](../../references/testing.md) 和 [T1/T2/T3 分级执行合同](../../references/testing-tiers.md)。
+开始前读取并遵循 [Siyrs Skill 第一性原则](../../references/principles.md)、[测试指南](../../references/testing.md) 和 [T1/T2/T3 分级执行合同](../../references/testing-tiers.md)。
 
 只运行本轮变化真正需要的回归测试，然后结束。
 
