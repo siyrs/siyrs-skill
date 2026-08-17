@@ -14,6 +14,8 @@ QUOTED_FIELD_RE = re.compile(
     re.MULTILINE,
 )
 LEGACY_PATHS = ("adapters", "commands", "schemas", "release-manifest.json")
+FRONTMATTER_REQUIRED = {"name", "description"}
+FRONTMATTER_ALLOWED = FRONTMATTER_REQUIRED | {"disable-model-invocation"}
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -58,14 +60,19 @@ def validate_skill(skill_dir: Path, *, explicit_child: bool = False) -> list[str
     text = skill_path.read_text(encoding="utf-8")
     try:
         meta = parse_frontmatter(text)
-        if set(meta) != {"name", "description"}:
-            raise ValueError("frontmatter 只能包含 name 和 description")
+        keys = set(meta)
+        if not FRONTMATTER_REQUIRED.issubset(keys) or not keys.issubset(FRONTMATTER_ALLOWED):
+            raise ValueError(
+                "frontmatter 必须包含 name、description，且只能额外使用 disable-model-invocation"
+            )
         if not NAME_RE.fullmatch(meta["name"]):
             raise ValueError("name 必须使用小写连字符格式，且不超过 64 个字符")
         if not meta["description"]:
             raise ValueError("description 不能为空")
         if explicit_child and meta["name"] != skill_dir.name:
             raise ValueError("子 Skill 的 name 必须与目录名一致")
+        if explicit_child and meta.get("disable-model-invocation") != "true":
+            raise ValueError("skills/ 下子 Skill 必须声明 disable-model-invocation: true")
     except (KeyError, ValueError) as exc:
         errors.append(f"{skill_path}: {exc}")
         meta = {}
