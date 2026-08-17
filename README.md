@@ -1,6 +1,6 @@
 # Siyrs Skill
 
-当前版本：**v0.6.1**
+当前版本：**v0.6.2**
 
 这是一个 Markdown-first 的轻量工程 Skill 套件。主 `siyrs-skill` 负责通用工程闭环，`skills/` 下的子 Skill 提供独立、显式的高频工作流。
 
@@ -18,6 +18,7 @@
 siyrs-skill/
 ├── SKILL.md
 ├── agents/openai.yaml
+├── .claude-plugin/          # Claude Code 原生插件元数据
 ├── references/              # 运行时共享规范
 ├── skills/                  # 独立显式子 Skill
 ├── docs/                    # 架构、计划、维护、历史
@@ -52,6 +53,8 @@ siyrs-skill/
 
 ## 安装
 
+### Codex
+
 macOS / Linux：
 
 ```bash
@@ -65,6 +68,37 @@ git clone https://github.com/siyrs/siyrs-skill.git "$HOME/.agents/skills/siyrs-s
 ```
 
 更新后如果 Skill 列表没有立即刷新，重启 Codex。
+
+### Claude Code
+
+Claude Code 使用原生 Plugin / Marketplace 安装，不要把整个仓库手工 clone 到 `~/.claude/skills/siyrs-skill`：
+
+```text
+/plugin marketplace add siyrs/siyrs-skill
+/plugin install siyrs-skill@siyrs-skill
+```
+
+也可以使用非交互 CLI：
+
+```bash
+claude plugin marketplace add siyrs/siyrs-skill
+claude plugin install siyrs-skill@siyrs-skill
+```
+
+安装后，Claude Code 会原生发现根 `SKILL.md` 和 `skills/*/SKILL.md`。Plugin Skill 使用 namespace，例如：
+
+```text
+/siyrs-skill:siyk-init
+/siyrs-skill:siyk-test-add
+/siyrs-skill:siyk-test-add-t3
+/siyrs-skill:siyk-test-run-t1
+/siyrs-skill:siyk-test-run-t2
+/siyrs-skill:siyk-test-run-t3
+/siyrs-skill:siyk-git-commit
+/siyrs-skill:siyk-git-sync
+```
+
+8 个 `siyk-*` 子 Skill 在 Claude Code 中仍然保持仅用户显式调用；主 Skill 保持通用入口。插件更新后可使用 `/reload-plugins` 重新加载。
 
 ## 使用示例
 
@@ -83,7 +117,7 @@ $siyk-git-sync
 
 `siyk-test-add` 会围绕当前目标和真实改动判断需要 T1/T2/T3 哪种测试深度；显式 `siyk-test-add-t3` 用于多角色、权限、状态、数据传播与影响隔离等深度业务验收场景。T3 设计优先沉淀 Markdown Case，再按真实价值决定自动化。
 
-支持 Skill 快捷入口的界面也可通过 `/` 列表选择；Codex CLI / IDE 可使用 `/skills` 或 `$skill-name`。
+支持 Skill 快捷入口的界面也可通过 `/` 列表选择；Codex CLI / IDE 可使用 `/skills` 或 `$skill-name`。Claude Code Plugin 使用 `/siyrs-skill:<skill-name>` namespace。
 
 这些示例不是中央注册表。实际可用子 Skill 以 `skills/*/SKILL.md` 为准，新增子 Skill 不需要修改 README 才能被套件校验发现。
 
@@ -107,7 +141,7 @@ skills/siyk-example/
     └── openai.yaml
 ```
 
-新增普通子 Skill 不需要修改 validator、中央列表或根 Skill 来“注册”。具体开发约束见 [贡献指南](docs/CONTRIBUTING.md)。
+新增普通子 Skill 不需要修改 validator、中央列表或根 Skill 来“注册”。子 Skill 的 `SKILL.md` 保持 `disable-model-invocation: true`，以同时维持 Claude Code 的显式调用语义；具体开发约束见 [贡献指南](docs/CONTRIBUTING.md)。
 
 ## 维护
 
