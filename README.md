@@ -1,6 +1,6 @@
 # Siyrs Skill
 
-当前版本：**v0.6.2**
+当前版本：**v0.6.3**
 
 这是一个 Markdown-first 的轻量工程 Skill 套件。主 `siyrs-skill` 负责通用工程闭环，`skills/` 下的子 Skill 提供独立、显式的高频工作流。
 
@@ -18,7 +18,6 @@
 siyrs-skill/
 ├── SKILL.md
 ├── agents/openai.yaml
-├── .claude-plugin/          # Claude Code 原生插件元数据
 ├── references/              # 运行时共享规范
 ├── skills/                  # 独立显式子 Skill
 ├── docs/                    # 架构、计划、维护、历史
@@ -53,52 +52,119 @@ siyrs-skill/
 
 ## 安装
 
-### Codex
+### 统一安装源
+
+Codex 与 Claude Code 共用**同一份真实 Git 仓库**：
+
+```text
+$HOME/.agents/skills/siyrs-skill
+```
+
+不要为 Claude Code 再 clone 第二份仓库，也不要使用 Claude Plugin 安装；Plugin Skill 会带 namespace，无法得到直接的 `/siyk-*` 快捷方式。
 
 macOS / Linux：
 
 ```bash
-git clone https://github.com/siyrs/siyrs-skill.git ~/.agents/skills/siyrs-skill
+repo="$HOME/.agents/skills/siyrs-skill"
+mkdir -p "$HOME/.agents/skills"
+if [ -d "$repo/.git" ]; then
+  git -C "$repo" pull --ff-only
+else
+  git clone https://github.com/siyrs/siyrs-skill.git "$repo"
+fi
 ```
 
 Windows PowerShell：
 
 ```powershell
-git clone https://github.com/siyrs/siyrs-skill.git "$HOME/.agents/skills/siyrs-skill"
+$repo = Join-Path $HOME ".agents\skills\siyrs-skill"
+New-Item -ItemType Directory -Force -Path (Split-Path $repo) | Out-Null
+if (Test-Path (Join-Path $repo ".git")) {
+    git -C $repo pull --ff-only
+} else {
+    git clone https://github.com/siyrs/siyrs-skill.git $repo
+}
 ```
 
-更新后如果 Skill 列表没有立即刷新，重启 Codex。
+Codex 直接使用这一安装目录。更新 Siyrs Skill 时只需要对这一份仓库执行 `git pull --ff-only`。
 
 ### Claude Code
 
-Claude Code 使用原生 Plugin / Marketplace 安装，不要把整个仓库手工 clone 到 `~/.claude/skills/siyrs-skill`：
+Claude Code 使用个人 User Skills 路径 `~/.claude/skills/<skill-name>/SKILL.md`。为了既保留唯一 Git 仓库，又得到没有 namespace 的直接命令，`~/.claude/skills/` 只创建到统一安装源的目录映射：
 
 ```text
-/plugin marketplace add siyrs/siyrs-skill
-/plugin install siyrs-skill@siyrs-skill
+~/.claude/skills/
+├── siyrs-skill       → ~/.agents/skills/siyrs-skill
+├── siyk-init         → ~/.agents/skills/siyrs-skill/skills/siyk-init
+├── siyk-test-add     → ~/.agents/skills/siyrs-skill/skills/siyk-test-add
+├── siyk-test-add-t3  → ~/.agents/skills/siyrs-skill/skills/siyk-test-add-t3
+├── siyk-test-run-t1  → ~/.agents/skills/siyrs-skill/skills/siyk-test-run-t1
+├── siyk-test-run-t2  → ~/.agents/skills/siyrs-skill/skills/siyk-test-run-t2
+├── siyk-test-run-t3  → ~/.agents/skills/siyrs-skill/skills/siyk-test-run-t3
+├── siyk-git-commit   → ~/.agents/skills/siyrs-skill/skills/siyk-git-commit
+└── siyk-git-sync     → ~/.agents/skills/siyrs-skill/skills/siyk-git-sync
 ```
 
-也可以使用非交互 CLI：
+共享 reference 仍只保留在统一仓库中；额外将 `~/.claude/references` 映射到仓库的 `references/`，保证平铺后的子 Skill 继续能使用现有相对 reference 链接。
+
+如果曾安装 v0.6.2 Claude Plugin，先通过 `/plugin` 卸载旧插件和 marketplace，或执行：
+
+```text
+/plugin uninstall siyrs-skill@siyrs-skill
+/plugin marketplace remove siyrs-skill
+```
+
+如果 `~/.claude/skills/siyrs-skill` 已经是旧版真实 clone，而不是 junction/symlink，请先确认没有本地修改再删除旧副本；下面的首次映射命令遇到现有真实目录时会失败，不会替你覆盖数据。
+
+#### Windows PowerShell：首次建立映射
+
+```powershell
+$repo = Join-Path $HOME ".agents\skills\siyrs-skill"
+$skillsRoot = Join-Path $HOME ".claude\skills"
+New-Item -ItemType Directory -Force -Path $skillsRoot | Out-Null
+
+New-Item -ItemType Junction -Path (Join-Path $skillsRoot "siyrs-skill") -Target $repo | Out-Null
+Get-ChildItem (Join-Path $repo "skills") -Directory |
+    Where-Object { Test-Path (Join-Path $_.FullName "SKILL.md") } |
+    ForEach-Object {
+        New-Item -ItemType Junction -Path (Join-Path $skillsRoot $_.Name) -Target $_.FullName | Out-Null
+    }
+
+New-Item -ItemType Junction -Path (Join-Path $HOME ".claude\references") -Target (Join-Path $repo "references") | Out-Null
+```
+
+#### macOS / Linux：首次建立映射
 
 ```bash
-claude plugin marketplace add siyrs/siyrs-skill
-claude plugin install siyrs-skill@siyrs-skill
+repo="$HOME/.agents/skills/siyrs-skill"
+skills_root="$HOME/.claude/skills"
+mkdir -p "$skills_root"
+
+ln -s "$repo" "$skills_root/siyrs-skill"
+for dir in "$repo"/skills/*; do
+  [ -f "$dir/SKILL.md" ] || continue
+  ln -s "$dir" "$skills_root/$(basename "$dir")"
+done
+ln -s "$repo/references" "$HOME/.claude/references"
 ```
 
-安装后，Claude Code 会原生发现根 `SKILL.md` 和 `skills/*/SKILL.md`。Plugin Skill 使用 namespace，例如：
+这些映射首次建立即可；以后更新只更新 `$HOME/.agents/skills/siyrs-skill` 这一份仓库。
+
+Claude Code 中应直接出现：
 
 ```text
-/siyrs-skill:siyk-init
-/siyrs-skill:siyk-test-add
-/siyrs-skill:siyk-test-add-t3
-/siyrs-skill:siyk-test-run-t1
-/siyrs-skill:siyk-test-run-t2
-/siyrs-skill:siyk-test-run-t3
-/siyrs-skill:siyk-git-commit
-/siyrs-skill:siyk-git-sync
+/siyrs-skill
+/siyk-init
+/siyk-test-add
+/siyk-test-add-t3
+/siyk-test-run-t1
+/siyk-test-run-t2
+/siyk-test-run-t3
+/siyk-git-commit
+/siyk-git-sync
 ```
 
-8 个 `siyk-*` 子 Skill 在 Claude Code 中仍然保持仅用户显式调用；主 Skill 保持通用入口。插件更新后可使用 `/reload-plugins` 重新加载。
+8 个 `siyk-*` 子 Skill 保持 `disable-model-invocation: true`，因此只由用户显式调用；主 `siyrs-skill` 不设置该限制，可作为通用入口由 Claude 根据上下文自动判断。Claude Code 会监视已有的 `~/.claude/skills/`；如果本次安装才第一次创建顶层 `skills` 目录，重启一次 Claude Code。
 
 ## 使用示例
 
@@ -117,7 +183,7 @@ $siyk-git-sync
 
 `siyk-test-add` 会围绕当前目标和真实改动判断需要 T1/T2/T3 哪种测试深度；显式 `siyk-test-add-t3` 用于多角色、权限、状态、数据传播与影响隔离等深度业务验收场景。T3 设计优先沉淀 Markdown Case，再按真实价值决定自动化。
 
-支持 Skill 快捷入口的界面也可通过 `/` 列表选择；Codex CLI / IDE 可使用 `/skills` 或 `$skill-name`。Claude Code Plugin 使用 `/siyrs-skill:<skill-name>` namespace。
+支持 Skill 快捷入口的界面也可通过 `/` 列表选择；Codex CLI / IDE 可使用 `/skills` 或 `$skill-name`，Claude Code User Skills 直接使用 `/skill-name`。
 
 这些示例不是中央注册表。实际可用子 Skill 以 `skills/*/SKILL.md` 为准，新增子 Skill 不需要修改 README 才能被套件校验发现。
 
