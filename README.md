@@ -1,6 +1,6 @@
 # Siyrs Skill
 
-当前版本：**v0.6.2**
+当前版本：**v0.6.3**
 
 这是一个 Markdown-first 的轻量工程 Skill 套件。主 `siyrs-skill` 负责通用工程闭环，`skills/` 下的子 Skill 提供独立、显式的高频工作流。
 
@@ -18,7 +18,6 @@
 siyrs-skill/
 ├── SKILL.md
 ├── agents/openai.yaml
-├── .claude-plugin/          # Claude Code 原生插件元数据
 ├── references/              # 运行时共享规范
 ├── skills/                  # 独立显式子 Skill
 ├── docs/                    # 架构、计划、维护、历史
@@ -71,34 +70,87 @@ git clone https://github.com/siyrs/siyrs-skill.git "$HOME/.agents/skills/siyrs-s
 
 ### Claude Code
 
-Claude Code 使用原生 Plugin / Marketplace 安装，不要把整个仓库手工 clone 到 `~/.claude/skills/siyrs-skill`：
+Claude Code 使用 **User Skills**，让主 Skill 和全部子 Skill 都直接暴露为无 namespace 的 `/skill-name`。不要使用 Plugin 安装；Plugin Skill 会被 Claude Code 强制加 `plugin-name:` 前缀。
+
+如果曾安装 v0.6.2 Plugin，先在 Claude Code 中移除旧插件和 marketplace：
 
 ```text
-/plugin marketplace add siyrs/siyrs-skill
-/plugin install siyrs-skill@siyrs-skill
+/plugin uninstall siyrs-skill@siyrs-skill
+/plugin marketplace remove siyrs-skill
 ```
 
-也可以使用非交互 CLI：
+#### Windows PowerShell
+
+```powershell
+$skillsRoot = Join-Path $HOME ".claude\skills"
+$mainSkill = Join-Path $skillsRoot "siyrs-skill"
+New-Item -ItemType Directory -Force -Path $skillsRoot | Out-Null
+
+if (Test-Path (Join-Path $mainSkill ".git")) {
+    git -C $mainSkill pull --ff-only
+} else {
+    git clone https://github.com/siyrs/siyrs-skill.git $mainSkill
+}
+
+Get-ChildItem (Join-Path $mainSkill "skills") -Directory |
+    Where-Object { Test-Path (Join-Path $_.FullName "SKILL.md") } |
+    ForEach-Object {
+        $link = Join-Path $skillsRoot $_.Name
+        if (-not (Test-Path $link)) {
+            New-Item -ItemType Junction -Path $link -Target $_.FullName | Out-Null
+        }
+    }
+
+$refsLink = Join-Path $HOME ".claude\references"
+if (-not (Test-Path $refsLink)) {
+    New-Item -ItemType Junction -Path $refsLink -Target (Join-Path $mainSkill "references") | Out-Null
+}
+```
+
+#### macOS / Linux
 
 ```bash
-claude plugin marketplace add siyrs/siyrs-skill
-claude plugin install siyrs-skill@siyrs-skill
+skills_root="$HOME/.claude/skills"
+main_skill="$skills_root/siyrs-skill"
+mkdir -p "$skills_root"
+
+if [ -d "$main_skill/.git" ]; then
+  git -C "$main_skill" pull --ff-only
+else
+  git clone https://github.com/siyrs/siyrs-skill.git "$main_skill"
+fi
+
+for dir in "$main_skill"/skills/*; do
+  [ -f "$dir/SKILL.md" ] || continue
+  link="$skills_root/$(basename "$dir")"
+  if [ ! -e "$link" ] && [ ! -L "$link" ]; then
+    ln -s "$dir" "$link"
+  fi
+done
+
+refs_link="$HOME/.claude/references"
+if [ ! -e "$refs_link" ] && [ ! -L "$refs_link" ]; then
+  ln -s "$main_skill/references" "$refs_link"
+fi
 ```
 
-安装后，Claude Code 会原生发现根 `SKILL.md` 和 `skills/*/SKILL.md`。Plugin Skill 使用 namespace，例如：
+主仓库只保存一份真实 Skill 内容；平铺的子 Skill 是 junction/symlink，不复制规则。`~/.claude/references` 只把现有共享 Markdown references 暴露给平铺后的子 Skill，不保存状态或缓存。
+
+安装后应直接出现：
 
 ```text
-/siyrs-skill:siyk-init
-/siyrs-skill:siyk-test-add
-/siyrs-skill:siyk-test-add-t3
-/siyrs-skill:siyk-test-run-t1
-/siyrs-skill:siyk-test-run-t2
-/siyrs-skill:siyk-test-run-t3
-/siyrs-skill:siyk-git-commit
-/siyrs-skill:siyk-git-sync
+/siyrs-skill
+/siyk-init
+/siyk-test-add
+/siyk-test-add-t3
+/siyk-test-run-t1
+/siyk-test-run-t2
+/siyk-test-run-t3
+/siyk-git-commit
+/siyk-git-sync
 ```
 
-8 个 `siyk-*` 子 Skill 在 Claude Code 中仍然保持仅用户显式调用；主 Skill 保持通用入口。插件更新后可使用 `/reload-plugins` 重新加载。
+8 个 `siyk-*` 子 Skill 保持 `disable-model-invocation: true`，因此只由用户显式调用；主 `siyrs-skill` 不设置该限制，可作为通用入口由 Claude 根据上下文自动判断。Claude Code 会实时监视已有 `~/.claude/skills/` 中的变更；如果本次安装才第一次创建顶层 `skills` 目录，则重启一次 Claude Code。
 
 ## 使用示例
 
@@ -117,7 +169,7 @@ $siyk-git-sync
 
 `siyk-test-add` 会围绕当前目标和真实改动判断需要 T1/T2/T3 哪种测试深度；显式 `siyk-test-add-t3` 用于多角色、权限、状态、数据传播与影响隔离等深度业务验收场景。T3 设计优先沉淀 Markdown Case，再按真实价值决定自动化。
 
-支持 Skill 快捷入口的界面也可通过 `/` 列表选择；Codex CLI / IDE 可使用 `/skills` 或 `$skill-name`。Claude Code Plugin 使用 `/siyrs-skill:<skill-name>` namespace。
+支持 Skill 快捷入口的界面也可通过 `/` 列表选择；Codex CLI / IDE 可使用 `/skills` 或 `$skill-name`，Claude Code User Skills 直接使用 `/skill-name`。
 
 这些示例不是中央注册表。实际可用子 Skill 以 `skills/*/SKILL.md` 为准，新增子 Skill 不需要修改 README 才能被套件校验发现。
 
