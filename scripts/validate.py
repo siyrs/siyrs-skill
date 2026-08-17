@@ -13,7 +13,13 @@ QUOTED_FIELD_RE = re.compile(
     r'^\s{2}(display_name|short_description|default_prompt):\s+"([^"]+)"\s*$',
     re.MULTILINE,
 )
-LEGACY_PATHS = ("adapters", "commands", "schemas", "release-manifest.json")
+LEGACY_PATHS = (
+    "adapters",
+    "commands",
+    "schemas",
+    "release-manifest.json",
+    ".claude-plugin",
+)
 FRONTMATTER_REQUIRED = {"name", "description"}
 FRONTMATTER_ALLOWED = FRONTMATTER_REQUIRED | {"disable-model-invocation"}
 
