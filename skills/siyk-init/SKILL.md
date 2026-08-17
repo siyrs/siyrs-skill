@@ -1,6 +1,7 @@
 ---
 name: siyk-init
 description: 显式的项目初始化与刷新快捷 Skill。用于创建或刷新 `<project-root>/.siyrs/README.md` 项目地图，减少后续重复全仓扫描；项目地图内容、扫描范围、Secret 与 Markdown-first 边界统一遵循共享项目地图指南。
+disable-model-invocation: true
 ---
 
 # SIYK 项目初始化
