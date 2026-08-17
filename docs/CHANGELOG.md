@@ -1,5 +1,16 @@
 # 更新日志
 
+## 0.6.3 - 2026-08-17
+
+### Claude Code User Skills 修正
+
+- 撤回 v0.6.2 的 Plugin / Marketplace 分发方式：Claude Code Plugin 会强制使用 `plugin-name:skill-name` namespace，不符合 Siyrs Skill 需要的直接 `/siyrs-skill` 与 `/siyk-*` 快捷入口。
+- `$HOME/.agents/skills/siyrs-skill` 重新明确为 Codex 与 Claude Code 共用的唯一真实 Git 安装源；Claude Code 不再维护第二份仓库副本。
+- Claude Code 改用官方 User Skills 发现路径 `~/.claude/skills/<skill-name>/SKILL.md`，通过 junction / symlink 将主 Skill 与 8 个子 Skill 平铺映射到该目录，因此命令直接保持 `/siyrs-skill`、`/siyk-init`、`/siyk-test-add` 等形式。
+- 增加 `~/.claude/references` 到统一仓库 `references/` 的轻量映射，保证平铺后的子 Skill 继续使用现有共享 Markdown reference，不复制规范内容。
+- 保留子 Skill 的 `disable-model-invocation: true`，因此 Claude Code 中 8 个 `siyk-*` 继续只允许用户显式调用；主 `siyrs-skill` 仍可作为通用自动判断入口。
+- 删除 `.claude-plugin/` manifest，并在结构校验中阻止其重新引入；本版本不修改任何测试、项目地图、Git 或 T3 业务合同。
+
 ## 0.6.2 - 2026-08-17
 
 ### Claude Code 原生兼容
