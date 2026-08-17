@@ -1,6 +1,7 @@
 ---
 name: siyk-test-add-t3
 description: 显式的 T3 深度业务测试设计 Skill。围绕当前修改或用户指定 Scope，按共享 T3 设计合同建立业务认知、沉淀高价值 Markdown-first 测试用例，并按真实价值决定自动化。
+disable-model-invocation: true
 ---
 
 # SIYK T3 测试设计

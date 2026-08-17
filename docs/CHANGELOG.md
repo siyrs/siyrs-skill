@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.6.2 - 2026-08-17
+
+### Claude Code 原生兼容
+
+- 新增最小 `.claude-plugin/plugin.json` 与 `.claude-plugin/marketplace.json`，让仓库可直接作为 Claude Code Plugin / Marketplace 安装，不再需要把整个仓库手工 clone 到 `~/.claude/skills/`。
+- 保持现有根 `SKILL.md` + `skills/*/SKILL.md` 结构不变，交给 Claude Code Plugin 原生发现；Codex 的 `agents/openai.yaml` 结构和调用方式不变。
+- 8 个 `siyk-*` 子 Skill 增加 Claude Code 原生 `disable-model-invocation: true`，继续保持仅用户显式调用；主 `siyrs-skill` 不增加该限制。
+- validator 仅增加协议级结构检查：允许 Claude Code frontmatter 字段、校验子 Skill 显式调用、两个 Claude manifest、marketplace GitHub source，以及 plugin version 与 `VERSION` 一致。
+- README 增加 Claude Code Marketplace / Plugin 安装与 namespace 调用说明；本版本不修改测试模型、T3 设计、项目地图、Git 行为合同或 Markdown-first 架构。
+
 ## 0.6.1 - 2026-08-15
 
 ### 收敛与去重
@@ -71,7 +81,7 @@
 - 子 Skill 的目录名与 `SKILL.md` `name` 现在由校验器自动保持一致，所有 `skills/` 子 Skill 统一要求 `allow_implicit_invocation: false`。
 - 明确 `references/*.md` 是共享运行时规范的权威来源；根/子 `SKILL.md` 是行为入口；README 只负责安装、概览和示例，CONTRIBUTING 只负责仓库维护规则。
 - 收缩根 `SKILL.md`，不再枚举完整子 Skill 清单；新增子 Skill 无需为了“注册”修改根 Skill。
-- 大幅精简 README，移除对第一性原则、T1/T2/T3、测试资产等规范的重复定义，改为链接权威 references。
+- 大幅精简 README，移除对第一性原则、T1/T2/T3 与测试资产等规范的重复定义，改为链接权威 references。
 - 精简 CONTRIBUTING，只保留规范层级、自动发现、子 Skill 最小结构、轻量约束与验证方式。
 - 回归测试改为基于自动发现验证所有子 Skill，并增加“没有中央 Skill registry”和“reference 为规范、README 为说明”的架构保护。
 - 本版本不增加新功能，不改变现有 T1/T2/T3、测试资产、`.siyrs` 或 Git 子 Skill 的行为合同，也不引入文档 Ownership/写权限限制。

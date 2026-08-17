@@ -1,0 +1,6 @@
+{
+  "name": "siyrs-skill",
+  "description": "Markdown-first 的轻量工程 Skill 套件，提供仓库修改、测试设计与执行、Git 交付工作流。",
+  "version": "0.6.2",
+  "repository": "https://github.com/siyrs/siyrs-skill"
+}

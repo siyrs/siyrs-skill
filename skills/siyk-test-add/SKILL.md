@@ -1,6 +1,7 @@
 ---
 name: siyk-test-add
 description: 显式的智能测试补充 Skill。围绕当前目标和真实改动自动判断需要 T1/T2/T3 哪种测试深度，沉淀合适的可执行测试与 Markdown-first 测试资产；UAT、验收或测试用例等高层意图默认进入 T3 深度设计。
+disable-model-invocation: true
 ---
 
 # SIYK 智能测试补充

@@ -1,6 +1,7 @@
 ---
 name: siyk-test-run-t3
 description: 显式的 T3 发布级验证执行 Skill。默认围绕当前目标、真实改动与受影响模块，或用户明确指定的 Scope，运行该范围完整相关的 Unit/Integration/E2E/UAT 与必要 release gate，并沉淀可信报告。
+disable-model-invocation: true
 ---
 
 # SIYK T3 发布级验证

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -14,6 +15,8 @@ QUOTED_FIELD_RE = re.compile(
     re.MULTILINE,
 )
 LEGACY_PATHS = ("adapters", "commands", "schemas", "release-manifest.json")
+FRONTMATTER_REQUIRED = {"name", "description"}
+FRONTMATTER_ALLOWED = FRONTMATTER_REQUIRED | {"disable-model-invocation"}
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -58,14 +61,19 @@ def validate_skill(skill_dir: Path, *, explicit_child: bool = False) -> list[str
     text = skill_path.read_text(encoding="utf-8")
     try:
         meta = parse_frontmatter(text)
-        if set(meta) != {"name", "description"}:
-            raise ValueError("frontmatter 只能包含 name 和 description")
+        keys = set(meta)
+        if not FRONTMATTER_REQUIRED.issubset(keys) or not keys.issubset(FRONTMATTER_ALLOWED):
+            raise ValueError(
+                "frontmatter 必须包含 name、description，且只能额外使用 disable-model-invocation"
+            )
         if not NAME_RE.fullmatch(meta["name"]):
             raise ValueError("name 必须使用小写连字符格式，且不超过 64 个字符")
         if not meta["description"]:
             raise ValueError("description 不能为空")
         if explicit_child and meta["name"] != skill_dir.name:
             raise ValueError("子 Skill 的 name 必须与目录名一致")
+        if explicit_child and meta.get("disable-model-invocation") != "true":
+            raise ValueError("skills/ 下子 Skill 必须声明 disable-model-invocation: true")
     except (KeyError, ValueError) as exc:
         errors.append(f"{skill_path}: {exc}")
         meta = {}
@@ -104,11 +112,49 @@ def validate_skill(skill_dir: Path, *, explicit_child: bool = False) -> list[str
     return errors
 
 
+def validate_claude_plugin(root: Path) -> list[str]:
+    """校验 Claude Code 原生 Plugin / Marketplace 的最小协议元数据。"""
+    errors: list[str] = []
+    plugin_path = root / ".claude-plugin" / "plugin.json"
+    marketplace_path = root / ".claude-plugin" / "marketplace.json"
+
+    try:
+        plugin = json.loads(plugin_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"{plugin_path}: 无法读取有效 JSON：{exc}"]
+
+    try:
+        marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"{marketplace_path}: 无法读取有效 JSON：{exc}"]
+
+    version_path = root / "VERSION"
+    version = version_path.read_text(encoding="utf-8").strip() if version_path.is_file() else ""
+    if plugin.get("name") != "siyrs-skill":
+        errors.append(f"{plugin_path}: name 必须为 siyrs-skill")
+    if plugin.get("version") != version:
+        errors.append(f"{plugin_path}: version 必须与 VERSION 一致")
+
+    plugins = marketplace.get("plugins")
+    if marketplace.get("name") != "siyrs-skill" or not isinstance(plugins, list):
+        errors.append(f"{marketplace_path}: marketplace name/plugins 结构无效")
+        return errors
+
+    entry = next((item for item in plugins if item.get("name") == "siyrs-skill"), None)
+    expected_source = {"source": "github", "repo": "siyrs/siyrs-skill"}
+    if not entry or entry.get("source") != expected_source:
+        errors.append(f"{marketplace_path}: siyrs-skill 必须指向 GitHub 仓库 siyrs/siyrs-skill")
+
+    return errors
+
+
 def validate(root: Path) -> list[str]:
     errors: list[str] = []
 
     for skill_dir, explicit_child in discover_skill_dirs(root):
         errors.extend(validate_skill(skill_dir, explicit_child=explicit_child))
+
+    errors.extend(validate_claude_plugin(root))
 
     for legacy in LEGACY_PATHS:
         if (root / legacy).exists():

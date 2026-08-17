@@ -1,0 +1,17 @@
+{
+  "name": "siyrs-skill",
+  "owner": {
+    "name": "Siyrs Skill"
+  },
+  "description": "Siyrs Skill 的 Claude Code 插件源。",
+  "plugins": [
+    {
+      "name": "siyrs-skill",
+      "source": {
+        "source": "github",
+        "repo": "siyrs/siyrs-skill"
+      },
+      "description": "Markdown-first 的轻量工程 Skill 套件。"
+    }
+  ]
+}

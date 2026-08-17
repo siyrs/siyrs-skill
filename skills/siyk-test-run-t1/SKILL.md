@@ -1,6 +1,7 @@
 ---
 name: siyk-test-run-t1
 description: 显式的 T1 变更回归执行 Skill。根据本轮真实 diff 与 blast radius 动态选择受影响测试，在项目原生测试位置运行最窄但可信的回归；默认只执行和分析，不新增测试、不修改业务代码、不生成持久报告。
+disable-model-invocation: true
 ---
 
 # SIYK T1 变更回归
