@@ -1,5 +1,16 @@
 # 更新日志
 
+## 0.6.4 - 2026-08-17
+
+### 安装说明收敛
+
+- 重写 README 的 Codex / Claude Code 安装章节，按“安装硬规则 → 统一 checkout → Codex → Claude Code → 验证 → 旧安装迁移 → 后续更新”组织，降低安装 AI 自行选择错误目录或分发方式的概率。
+- 明确 `$HOME/.agents/skills/siyrs-skill` 是 Siyrs Skill 的唯一真实 Git checkout；Claude Code 不 clone 第二份仓库，只在 `~/.claude/skills/` 建立 User Skills 的 junction / symlink 映射。
+- 明确禁止 Claude Plugin / Marketplace 方式，避免重新出现 `/siyrs-skill:siyk-*` namespace；安装完成必须实际验证 `/siyrs-skill` 与全部 `/siyk-*` 直接快捷入口。
+- Windows / macOS / Linux 示例改为更安全的“遇到已有路径先保留并检查”，不默认覆盖旧 clone、旧映射或用户内容。
+- 新增可直接交给 Codex / Claude Code 的安装约束提示，以及 Windows `py` 维护命令备用说明。
+- 本版本只优化安装与维护说明，不修改任何 Skill、reference、测试模型、项目地图或 Git 行为合同。
+
 ## 0.6.3 - 2026-08-17
 
 ### Claude Code User Skills 修正
