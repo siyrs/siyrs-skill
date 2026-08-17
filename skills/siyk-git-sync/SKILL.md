@@ -1,6 +1,7 @@
 ---
 name: siyk-git-sync
 description: 显式的轻量 Git 同步快捷 Skill。用于按仓库正常策略整合目标远端分支并正常推送；范围保护、冲突处理、受保护分支和禁止历史改写等共享边界统一遵循 Git 交付指南。
+disable-model-invocation: true
 ---
 
 # SIYK Git 同步
