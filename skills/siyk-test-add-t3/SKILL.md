@@ -1,12 +1,11 @@
 ---
 name: siyk-test-add-t3
-description: 显式的 T3 深度业务测试设计 Skill。围绕当前修改或用户指定 Scope，按共享 T3 设计合同建立业务认知、沉淀高价值 Markdown-first 测试用例，并按真实价值决定自动化。
-disable-model-invocation: true
+description: 设计并沉淀 T3 深度业务测试与 UAT 用例。
 ---
 
 # SIYK T3 测试设计
 
-开始前读取并遵循 [Siyrs Skill 第一性原则](../../references/principles.md)、[测试指南](../../references/testing.md)、[测试分级执行合同](../../references/testing-tiers.md) 和 [T3 深度业务测试设计](../../references/testing-t3-design.md)。
+开始前读取并遵循 [Siyrs Skill 第一性原则](references/principles.md)、[测试指南](references/testing.md)、[测试分级执行合同](references/testing-tiers.md) 和 [T3 深度业务测试设计](references/testing-t3-design.md)。
 
 本 Skill 是显式 T3 测试资产设计入口。完整 T3 设计语义以 `testing-t3-design.md` 为准；本入口只负责确定 Scope、调用该合同、沉淀结果和守住停止边界，不复制整份共享规则。
 

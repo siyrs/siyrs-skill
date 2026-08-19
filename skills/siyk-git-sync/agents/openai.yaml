@@ -1,6 +1,6 @@
 interface:
   display_name: "siyk-git-sync"
-  short_description: "保存必要本地改动，正常整合目标远端分支并推送，不附加测试流程"
-  default_prompt: "使用 $siyk-git-sync 在必要时先保存本地目标改动，再正常整合目标远端分支并推送，不附加未要求的测试或发布流程。"
+  short_description: "按仓库正常策略整合远端更新并推送目标改动"
+  default_prompt: "使用 $siyk-git-sync 按仓库正常策略同步并推送当前目标改动。"
 policy:
   allow_implicit_invocation: false

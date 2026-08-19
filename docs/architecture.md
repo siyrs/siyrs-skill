@@ -1,89 +1,145 @@
 # Siyrs Skill 架构说明
 
-本文解释当前 Skill bundle 为什么这样组织，以及以后扩展时应保持哪些结构特征。具体运行时行为仍以 `references/*.md` 和各 `SKILL.md` 为准。
+## 1. 定位
 
-## 当前分层
+Siyrs Skill 是一个 **Agent Skills Native Collection**，不是一个内部再嵌套子 Skill 的单体 Skill。
+
+Collection 根目录只承载源码、维护文档和确定性工具；真正交付给 Codex 或 Claude Code 的单位是 `skills/` 下 9 个平级、独立、自包含的 Agent Skill。
 
 ```text
-siyrs-skill/
-├── SKILL.md                  # 主行为入口
-├── agents/openai.yaml
-├── references/               # 共享运行时规范
-├── skills/                   # 独立显式子 Skill
-├── docs/                     # 维护、架构、计划、历史
-├── scripts/                  # 少量确定性工具
-├── tests/                    # Bundle 回归测试
-├── README.md                 # 安装、概览、示例
-└── VERSION
+Collection
+├── skills/siyrs-skill
+├── skills/siyk-init
+├── skills/siyk-test-add
+├── skills/siyk-test-add-t3
+├── skills/siyk-test-run-t1
+├── skills/siyk-test-run-t2
+├── skills/siyk-test-run-t3
+├── skills/siyk-git-commit
+└── skills/siyk-git-sync
 ```
 
-### 根 Skill
+“主 Skill / 快捷 Skill”是业务角色，不是嵌套目录关系。
 
-根 `SKILL.md` 只负责通用工程闭环、规范入口和扩展边界。它不维护完整子 Skill 注册表，也不复制每个子 Skill 的详细行为。
-
-### 子 Skill
-
-`skills/` 下一级目录自动发现。一个普通子 Skill 的最小结构是：
+## 2. 单个 Skill 的稳定形态
 
 ```text
-skills/siyk-example/
+skills/<name>/
 ├── SKILL.md
+├── references/
 └── agents/
     └── openai.yaml
 ```
 
-每个子 Skill 应有清晰、独立的用户意图和停止边界。新增普通子 Skill 不需要修改中央 registry、validator 名单或根 Skill 来完成注册。
+- `SKILL.md` 使用 Agent Skills 标准 frontmatter，并保持入口简洁。
+- `references/` 只包含该 Skill 实际需要的 Markdown 规范；所有引用都从 Skill 根目录解析。
+- `agents/openai.yaml` 是 Codex 的薄平台元数据，不承载业务合同。
+- Skill 不访问父目录，不依赖 Collection 根 `README.md`、全局 reference 映射或另一个 Skill 才能工作。
 
-### References
+任意 `skills/<name>/` 单独复制出去，仍应是完整 Skill。
 
-`references/*.md` 是共享运行时规范的权威来源。多个 Skill 需要共享同一规则时，应共同引用一个 reference，而不是复制规则。
+## 3. 共享规则：源码单一，运行时自包含
 
-### Docs
+跨 Skill 复用的权威 Markdown 源位于：
 
-`docs/*.md` 解释架构、维护方式、版本历史和演化计划。它们不参与 Skill 的运行时路由，也不能成为运行行为的唯一事实来源。
+```text
+shared/references/
+```
 
-## 扩展原则
+`skills/*/references/` 是由 `scripts/sync_references.py` 确定性物化的运行时副本：
 
-### Convention over Registration
+```text
+shared/references/*.md
+        ↓ 确定性同步
+skills/<name>/references/*.md
+```
 
-子 Skill 通过目录约定自动发现，而不是中央列表注册。新增能力的正常成本应尽量接近“新增自己的目录与文件”。
+维护规则：
 
-### 一个意图，一个 Skill
+- 人工只修改 `shared/references/`；
+- 修改后运行 `python scripts/sync_references.py`；
+- CI 检查每个 Skill 只包含它通过链接闭包真正需要的 reference；
+- 副本缺失、过期、多余或内容漂移都会失败。
 
-只有当新工作流具备独立触发意图、独特行为和明确停止边界时，才拆成新的子 Skill。不要为了文件更小而机械拆分同一工作流。
+这种设计同时满足：
 
-### 共享规则单一来源
+- Markdown-first；
+- 共享规则单一真相源；
+- 每个发布 Skill 自包含；
+- 不依赖运行时 router、state、registry 或全局路径技巧。
 
-跨 Skill 规则放 `references/`。单个 Skill 独有的少量规则留在该 Skill 本体。README 和 docs 不复制完整运行合同。
+## 4. 平台兼容层
 
-### Markdown-first
+### Codex
 
-规则、计划、架构、索引等知识优先 Markdown。只有确实需要可执行、确定性、重复自动化或机器校验时才增加 script/code。
+Codex 直接安装 `skills/<name>/`：
 
-### 不恢复运行时平台化
+- 公共 `SKILL.md` 保持严格 Agent Skills frontmatter；
+- `agents/openai.yaml` 控制展示文案与 `allow_implicit_invocation`；
+- 主 `siyrs-skill` 允许隐式调用，8 个 `siyk-*` 关闭隐式调用。
 
-不要重新引入 command registry、router、按 Agent 复制的 adapter、state machine、配置 schema、release manifest、test state、matrix runtime、evidence registry 或 cache，仅为了管理 Skill 自身。
+### Claude Code
 
-## 防膨胀检查
+Claude Code 的用户显式调用控制位于 `SKILL.md` frontmatter。为避免把 Claude 专用字段写入公共源包，`scripts/install.py` 会生成：
 
-新增或修改能力时，至少检查：
+```text
+.generated/claude/skills/<name>/
+```
 
-1. 是否必须修改多个既有 Skill 才能让新 Skill 工作？如果是，先判断是否存在不必要耦合。
-2. 是否正在把共享规则复制进 README、docs 或多个 Skill？如果是，应收敛到 reference。
-3. 是否为了描述状态而新增 JSON/YAML/schema，而 Markdown 已经足够？如果是，优先保持 Markdown。
-4. 是否新增了中央注册表或路由层？如果是，应优先依赖目录约定和 Agent Skill 原生发现能力。
-5. 是否把某个真实项目的特殊约束写成了 Siyrs Skill 全局架构？如果是，应保持通用化或留在目标项目自身。
+生成规则只有两条：
 
-## 当前稳定边界
+- 移除 Codex 专用 `agents/`；
+- 给 8 个 `siyk-*` 注入 `disable-model-invocation: true`，主 `siyrs-skill` 不注入。
 
-当前架构期望长期保持：
+业务正文和 references 不分叉，不维护 Claude adapter 副本。
 
-- 根 Skill 薄、子 Skill 独立；
-- 子 Skill 自动发现；
-- references 为运行时规范；
-- docs 为维护与演化说明；
-- `.siyrs/README.md` 只做目标项目导航；
-- 测试代码跟随目标项目原生代码布局；
-- 不通过额外运行时框架管理 Skill bundle。
+## 5. 安装拓扑
 
-这些是架构方向，不等于在 0.x 阶段冻结所有具体业务合同。具体稳定化节奏见 [plan.md](plan.md)。
+Collection 源码放在不属于宿主 Skill 搜索路径的中立目录，例如：
+
+```text
+$HOME/.siyrs/siyrs-skill
+```
+
+然后建立 9 个平级目录映射：
+
+```text
+Codex:       $HOME/.agents/skills/<name>  → Collection/skills/<name>
+Claude Code: $HOME/.claude/skills/<name>  → Collection/.generated/claude/skills/<name>
+```
+
+禁止把整个 Collection clone 到宿主 Skill 根目录。否则宿主可能同时发现 Collection、嵌套目录或历史映射，造成重复菜单项。
+
+## 6. 描述与调用策略
+
+- 主 `siyrs-skill` 的 description 可包含足够的任务关键词，帮助模型自动选择。
+- `siyk-*` 只由用户显式调用，因此 description 保持短、清晰，避免污染 Claude Code `/` 菜单。
+- 复杂触发、流程和停止边界留在 Skill 正文与 references，不塞入 description。
+
+## 7. 扩展方式
+
+新增 Skill 的最小源码：
+
+```text
+skills/<name>/
+├── SKILL.md
+└── agents/openai.yaml
+```
+
+需要共享规则时，在 `SKILL.md` 中链接 `references/<file>.md`，并把权威内容放入 `shared/references/<file>.md`；同步工具会自动计算引用闭包并物化。
+
+新增一个 Skill 不需要：
+
+- 修改中央注册表；
+- 修改主 Skill 才能“注册”；
+- 增加 command router；
+- 增加 state/schema/manifest；
+- 复制另一套 Claude 或 Codex 业务正文。
+
+## 8. 防膨胀约束
+
+- 一个 Skill 只负责一个清晰用户意图和停止边界。
+- 可复用复杂知识进入 Markdown reference，入口保持薄。
+- 只有确定性、重复、机器校验或安装映射才使用 Python 工具。
+- 不恢复 adapter 业务副本、command registry、运行时状态机、测试 matrix/evidence registry 或发布 manifest。
+- `.siyrs/`、`docs/testing/`、T1/T2/T3 和 Markdown Case 等目标项目资产合同在 v0.7.0 中不变。

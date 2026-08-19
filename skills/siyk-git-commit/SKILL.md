@@ -1,12 +1,11 @@
 ---
 name: siyk-git-commit
-description: 显式的轻量 Git 提交快捷 Skill。用于把当前明确需要保存的本地改动创建为一个正常 Git 提交；范围保护、无关改动保留和禁止破坏性操作统一遵循共享 Git 交付指南。
-disable-model-invocation: true
+description: 保存当前明确目标改动为本地 Git 提交。
 ---
 
 # SIYK Git 提交
 
-开始前读取并遵循 [Siyrs Skill 第一性原则](../../references/principles.md) 和 [Git 交付指南](../../references/git.md)。
+开始前读取并遵循 [Siyrs Skill 第一性原则](references/principles.md) 和 [Git 交付指南](references/git.md)。
 
 本 Skill 只完成一次本地 Git 保存，完整共享 Git 边界以 `git.md` 为准。
 
