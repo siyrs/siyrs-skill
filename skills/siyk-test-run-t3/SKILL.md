@@ -1,12 +1,11 @@
 ---
 name: siyk-test-run-t3
-description: 显式的 T3 发布级验证执行 Skill。默认围绕当前目标、真实改动与受影响模块，或用户明确指定的 Scope，运行该范围完整相关的 Unit/Integration/E2E/UAT 与必要 release gate，并沉淀可信报告。
-disable-model-invocation: true
+description: 对当前或指定 Scope 运行 T3 发布级验证。
 ---
 
 # SIYK T3 发布级验证
 
-开始前读取并遵循 [Siyrs Skill 第一性原则](../../references/principles.md)、[测试指南](../../references/testing.md) 和 [测试分级执行合同](../../references/testing-tiers.md)。
+开始前读取并遵循 [Siyrs Skill 第一性原则](references/principles.md)、[测试指南](references/testing.md) 和 [测试分级执行合同](references/testing-tiers.md)。
 
 本 Skill 只执行当前 T3 Scope 已有测试资产与发布级门禁，不重新设计或新增 T3 Case。
 

@@ -1,6 +1,6 @@
 interface:
   display_name: "siyk-test-run-t1"
-  short_description: "按当前 diff 与影响半径运行 T1 变更回归，不默认修改代码或测试"
-  default_prompt: "使用 $siyk-test-run-t1 根据本轮真实改动和影响半径运行必要的 T1 变更回归，并只报告真实执行证据。"
+  short_description: "按当前 diff 与影响范围运行最窄可信的 T1 回归"
+  default_prompt: "使用 $siyk-test-run-t1 运行当前改动真正需要的 T1 变更回归。"
 policy:
   allow_implicit_invocation: false

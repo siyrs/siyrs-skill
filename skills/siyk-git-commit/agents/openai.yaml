@@ -1,6 +1,6 @@
 interface:
   display_name: "siyk-git-commit"
-  short_description: "将当前目标改动安全保存为一个本地 Git 提交，不执行远端同步"
-  default_prompt: "使用 $siyk-git-commit 将当前明确需要保存的本地改动创建为一个正常 Git 提交，并保留所有无关改动。"
+  short_description: "保留无关改动并把当前目标变化保存为本地提交"
+  default_prompt: "使用 $siyk-git-commit 把当前明确目标改动保存为一个正常本地 Git 提交。"
 policy:
   allow_implicit_invocation: false

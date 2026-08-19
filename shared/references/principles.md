@@ -1,6 +1,6 @@
 # Siyrs Skill 第一性原则
 
-本文件适用于主 `siyrs-skill` 和所有 `siyk-*` 子 Skill。它们是全局行为约束，不属于某个具体功能点。
+本文件适用于 `siyrs-skill` 和所有 `siyk-*` Skill。它们是全局行为约束，不属于某个具体功能点。
 
 ## 1. Markdown-first
 
@@ -33,17 +33,14 @@
 
 ## 规范来源
 
-Siyrs Skill 将运行时规范与项目维护文档分开：
+每个独立 Agent Skill 都是自包含包：
 
-- `references/*.md` 是共享规则的**权威运行时规范来源**。跨 Skill 复用的行为合同、测试规则、Git 规则和项目地图规则应维护在这里。
-- 根 `SKILL.md` 和 `skills/*/SKILL.md` 是**行为入口**：说明何时执行、需要读取哪些规范、本 Skill 的独特职责和停止边界；不要复制整份共享规则。
-- 根 `README.md` 是**安装、概览和示例说明**，不是运行时规范。Skill 执行不能依赖 README 中独有的信息。
-- `docs/*.md` 保存**架构、维护、计划和版本历史**，用于解释项目如何开发和演化；不能成为 Skill 执行时的唯一规则来源。
-- `docs/CONTRIBUTING.md` 只约束本仓库如何维护，不承载具体功能的运行时业务规则。
+- 当前 Skill 的 `references/*.md` 是共享规则的**权威运行时规范来源**；
+- 当前 Skill 的 `SKILL.md` 是**行为入口**：说明何时执行、需要读取哪些规范、本 Skill 的独特职责和停止边界；
+- Skill 执行不得依赖 Skill 根目录之外的文件；不依赖 Collection 仓库的 README、docs、父目录或其他 Skill；
+- 同一规则在源码层只维护于 `shared/references/`，由确定性同步工具物化到需要它的 Skill 包，避免人工复制和规则漂移。
 
-README/docs 与 reference 冲突时，运行时行为以 reference 和对应 `SKILL.md` 为准。
-
-修改共享规则时优先修改对应 reference，再按需要同步入口或说明；不要通过复制相同规则到多个文件来获得“完整感”。
+修改共享规则时先修改 Collection 中对应的 `shared/references/*.md`，再运行同步与校验；不要直接把多个运行时副本改成不同版本。
 
 ## 两条原则如何配合
 

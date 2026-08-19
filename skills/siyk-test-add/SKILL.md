@@ -1,12 +1,11 @@
 ---
 name: siyk-test-add
-description: 显式的智能测试补充 Skill。围绕当前目标和真实改动自动判断需要 T1/T2/T3 哪种测试深度，沉淀合适的可执行测试与 Markdown-first 测试资产；UAT、验收或测试用例等高层意图默认进入 T3 深度设计。
-disable-model-invocation: true
+description: 为当前改动设计并补充合适深度的测试资产。
 ---
 
 # SIYK 智能测试补充
 
-开始前读取并遵循 [Siyrs Skill 第一性原则](../../references/principles.md)、[测试指南](../../references/testing.md) 和 [测试分级执行合同](../../references/testing-tiers.md)。
+开始前读取并遵循 [Siyrs Skill 第一性原则](references/principles.md)、[测试指南](references/testing.md) 和 [测试分级执行合同](references/testing-tiers.md)。
 
 默认只处理当前用户目标、当前相关 diff、受影响模块和必要 blast radius，不扫描整个仓库清理历史测试债。
 
@@ -34,14 +33,14 @@ disable-model-invocation: true
 4. T1 重点证明当前变化；T2 只有真实稳定 Smoke 行为发生变化时才新增/更新 `T2` Case，不为了档位形式化制造 Smoke。
 5. 运行新增测试和最窄必要关联验证，如实报告 pass/fail、阻塞和环境限制。
 
-显式 `/siyk-test-add e2e`、`/siyk-test-add 集成测试`、`/siyk-test-add 单元测试` 时重点补对应测试层。
+用户显式要求 E2E、集成测试或单元测试时，重点补对应测试层。
 
 ## T3：委托给共享设计合同
 
-当判断为 T3，或用户明确要求 T3 / UAT / 业务验收 / 测试用例时，读取并完整遵循 [T3 深度业务测试设计](../../references/testing-t3-design.md)，不要在本入口复制另一份 T3 规则。
+当判断为 T3，或用户明确要求 T3 / UAT / 业务验收 / 测试用例时，读取并完整遵循 [T3 深度业务测试设计](references/testing-t3-design.md)，不要在本入口复制另一份 T3 规则。
 
 - 默认 Scope 仍是当前目标、修改、受影响模块和必要 blast radius；用户指定范围时以指定 Scope 为准。
-- `/siyk-test-add 测试用例 [目标文件]` 可以指定 Case 文件；未指定时按业务模块选择 `docs/testing/cases/<module>.md`。
+- 用户可以通过“测试用例 [目标文件]”指定 Case 文件；未指定时按业务模块选择 `docs/testing/cases/<module>.md`。
 - 发现等价 Case 时增强已有内容；新增自动化、关联已有自动化或保留 Manual/UAT 均以共享 T3 合同和真实项目价值为准。
 
 ## 测试资产边界

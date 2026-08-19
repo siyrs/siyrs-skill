@@ -1,5 +1,18 @@
 # 更新日志
 
+## 0.7.0 - 2026-08-19
+
+### Agent Skills Native Collection
+
+- 将仓库根目录从“一个主 Skill + 内嵌快捷 Skill”重构为 Agent Skills Collection；根目录不再暴露 `SKILL.md`，主 `siyrs-skill` 与 8 个 `siyk-*` 全部成为 `skills/` 下平级独立 Skill。
+- 每个 Skill 现在都自带 `SKILL.md`、所需 `references/` 与 Codex `agents/openai.yaml`，所有运行时链接都从当前 Skill 根目录解析；彻底移除 `../../references` 和全局 reference Junction workaround。
+- 新增 `shared/references/` 作为共享 Markdown 的唯一人工维护源，并新增确定性 `scripts/sync_references.py`；各 Skill 的自包含 reference 由工具物化，CI 阻止缺失、多余和内容漂移。
+- 明确跨平台分层：严格 Agent Skills 源包直接供 Codex 使用；Claude Code 变体由安装工具从同一 Markdown 源生成，只移除 Codex 元数据并为 8 个显式 Skill 注入 `disable-model-invocation: true`。
+- 大幅缩短 8 个 `siyk-*` 的 description，保留主 `siyrs-skill` 的自动匹配关键词，减少 Claude Code `/` 菜单噪音与启动 metadata 负担。
+- 新增安全的跨平台安装工具：Collection 源码放在中立目录，Codex 与 Claude Code 分别只映射 9 个平级 Skill；不使用 Claude Plugin namespace，不把整个 Collection 放入宿主 Skill 搜索目录。
+- 重写 validator、回归测试、README、架构和贡献指南，围绕“9 个独立 Agent Skill、单一 Markdown 源、运行时自包含、无中央 registry”建立稳定约束。
+- `.siyrs/`、`docs/testing/`、T1/T2/T3、T3 深度业务测试设计、P0-P3 与 Git 交付等目标项目合同保持不变。
+
 ## 0.6.4 - 2026-08-17
 
 ### 安装说明收敛
@@ -126,7 +139,7 @@
 ### 第一性原则
 
 - 新增共享 `references/principles.md`，把 **Markdown-first** 提升为主 `siyrs-skill` 与所有 `siyk-*` 子 Skill 的全局原则：工程知识默认优先 Markdown，只有确实需要可执行、确定性、重复自动化或机器校验时才新增 script/code。
-- 新增 **事实优先，不懂不猜** 原则：先读取上下文、项目地图、真实代码/配置/测试并使用工具查证；关键歧义仍会影响正确性时直接询问用户，不把未经验证的推断写成事实。
+- 新增 **事实优先，不懂不猜** 原则：先读取上下文、项目地图、真实代码、配置、测试并使用工具查证；关键歧义仍会影响正确性时直接询问用户，不把未经验证的推断写成事实。
 - 明确只有低风险、可逆的小细节才允许采用明确说明的最小假设；禁止编造文件路径、命令、API、依赖、配置、权限、需求和未实际执行的测试/CI/发布结果。
 - 主 Skill 与 `siyk-init`、`siyk-test-add`、`siyk-git-commit`、`siyk-git-sync` 都显式继承同一原则文件，避免各 Skill 复制规则后发生漂移。
 

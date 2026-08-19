@@ -1,19 +1,10 @@
 # Siyrs Skill 文档
 
-`docs/` 保存项目维护、架构说明和演化计划，不承载 Skill 运行时唯一规则。
+本目录保存 Siyrs Skill Collection 的架构、维护、演化和版本历史说明，不作为已安装 Skill 的运行时规则来源。
 
-## 文档职责
+- [架构说明](architecture.md)：Collection 源码、独立 Skill、共享 reference 物化与双宿主安装模型。
+- [贡献指南](CONTRIBUTING.md)：新增或修改 Skill、reference、平台元数据和校验的约束。
+- [演化计划](plan.md)：v0.7.x 稳定阶段与 v1.0 候选条件。
+- [更新日志](CHANGELOG.md)：版本演进记录。
 
-- [architecture.md](architecture.md)：当前 Skill bundle 架构、扩展模型和防膨胀约束。
-- [plan.md](plan.md)：0.x 阶段到 v1.0 的通用演化计划和稳定化条件。
-- [CONTRIBUTING.md](CONTRIBUTING.md)：仓库开发、维护和验证约束。
-- [CHANGELOG.md](CHANGELOG.md)：版本历史。
-
-## 与运行时规范的关系
-
-Siyrs Skill 明确区分两类 Markdown：
-
-- `references/*.md`：共享运行时规范的权威来源，Skill 执行时按需读取。
-- `docs/*.md`：面向维护者和开发者的架构、计划、历史与说明。
-
-`docs/` 可以解释为什么这样设计、未来准备怎样演化，但不能成为某个 Skill 执行时必须依赖的唯一规则来源。运行时行为发生变化时，应先修改对应 `references/` 或 Skill 入口，再按需要同步这里的说明。
+运行时行为以每个 `skills/<name>/SKILL.md` 及其自带的 `references/*.md` 为准；Collection 根 README 只负责安装、概览和示例。

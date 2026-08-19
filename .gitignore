@@ -6,3 +6,5 @@ htmlcov/
 .DS_Store
 *.zip
 .idea/
+.generated/
+dist/

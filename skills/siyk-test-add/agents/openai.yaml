@@ -1,6 +1,6 @@
 interface:
   display_name: "siyk-test-add"
-  short_description: "按当前改动自动判断 T1/T2/T3 测试深度并沉淀合适测试资产"
-  default_prompt: "使用 $siyk-test-add 根据当前目标、真实改动和业务风险自动判断 T1/T2/T3 测试深度，沉淀合适的 Markdown-first 测试资产与必要自动化；UAT、验收或测试用例默认按 T3 深度设计。"
+  short_description: "根据当前改动风险设计并补充合适深度的测试资产"
+  default_prompt: "使用 $siyk-test-add 为当前目标和真实改动补充合适深度的测试资产。"
 policy:
   allow_implicit_invocation: false

@@ -1,6 +1,6 @@
 interface:
   display_name: "siyk-test-run-t3"
-  short_description: "按当前或指定 Scope 运行 T3 发布级验证、UAT 与门禁并沉淀报告"
-  default_prompt: "使用 $siyk-test-run-t3 围绕当前或我指定的 Scope，按项目真实 release gate 运行完整相关测试与 UAT，并将可信结论沉淀为测试报告。"
+  short_description: "对当前或指定范围运行完整相关的 T3 发布级验证"
+  default_prompt: "使用 $siyk-test-run-t3 对当前或指定 Scope 运行 T3 发布级验证。"
 policy:
   allow_implicit_invocation: false

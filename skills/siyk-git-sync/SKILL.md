@@ -1,14 +1,13 @@
 ---
 name: siyk-git-sync
-description: 显式的轻量 Git 同步快捷 Skill。用于按仓库正常策略整合目标远端分支并正常推送；范围保护、冲突处理、受保护分支和禁止历史改写等共享边界统一遵循 Git 交付指南。
-disable-model-invocation: true
+description: 按仓库正常策略同步并推送当前目标改动。
 ---
 
 # SIYK Git 同步
 
-开始前读取并遵循 [Siyrs Skill 第一性原则](../../references/principles.md) 和 [Git 交付指南](../../references/git.md)。
+开始前读取并遵循 [Siyrs Skill 第一性原则](references/principles.md) 和 [Git 交付指南](references/git.md)。
 
-本 Skill 只完成正常 Git 同步，完整共享 Git 边界以 `git.md` 为准，不依赖另一个子 Skill 才能理解范围规则。
+本 Skill 只完成正常 Git 同步，完整共享 Git 边界以 `git.md` 为准，不依赖另一个 Skill 才能理解范围规则。
 
 1. 查看 `git status`、当前分支、upstream、目标分支和双方 divergence。
 2. 本次目标本地改动尚未保存且需要随本次同步交付时，按 Git 交付指南创建正常本地 commit，并保留无关工作区改动。

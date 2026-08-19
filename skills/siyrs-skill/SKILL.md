@@ -1,6 +1,6 @@
 ---
 name: siyrs-skill
-description: 聚焦完成软件仓库修改，按风险选择合适的测试，并按用户要求完成 Git 交付。适用于实现功能、修复问题、重构、代码审查、补充或运行测试、执行 T1/T2/T3、回归/冒烟/全量/UAT/Android/Web/后端验证，以及提交、同步、推送或合并代码等场景。
+description: 面向软件仓库的通用工程工作流；用于实现功能、修复问题、重构、代码审查、补充或运行测试，以及按用户要求完成 Git 交付。
 ---
 
 # Siyrs Skill
@@ -9,7 +9,7 @@ description: 聚焦完成软件仓库修改，按风险选择合适的测试，�
 
 ## 第一性原则
 
-开始任何任务前遵循 [Siyrs Skill 第一性原则](references/principles.md)。其中 `references/*.md` 是共享运行时规范的权威来源；README 只用于安装、概览和示例，不参与运行时判断。
+开始任何任务前遵循 [Siyrs Skill 第一性原则](references/principles.md)。当前 Skill 自带的 `references/*.md` 是运行时规范的权威来源。
 
 核心原则：
 
@@ -43,26 +43,6 @@ description: 聚焦完成软件仓库修改，按风险选择合适的测试，�
    - 测试知识继续以 `docs/testing/README.md` 为入口，使用 `standards/`、`cases/`、`reports/` 等当前测试规范；具体合同以 testing references 为准。
    - 简洁报告改了什么、执行了什么、哪些通过或失败，以及仍存在的风险。
 
-## 独立子 Skill
+## 停止边界
 
-`skills/` 下的一级目录都是独立、显式调用的子 Skill。每个子 Skill 自己声明触发意图、独特行为和停止边界，并按需引用共享 references。
-
-- 根 Skill **不维护子 Skill 注册表或完整清单**。
-- 新增 `skills/<name>/SKILL.md` 与 `agents/openai.yaml` 后，由套件结构自动发现和校验；不需要为了“注册”它而修改根 Skill。
-- 子 Skill 默认关闭隐式调用，避免与主 `siyrs-skill` 的通用入口竞争。
-- 共享规则进入 reference；只属于单个 Skill 的规则留在该 Skill 内，不复制到 README 或其他入口。
-
-## 扩展约束
-
-- 新工作流只有在拥有清晰、独立的用户意图和停止边界时才拆成子 Skill。
-- 子 Skill 保持薄；复杂且可复用的领域知识放到一层深度的 `references/`。
-- 只有重复、确定性且脚本化更安全或更省成本的工作才新增 script。
-- 不恢复 command registry、adapter、state machine、配置 schema、release manifest 或测试运行时治理层。
-
-修改本仓库后运行：
-
-```bash
-python scripts/validate.py .
-python -m unittest discover -s tests -v
-python -m compileall -q scripts tests
-```
+只完成用户要求的工程闭环，不自动扩展到发布、部署、历史改写或无关重构。没有真实执行的测试、CI、发布或交付动作不得宣称完成。

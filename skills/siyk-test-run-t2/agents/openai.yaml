@@ -1,6 +1,6 @@
 interface:
   display_name: "siyk-test-run-t2"
-  short_description: "运行项目固定 T2 Smoke 主路径与关键边界集合，不默认修改代码"
-  default_prompt: "使用 $siyk-test-run-t2 运行项目已经定义的 T2 标准 Smoke 集合，并只基于真实执行结果报告结论。"
+  short_description: "运行项目长期维护的固定 T2 标准 Smoke 集合"
+  default_prompt: "使用 $siyk-test-run-t2 运行项目已有的 T2 标准 Smoke。"
 policy:
   allow_implicit_invocation: false

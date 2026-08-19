@@ -1,13 +1,8 @@
 # Git 交付指南
 
-仅当主 `siyrs-skill` 工作流包含 Git 交付时读取本 reference。
+仅当当前工程工作流包含 Git 交付时读取本 reference。
 
-两个显式快捷 Skill 独立维护：
-
-- `skills/siyk-git-commit/`
-- `skills/siyk-git-sync/`
-
-不要在这里重复它们的详细快捷流程。
+`/siyk-git-commit` 与 `/siyk-git-sync` 是两个独立显式入口；本文件保存它们共同使用的范围、安全和远端交付边界，不重复各自完整流程。
 
 ## 先确认范围
 

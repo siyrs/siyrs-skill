@@ -1,12 +1,11 @@
 ---
 name: siyk-test-run-t2
-description: 显式的 T2 标准 Smoke 执行 Skill。运行项目长期维护的固定主路径与关键权限/边界集合，覆盖必要的 Unit/Integration/E2E 层；默认只执行和分析，不新增测试、不修改业务代码、不生成持久报告。
-disable-model-invocation: true
+description: 运行项目既有的 T2 标准 Smoke。
 ---
 
 # SIYK T2 标准 Smoke
 
-开始前读取并遵循 [Siyrs Skill 第一性原则](../../references/principles.md)、[测试指南](../../references/testing.md) 和 [T1/T2/T3 分级执行合同](../../references/testing-tiers.md)。
+开始前读取并遵循 [Siyrs Skill 第一性原则](references/principles.md)、[测试指南](references/testing.md) 和 [T1/T2/T3 分级执行合同](references/testing-tiers.md)。
 
 只运行项目已经定义的标准 Smoke 集合，然后结束。
 

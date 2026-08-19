@@ -1,88 +1,88 @@
 # 贡献指南
 
-这个仓库要刻意保持小而清晰。
+## 1. 先理解文档层级
 
-## 文档分层
+- `skills/*/SKILL.md`：独立 Skill 行为入口。
+- `skills/*/references/`：已物化的运行时 Markdown，只由同步工具维护。
+- `shared/references/`：跨 Skill 共享规范的唯一人工维护源。
+- `skills/*/agents/openai.yaml`：Codex 展示与调用策略。
+- `README.md` / `docs/*.md`：安装、架构、维护和计划说明，不承载运行时唯一规则。
 
-- `references/*.md` 是共享运行时规范的权威来源。
-- 根 `SKILL.md` 与 `skills/*/SKILL.md` 是行为入口，只保留触发条件、独特职责、必要引用和停止边界。
-- 根 `README.md` 面向安装、概览和示例，不承载运行时唯一规则。
-- `docs/*.md` 保存架构说明、开发维护约束、计划和历史，不替代 references。
-- 本文件只约束 Siyrs Skill 仓库如何开发和维护，不复制具体功能合同。
+## 2. 修改共享规则
 
-## 新增子 Skill
-
-`skills/` 下每个一级子目录都会被自动发现并校验，不维护中央注册表。
-
-最小结构：
-
-```text
-skills/<name>/
-├── SKILL.md
-└── agents/
-    └── openai.yaml
-```
-
-要求：
-
-- `SKILL.md` 的 `name` 与目录名一致。
-- 子 Skill 必须显式调用，`allow_implicit_invocation: false`。
-- 子 Skill 应引用 `../../references/principles.md` 并遵循全局第一性原则。
-- 一个子 Skill 只负责一个清晰用户意图和停止边界。
-- 复杂且跨 Skill 复用的领域知识放到一层深度的 `references/`，不要复制到多个入口。
-- 新增普通子 Skill 不需要修改 validator、根 Skill 或中央 Skill 列表来“注册”。
-- 只有该功能确实存在独特行为风险时，才增加对应专项回归测试；不要因为注册需要而维护第二份 Skill 名单。
-
-## 修改共享规范
-
-修改跨 Skill 共享行为时：
-
-1. 先确认规则确实属于多个 Skill，而不是单个入口的局部行为。
-2. 修改对应 `references/*.md`。
-3. 必要时同步相关 Skill 入口中的链接、独特边界或用户提示。
-4. `README.md` 和 `docs/` 只在说明价值发生变化时同步，不复制整份运行时合同。
-5. 为稳定行为合同补充语义回归测试，避免测试绑定自然语言的固定句子。
-
-## 文档维护
-
-根目录尽量只保留安装或运行需要直接暴露的入口文件，例如 `README.md`、`SKILL.md`、`VERSION`。
-
-维护、架构、计划和历史文档优先放在一层深度的 `docs/`：
-
-```text
-docs/
-├── README.md
-├── architecture.md
-├── plan.md
-├── CONTRIBUTING.md
-└── CHANGELOG.md
-```
-
-不要为了分类继续默认创建 `docs/design/`、`docs/roadmap/`、`docs/governance/` 等深层目录；出现足够多真实内容后再考虑拆分。
-
-`docs/plan.md` 只记录已经形成共识、可能影响长期维护成本的演化方向，不把未经验证的功能想法写成承诺。
-
-## 保持轻量
-
-- Markdown-first；只有重复、确定性且脚本化更安全或更省成本的工作才增加 script。
-- 不要重新引入 command registry、router、按 Agent 复制的 adapter、state machine、配置 schema、release manifest、test state、matrix runtime、evidence registry 或 cache。
-- `.siyrs/README.md` 继续只是目标项目地图，不是真相数据库。
-- 可执行测试继续留在目标项目原生目录，不为了 Siyrs Skill 目录规范迁移测试代码。
-- Skill 名称、description 或默认调用方式变化时，同步更新该 Skill 自己的 `agents/openai.yaml`。
-- 面向维护者和使用者的说明优先中文；Skill 名、命令、代码标识符、协议字段和必要技术术语保留英文。
-
-## 版本与计划
-
-0.x 阶段允许根据真实项目实践继续收敛标准；不要为了尚未定型的历史混合格式提前建立长期兼容或迁移框架。进入 v1.0 候选前，应先通过真实使用证明核心结构不再需要频繁调整。
-
-详细演化节奏见 [plan.md](plan.md)。
-
-## 验证
-
-合并前运行：
+修改 `shared/references/*.md` 后执行：
 
 ```bash
+python scripts/sync_references.py
+python scripts/sync_references.py --check
+```
+
+不要直接编辑 `skills/*/references/`；CI 会检查内容漂移、多余文件和缺失引用。
+
+## 3. 修改或新增 Skill
+
+每个 Skill 必须：
+
+- 位于 `skills/<name>/`；
+- 包含 `SKILL.md`；
+- `name` 与父目录完全一致；
+- frontmatter 源码只使用 Agent Skills 标准字段；
+- 所有运行时链接都留在 Skill 根目录内；
+- 包含 `agents/openai.yaml`；
+- 主 `siyrs-skill` 使用 `allow_implicit_invocation: true`；
+- `siyk-*` 使用 `allow_implicit_invocation: false`。
+
+显式 `siyk-*` 的 description 应简短，说明用途即可；复杂判断留在正文。主 Skill description 需要覆盖通用工程任务关键词，便于自动选择。
+
+引用共享规范时写：
+
+```markdown
+[测试指南](references/testing.md)
+```
+
+然后在 `shared/references/testing.md` 维护权威内容并运行同步工具。
+
+## 4. Claude Code 扩展
+
+不要把 `disable-model-invocation` 直接写进源码 `SKILL.md`。Claude Code 变体由 `scripts/install.py` 在 `.generated/claude/skills/` 中确定性生成。
+
+不要恢复 `.claude-plugin/`：Plugin namespace 不满足本项目需要的直接 `/siyrs-skill` 与 `/siyk-*` 入口。
+
+## 5. 何时可以增加脚本
+
+只有以下工作适合脚本化：
+
+- 共享 Markdown 的确定性同步；
+- 跨平台安装映射；
+- 结构和一致性校验；
+- 其他明确重复、确定且机器执行更可靠的工作。
+
+不要用脚本重新编码自然语言业务规则，也不要增加 router、state、schema、registry、matrix runtime 或 adapter 业务副本。
+
+## 6. 本地验证
+
+```bash
+python scripts/sync_references.py --check
 python scripts/validate.py .
 python -m unittest discover -s tests -v
 python -m compileall -q scripts tests
 ```
+
+还应生成 Claude Code 变体验证：
+
+```bash
+python scripts/install.py --build-claude .generated/claude/skills
+```
+
+Windows 可使用 `py` 替代 `python`。
+
+## 7. 版本与文档
+
+发布版本时同步更新：
+
+- `VERSION`；
+- 根 `README.md` 的当前版本；
+- `docs/CHANGELOG.md`；
+- 必要的架构/安装说明。
+
+不要为了版本变化修改目标项目的 `.siyrs/`、`docs/testing/` 或历史测试 Case。

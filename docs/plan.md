@@ -1,66 +1,44 @@
 # Siyrs Skill 演化计划
 
-本文记录 Siyrs Skill 从当前 0.x 阶段走向 v1.0 的通用演化方向。它是维护计划，不是运行时合同；具体 Skill 行为仍以 `references/*.md` 和各 `SKILL.md` 为准。
+## 当前阶段：v0.7.x 原生 Collection 稳定期
 
-## 当前阶段：0.x 标准收敛
+v0.7.0 完成最后一轮核心分发架构校正：Collection 根目录不再冒充单个 Skill，9 个工作流成为平级、自包含的 Agent Skill；Codex 与 Claude Code 从同一 Markdown 源获得各自最薄的平台元数据。
 
-当前目标不是追求功能数量，而是通过真实项目实践验证并收敛以下基础标准：
+接下来的重点不是继续增加基础设施，而是通过真实仓库使用验证：
 
-- Markdown-first 的项目知识与测试资产；
-- `.siyrs/README.md` 项目地图；
-- `docs/testing/` 的 standards / cases / reports 结构；
-- T1 / T2 / T3 与 Unit / Integration / E2E / UAT 的正交测试模型；
-- 独立子 Skill + 自动发现的扩展方式；
-- references 为运行时规范、docs 为维护说明的文档分层。
+- 9 个 Skill 在干净 Codex 环境中只出现一次；
+- 9 个 Skill 在干净 Claude Code 环境中只出现一次；
+- 主 Skill 可自动匹配，显式 `siyk-*` 不参与自动匹配；
+- 每个 Skill 单独复制/安装后 references 完整可读；
+- 更新 Collection 后，安装映射与 Claude 生成变体可稳定刷新；
+- `.siyrs/`、`docs/testing/` 和现有测试资产无需迁移。
 
-0.x 阶段允许根据真实使用反馈继续修正这些标准。当前阶段不为尚未定型的历史混合格式建立长期兼容负担；如果旧项目需要采用新标准，应以当前规范为目标完成一次性整理，再用实际使用结果验证规范是否合理。
+## v0.7.x 允许的修改
+
+- 修复真实宿主发现、安装、symlink/Junction 或平台 metadata 问题；
+- 根据真实使用收缩 description、入口重复或 reference 边界；
+- 修复确定性同步、校验和安装工具的可靠性；
+- 修正被多个真实项目证明为通用问题的测试或 Git 合同。
+
+## v0.7.x 不做
+
+- 不重新引入 Plugin namespace；
+- 不恢复嵌套 Skill bundle；
+- 不建立中央 Skill registry；
+- 不增加运行时 router/state/schema/manifest；
+- 不为每个平台复制业务正文；
+- 不为了假设中的未来需求提前增加 Skill；
+- 不因 Collection 更新批量重写目标项目的测试用例。
 
 ## v1.0 候选条件
 
-当以下条件经过多个真实项目使用后仍保持稳定，可考虑进入 v1.0 候选：
+当以下条件经多个真实项目和两个宿主持续验证后，可进入 v1.0 候选：
 
-1. 新项目可以直接采用当前 `.siyrs` 与 `docs/testing` 结构，不需要额外解释性框架。
-2. 既有项目整理到当前规范后，T1/T2/T3、test-add 和 init 能稳定工作，不产生反复结构迁移。
-3. 新增普通子 Skill 基本只需要自己的 `SKILL.md` 与 `agents/openai.yaml`，没有重新出现中央 registry/router。
-4. references 能承载共享运行规则，README/docs 不再与运行时规范产生漂移。
-5. 真实使用没有证明需要 state/schema/cache 等额外运行时层。
-6. 核心测试资产格式、T1/T2/T3 语义和项目地图职责没有继续出现结构性调整需求。
+1. Collection / Skill / reference / platform metadata 分层稳定；
+2. 安装、更新、检查和旧版本迁移路径稳定；
+3. 9 个 Skill 的职责与停止边界不再频繁调整；
+4. Markdown-first、事实优先、不懂不猜在真实工作中持续有效；
+5. T1/T2/T3、T3 深度业务设计、`.siyrs` 和 `docs/testing` 合同不再需要结构性重写；
+6. 新增一个独立 Skill 只需增加自己的目录、必要 reference 与轻量校验，不修改核心运行时。
 
-## v1.0 之后的方向
-
-v1.0 代表核心公共合同已经经过真实实践验证。进入 v1.x / v2.x 后，新增能力应优先采用增量扩展，而不是反复改写既有项目资产。
-
-后续演化优先级：
-
-1. 新增独立使用型 Skill，而不是扩张根 Skill。
-2. 复用现有 references；只有出现真正新的共享领域规则时才新增 reference。
-3. 优先扩展 Markdown 语义，不轻易引入机器状态和迁移框架。
-4. 只有真实项目证明现有结构不足时，才讨论 breaking change。
-
-## 近期工作方式
-
-在进入 v1.0 前，采用以下节奏：
-
-```text
-真实项目使用
-→ 发现真实摩擦
-→ 判断是项目特殊问题还是 Siyrs Skill 通用问题
-→ 只修通用问题
-→ 回归验证
-→ 继续使用
-```
-
-不要为了设想中的未来场景提前构建复杂兼容层、迁移器、注册中心或治理平台。
-
-## 不做的事情
-
-当前没有证据时，不计划：
-
-- 为 Skill bundle 建立持久 state/config 数据库；
-- 为子 Skill 建立中央注册中心或命令路由器；
-- 为 Markdown 测试资产建立 schema/migration engine；
-- 为每次测试运行持久化状态历史；
-- 为所有潜在 Agent/IDE 复制一套 adapter；
-- 因为未来可能需要而预先创建深层 docs 目录或空模板。
-
-计划只记录已经形成共识、且可能影响长期维护成本的演化方向。具体功能需求出现时，再按第一性原则单独评估。
+v1.0 后再把已发布 Skill 包与目标项目资产视为需要稳定维护的公共合同；在此之前，修改仍应以真实问题为依据，而不是为历史偶然结构背负长期兼容层。
